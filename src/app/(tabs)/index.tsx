@@ -29,9 +29,13 @@ export default function HomeScreen() {
     <ScrollView style={globalStyles.container}>
       <View style={globalStyles.header}>
         <Text style={globalStyles.title}>MacroZone</Text>
+
         <ShareButton meals={meals} />
       </View>
       <HomeHeader />
+      <Text style={globalStyles.textSecondary}>
+        Your Personal Macro Tracker for your daily meals.
+      </Text>
       <MacroGrid meals={meals} />
       <CopyButton meals={meals} />
       <ReminderToggle />
