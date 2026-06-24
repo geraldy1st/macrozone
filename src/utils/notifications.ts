@@ -1,3 +1,4 @@
+import i18n from "@/i18n";
 import * as Notifications from "expo-notifications";
 
 Notifications.setNotificationHandler({
@@ -20,8 +21,8 @@ export const scheduleMealReminders = async () => {
 
   await Notifications.scheduleNotificationAsync({
     content: {
-      title: "MacroZone",
-      body: "Don't forget to log your lunch!",
+      title: i18n.t("app.name"),
+      body: i18n.t("notifications.lunchReminder"),
     },
     trigger: {
       type: Notifications.SchedulableTriggerInputTypes.DAILY,
@@ -32,8 +33,8 @@ export const scheduleMealReminders = async () => {
 
   await Notifications.scheduleNotificationAsync({
     content: {
-      title: "MacroZone",
-      body: "Time to log your dinner!",
+      title: i18n.t("app.name"),
+      body: i18n.t("notifications.dinnerReminder"),
     },
     trigger: {
       type: Notifications.SchedulableTriggerInputTypes.DAILY,

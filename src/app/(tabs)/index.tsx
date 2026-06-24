@@ -1,45 +1,119 @@
+import AppLogo from "@/components/AppLogo";
 import CopyButton from "@/components/CopyButton";
 import HomeHeader from "@/components/HomeHeader";
 import MacroGrid from "@/components/MacroGrid";
 import RecentMeals from "@/components/RecentMeals";
 import ReminderToggle from "@/components/ReminderToggle";
 import ShareButton from "@/components/ShareButton";
+import { getRandomQuote } from "@/data/motivationalQuotes";
 import { getMeals, Meal } from "@/storage/meals";
-import { globalStyles } from "@/styles/global";
+import { colors, globalStyles } from "@/styles/global";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
-import { ScrollView, Text, View } from "react-native";
+import { useTranslation } from "react-i18next";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 
 export default function HomeScreen() {
+  const { t, i18n } = useTranslation();
   const [meals, setMeals] = useState<Meal[]>([]);
+  const [quote, setQuote] = useState(() => getRandomQuote());
 
   const loadMeals = async () => {
     const data = await getMeals();
     setMeals(data);
-    console.log("Loaded meals:", data);
   };
 
   useFocusEffect(
     useCallback(() => {
       loadMeals();
-    }, []),
+      setQuote((currentQuote) => getRandomQuote(currentQuote));
+    }, [i18n.language]),
   );
 
   return (
-    <ScrollView style={globalStyles.container}>
-      <View style={globalStyles.header}>
-        <Text style={globalStyles.title}>MacroZone</Text>
+    <ScrollView
+      style={globalStyles.container}
+      contentContainerStyle={styles.content}
+      showsVerticalScrollIndicator={false}
+    >
+      <View style={styles.heroSection}>
+        <View style={globalStyles.header}>
+          <View style={styles.titleRow}>
+            <AppLogo size={44} />
+            <View>
+              <Text style={globalStyles.title}>{t("app.name")}</Text>
+              <HomeHeader />
+            </View>
+          </View>
+          <ShareButton meals={meals} />
+        </View>
 
-        <ShareButton meals={meals} />
+        <View style={styles.quoteCard}>
+          <View style={styles.quoteAccent} />
+          <Text style={styles.quote}>{quote}</Text>
+        </View>
       </View>
-      <HomeHeader />
-      <Text style={globalStyles.textSecondary}>
-        Your Personal Macro Tracker for your daily meals.
-      </Text>
+
       <MacroGrid meals={meals} />
-      <CopyButton meals={meals} />
-      <ReminderToggle />
+
+      <View style={styles.actionsCard}>
+        <CopyButton meals={meals} />
+        <View style={styles.divider} />
+        <ReminderToggle />
+      </View>
+
       <RecentMeals meals={meals} onDelete={loadMeals} />
     </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  content: {
+    paddingBottom: 40,
+  },
+  heroSection: {
+    marginBottom: 28,
+  },
+  titleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    flex: 1,
+  },
+  quoteCard: {
+    flexDirection: "row",
+    backgroundColor: colors.surface,
+    borderRadius: 14,
+    marginTop: 20,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: colors.cardBorder,
+  },
+  quoteAccent: {
+    width: 4,
+    backgroundColor: colors.accent,
+  },
+  quote: {
+    flex: 1,
+    fontSize: 15,
+    fontStyle: "italic",
+    fontWeight: "500",
+    color: colors.primary,
+    padding: 16,
+    lineHeight: 22,
+  },
+  actionsCard: {
+    backgroundColor: colors.card,
+    borderRadius: 16,
+    padding: 18,
+    marginTop: 20,
+    borderWidth: 1,
+    borderColor: colors.cardBorder,
+    gap: 4,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: colors.cardBorder,
+    marginVertical: 8,
+  },
+});

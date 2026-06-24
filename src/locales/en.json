@@ -1,0 +1,96 @@
+{
+  "app": {
+    "name": "MacroZone"
+  },
+  "tabs": {
+    "home": "Home",
+    "addMeals": "Add Meal",
+    "allMeals": "All Meals",
+    "settings": "Settings"
+  },
+  "home": {
+    "recentMeals": "Recent Meals",
+    "noMeals": "No meals logged yet.",
+    "copySummary": "Copy Summary",
+    "dailyProgress": "Daily Progress"
+  },
+  "macros": {
+    "calories": "Calories",
+    "protein": "Protein",
+    "carbs": "Carbs",
+    "fat": "Fat",
+    "ofGoal": "of {{goal}} goal",
+    "summary": "MacroZone Daily Summary\n\nCalories: {{calories}}\nProtein: {{protein}}g\nCarbs: {{carbs}}g\nFat: {{fat}}g\n\nMeals: {{count}} logged today",
+    "mealMacros": "{{calories}} cal • {{protein}}g P • {{carbs}}g C • {{fat}}g F"
+  },
+  "addMeal": {
+    "title": "Add Meal",
+    "mealName": "Meal name",
+    "calories": "Calories",
+    "protein": "Protein (g)",
+    "carbs": "Carbs (g)",
+    "fat": "Fat (g)",
+    "submit": "Add Meal",
+    "errorTitle": "Error",
+    "errorMessage": "Please enter a meal name and calories.",
+    "successTitle": "Success",
+    "successMessage": "Meal added successfully!"
+  },
+  "allMeals": {
+    "title": "All Meals",
+    "clearAll": "Clear All",
+    "noMeals": "No meals logged yet."
+  },
+  "mealItem": {
+    "deleteTitle": "Delete Meal",
+    "deleteMessage": "Are you sure you want to delete \"{{name}}\"?",
+    "cancel": "Cancel",
+    "delete": "Delete"
+  },
+  "copy": {
+    "title": "Copied!",
+    "message": "Macro summary copied to clipboard."
+  },
+  "reminders": {
+    "label": "Meal Reminders"
+  },
+  "notifications": {
+    "lunchReminder": "Don't forget to log your lunch!",
+    "dinnerReminder": "Time to log your dinner!"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "languageDescription": "Choose your preferred language",
+    "english": "English",
+    "french": "French",
+    "goals": {
+      "title": "Daily Goals",
+      "description": "Set your daily macro targets for progress tracking",
+      "calories": "Calories",
+      "protein": "Protein (g)",
+      "carbs": "Carbs (g)",
+      "fat": "Fat (g)",
+      "save": "Save Goals",
+      "savedTitle": "Goals Saved",
+      "savedMessage": "Your daily macro goals have been updated."
+    }
+  },
+  "quotes": [
+    "Every meal is an opportunity to fuel your goals.",
+    "Daily discipline builds tomorrow's results.",
+    "Your body deserves the best fuel.",
+    "Small choices, big wins.",
+    "Consistency beats intensity.",
+    "Eat with intention, progress with confidence.",
+    "Today, one more step toward your goals.",
+    "Your macros, your progress.",
+    "Nourishing your body is investing in yourself.",
+    "Motivation gets you started, habit keeps you going.",
+    "Balance and determination make the difference.",
+    "Every day counts, every meal too.",
+    "Take care of yourself, one meal at a time.",
+    "Today's efforts forge tomorrow's success.",
+    "Stay focused, stay consistent."
+  ]
+}

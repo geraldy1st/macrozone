@@ -1,13 +1,24 @@
 import { StyleSheet } from "react-native";
 
 export const colors = {
-  background: "#1a1a2e",
-  header: "#242444",
-  surface: "#2a2a4a",
+  background: "#0f0f1a",
+  header: "#1a1a2e",
+  surface: "#1e1e32",
+  card: "#16162a",
+  cardBorder: "#2a2a4a",
   primary: "#4fc3f7",
+  accent: "#ff6b35",
   text: "#ffffff",
-  textSecondary: "#a0a0b0",
+  textSecondary: "#8b8ba0",
   alert: "#ff5252",
+};
+
+export const macroColors = {
+  accent: "#ff6b35",
+  calories: "#ff6b35",
+  protein: "#4ecdc4",
+  carbs: "#ffd93d",
+  fat: "#6bcb77",
 };
 
 export const globalStyles = StyleSheet.create({
@@ -19,13 +30,14 @@ export const globalStyles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    fontWeight: "bold",
+    fontWeight: "800",
     color: colors.text,
+    letterSpacing: -0.5,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: "600",
-    color: colors.textSecondary,
+    fontWeight: "700",
+    color: colors.text,
     marginTop: 30,
     marginBottom: 16,
   },

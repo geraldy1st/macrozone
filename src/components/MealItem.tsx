@@ -1,7 +1,8 @@
 import { deleteMeal } from "@/storage/meals";
 import { colors } from "@/styles/global";
 import * as Haptics from "expo-haptics";
-import { Alert, StyleSheet, Text, TouchableOpacity } from "react-native";
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useTranslation } from "react-i18next";
 
 type MealItemProps = {
   id: string;
@@ -22,46 +23,84 @@ export default function MealItem({
   fat,
   onDelete,
 }: MealItemProps) {
+  const { t } = useTranslation();
+
   const handleLongPress = () => {
-    Alert.alert("Delete Meal", `Are you sure you want to delete "${name}"?`, [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Delete",
-        style: "destructive",
-        onPress: async () => {
-          await deleteMeal(id);
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-          onDelete();
+    Alert.alert(
+      t("mealItem.deleteTitle"),
+      t("mealItem.deleteMessage", { name }),
+      [
+        { text: t("mealItem.cancel"), style: "cancel" },
+        {
+          text: t("mealItem.delete"),
+          style: "destructive",
+          onPress: async () => {
+            await deleteMeal(id);
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            onDelete();
+          },
         },
-      },
-    ]);
+      ],
+    );
   };
 
   return (
     <TouchableOpacity style={styles.container} onLongPress={handleLongPress}>
-      <Text style={styles.name}>{name}</Text>
-      <Text style={styles.macros}>
-        {calories} cal • {protein}g P • {carbs}g C • {fat}g F
-      </Text>
+      <View style={styles.content}>
+        <Text style={styles.name}>{name}</Text>
+        <Text style={styles.macros}>
+          {t("macros.mealMacros", { calories, protein, carbs, fat })}
+        </Text>
+      </View>
+      <View style={styles.calorieBadge}>
+        <Text style={styles.calorieValue}>{calories}</Text>
+        <Text style={styles.calorieUnit}>cal</Text>
+      </View>
     </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: colors.surface,
-    borderRadius: 10,
+    backgroundColor: colors.card,
+    borderRadius: 14,
     padding: 16,
     marginBottom: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: colors.cardBorder,
+  },
+  content: {
+    flex: 1,
   },
   name: {
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: "700",
     color: colors.text,
   },
   macros: {
-    fontSize: 13,
+    fontSize: 12,
     color: colors.textSecondary,
     marginTop: 4,
+  },
+  calorieBadge: {
+    alignItems: "center",
+    backgroundColor: colors.surface,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    minWidth: 56,
+  },
+  calorieValue: {
+    fontSize: 18,
+    fontWeight: "800",
+    color: colors.accent,
+  },
+  calorieUnit: {
+    fontSize: 10,
+    fontWeight: "600",
+    color: colors.textSecondary,
+    textTransform: "uppercase",
   },
 });

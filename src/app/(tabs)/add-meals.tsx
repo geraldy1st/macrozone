@@ -3,16 +3,18 @@ import { colors, globalStyles } from "@/styles/global";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
-    Alert,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 export default function AddMealScreen() {
+  const { t } = useTranslation();
   const [name, setName] = useState("");
   const [calories, setCalories] = useState("");
   const [protein, setProtein] = useState("");
@@ -21,7 +23,7 @@ export default function AddMealScreen() {
 
   const handleAddMeal = async () => {
     if (!name || !calories) {
-      Alert.alert("Error", "Please enter a meal name and calories.");
+      Alert.alert(t("addMeal.errorTitle"), t("addMeal.errorMessage"));
       return;
     }
 
@@ -39,7 +41,7 @@ export default function AddMealScreen() {
     setCarbs("");
     setFat("");
 
-    Alert.alert("Success", "Meal added successfully!");
+    Alert.alert(t("addMeal.successTitle"), t("addMeal.successMessage"));
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
     router.push("/");
@@ -47,11 +49,11 @@ export default function AddMealScreen() {
 
   return (
     <View style={globalStyles.container}>
-      <Text style={globalStyles.title}>Add Meal</Text>
+      <Text style={globalStyles.title}>{t("addMeal.title")}</Text>
 
       <TextInput
         style={styles.input}
-        placeholder="Meal name"
+        placeholder={t("addMeal.mealName")}
         placeholderTextColor={colors.textSecondary}
         value={name}
         onChangeText={setName}
@@ -59,7 +61,7 @@ export default function AddMealScreen() {
 
       <TextInput
         style={styles.input}
-        placeholder="Calories"
+        placeholder={t("addMeal.calories")}
         placeholderTextColor={colors.textSecondary}
         keyboardType="numeric"
         value={calories}
@@ -69,7 +71,7 @@ export default function AddMealScreen() {
       <View style={styles.row}>
         <TextInput
           style={[styles.input, styles.rowInput]}
-          placeholder="Protein (g)"
+          placeholder={t("addMeal.protein")}
           placeholderTextColor={colors.textSecondary}
           keyboardType="numeric"
           value={protein}
@@ -77,7 +79,7 @@ export default function AddMealScreen() {
         />
         <TextInput
           style={[styles.input, styles.rowInput]}
-          placeholder="Carbs (g)"
+          placeholder={t("addMeal.carbs")}
           placeholderTextColor={colors.textSecondary}
           keyboardType="numeric"
           value={carbs}
@@ -85,7 +87,7 @@ export default function AddMealScreen() {
         />
         <TextInput
           style={[styles.input, styles.rowInput]}
-          placeholder="Fat (g)"
+          placeholder={t("addMeal.fat")}
           placeholderTextColor={colors.textSecondary}
           keyboardType="numeric"
           value={fat}
@@ -94,7 +96,7 @@ export default function AddMealScreen() {
       </View>
 
       <TouchableOpacity style={styles.button} onPress={handleAddMeal}>
-        <Text style={styles.buttonText}>Add Meal</Text>
+        <Text style={styles.buttonText}>{t("addMeal.submit")}</Text>
       </TouchableOpacity>
     </View>
   );

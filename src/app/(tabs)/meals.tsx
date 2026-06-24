@@ -3,9 +3,11 @@ import { clearAllMeals, getMeals, Meal } from "@/storage/meals";
 import { globalStyles } from "@/styles/global";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
-import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { useTranslation } from "react-i18next";
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 export default function AllMealsScreen() {
+  const { t } = useTranslation();
   const [meals, setMeals] = useState<Meal[]>([]);
 
   const loadMeals = async () => {
@@ -27,14 +29,14 @@ export default function AllMealsScreen() {
   return (
     <ScrollView style={globalStyles.container}>
       <View style={globalStyles.header}>
-        <Text style={globalStyles.title}>All Meals</Text>
+        <Text style={globalStyles.title}>{t("allMeals.title")}</Text>
         <TouchableOpacity onPress={handleClearAll}>
-          <Text style={styles.clearButton}>Clear All</Text>
+          <Text style={styles.clearButton}>{t("allMeals.clearAll")}</Text>
         </TouchableOpacity>
       </View>
       <View style={{ marginTop: 30 }}>
         {meals.length === 0 ? (
-          <Text style={globalStyles.empty}>No meals logged yet.</Text>
+          <Text style={globalStyles.empty}>{t("allMeals.noMeals")}</Text>
         ) : (
           meals.map((meal) => (
             <MealItem
@@ -54,9 +56,9 @@ export default function AllMealsScreen() {
   );
 }
 
-const styles = {
+const styles = StyleSheet.create({
   clearButton: {
     color: "red",
     fontSize: 16,
   },
-};
+});

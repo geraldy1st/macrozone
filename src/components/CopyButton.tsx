@@ -4,12 +4,15 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
 import * as Haptics from "expo-haptics";
 import { Alert, StyleSheet, Text, TouchableOpacity } from "react-native";
+import { useTranslation } from "react-i18next";
 
 type CopyButtonProps = {
   meals: Meal[];
 };
 
 export default function CopyButton({ meals }: CopyButtonProps) {
+  const { t } = useTranslation();
+
   const handleCopy = async () => {
     const totals = meals.reduce(
       (acc, meal) => ({
@@ -21,17 +24,23 @@ export default function CopyButton({ meals }: CopyButtonProps) {
       { calories: 0, protein: 0, carbs: 0, fat: 0 },
     );
 
-    const summary = `MacroZone Daily Summary\n\nCalories: ${totals.calories}\nProtein: ${totals.protein}g\nCarbs: ${totals.carbs}g\nFat: ${totals.fat}g\n\nMeals: ${meals.length} logged today`;
+    const summary = t("macros.summary", {
+      calories: totals.calories,
+      protein: totals.protein,
+      carbs: totals.carbs,
+      fat: totals.fat,
+      count: meals.length,
+    });
 
     await Clipboard.setStringAsync(summary);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    Alert.alert("Copied!", "Macro summary copied to clipboard.");
+    Alert.alert(t("copy.title"), t("copy.message"));
   };
 
   return (
     <TouchableOpacity style={styles.button} onPress={handleCopy}>
-      <Ionicons name="copy-outline" size={18} color={colors.primary} />
-      <Text style={styles.text}>Copy Summary</Text>
+      <Ionicons name="copy-outline" size={18} color={colors.accent} />
+      <Text style={styles.text}>{t("home.copySummary")}</Text>
     </TouchableOpacity>
   );
 }
@@ -40,11 +49,11 @@ const styles = StyleSheet.create({
   button: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
-    marginTop: 16,
+    gap: 8,
   },
   text: {
-    color: colors.primary,
-    fontSize: 14,
+    color: colors.accent,
+    fontSize: 15,
+    fontWeight: "600",
   },
 });

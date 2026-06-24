@@ -1,0 +1,96 @@
+{
+  "app": {
+    "name": "MacroZone"
+  },
+  "tabs": {
+    "home": "Accueil",
+    "addMeals": "Ajouter",
+    "allMeals": "Repas",
+    "settings": "Paramètres"
+  },
+  "home": {
+    "recentMeals": "Repas récents",
+    "noMeals": "Aucun repas enregistré.",
+    "copySummary": "Copier le résumé",
+    "dailyProgress": "Progression du jour"
+  },
+  "macros": {
+    "calories": "Calories",
+    "protein": "Protéines",
+    "carbs": "Glucides",
+    "fat": "Lipides",
+    "ofGoal": "sur {{goal}} objectif",
+    "summary": "Résumé MacroZone\n\nCalories : {{calories}}\nProtéines : {{protein}}g\nGlucides : {{carbs}}g\nLipides : {{fat}}g\n\nRepas : {{count}} enregistrés aujourd'hui",
+    "mealMacros": "{{calories}} cal • {{protein}}g P • {{carbs}}g G • {{fat}}g L"
+  },
+  "addMeal": {
+    "title": "Ajouter un repas",
+    "mealName": "Nom du repas",
+    "calories": "Calories",
+    "protein": "Protéines (g)",
+    "carbs": "Glucides (g)",
+    "fat": "Lipides (g)",
+    "submit": "Ajouter le repas",
+    "errorTitle": "Erreur",
+    "errorMessage": "Veuillez saisir un nom de repas et les calories.",
+    "successTitle": "Succès",
+    "successMessage": "Repas ajouté avec succès !"
+  },
+  "allMeals": {
+    "title": "Tous les repas",
+    "clearAll": "Tout effacer",
+    "noMeals": "Aucun repas enregistré."
+  },
+  "mealItem": {
+    "deleteTitle": "Supprimer le repas",
+    "deleteMessage": "Voulez-vous vraiment supprimer « {{name}} » ?",
+    "cancel": "Annuler",
+    "delete": "Supprimer"
+  },
+  "copy": {
+    "title": "Copié !",
+    "message": "Résumé des macros copié dans le presse-papiers."
+  },
+  "reminders": {
+    "label": "Rappels de repas"
+  },
+  "notifications": {
+    "lunchReminder": "N'oubliez pas d'enregistrer votre déjeuner !",
+    "dinnerReminder": "Il est temps d'enregistrer votre dîner !"
+  },
+  "settings": {
+    "title": "Paramètres",
+    "language": "Langue",
+    "languageDescription": "Choisissez votre langue préférée",
+    "english": "Anglais",
+    "french": "Français",
+    "goals": {
+      "title": "Objectifs quotidiens",
+      "description": "Définissez vos objectifs macros pour suivre votre progression",
+      "calories": "Calories",
+      "protein": "Protéines (g)",
+      "carbs": "Glucides (g)",
+      "fat": "Lipides (g)",
+      "save": "Enregistrer",
+      "savedTitle": "Objectifs enregistrés",
+      "savedMessage": "Vos objectifs macros ont été mis à jour."
+    }
+  },
+  "quotes": [
+    "Chaque repas est une opportunité de nourrir vos objectifs.",
+    "La discipline au quotidien construit les résultats de demain.",
+    "Votre corps mérite le meilleur carburant.",
+    "Petits choix, grandes victoires.",
+    "La constance bat l'intensité.",
+    "Mangez avec intention, progressez avec confiance.",
+    "Aujourd'hui, un pas de plus vers vos objectifs.",
+    "Vos macros, votre progression.",
+    "Nourrir son corps, c'est investir en soi.",
+    "La motivation vous fait démarrer, l'habitude vous fait continuer.",
+    "Équilibre et détermination font la différence.",
+    "Chaque jour compte, chaque repas aussi.",
+    "Prenez soin de vous, un repas à la fois.",
+    "Vos efforts d'aujourd'hui forgent votre réussite de demain.",
+    "Restez focalisé, restez constant."
+  ]
+}

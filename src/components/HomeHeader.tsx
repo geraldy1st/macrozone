@@ -1,25 +1,24 @@
-import { colors, globalStyles } from "@/styles/global";
-import { StyleSheet, Text, View } from "react-native";
+import { colors } from "@/styles/global";
+import { StyleSheet, Text } from "react-native";
+import { useTranslation } from "react-i18next";
 
 export default function HomeHeader() {
-  const currentDate = new Date().toLocaleDateString("en-US", {
+  const { i18n } = useTranslation();
+  const locale = i18n.language === "fr" ? "fr-FR" : "en-US";
+  const currentDate = new Date().toLocaleDateString(locale, {
     weekday: "long",
     month: "long",
     day: "numeric",
   });
 
-  return (
-    <View style={globalStyles.header}>
-      <Text style={styles.date}>{currentDate}</Text>
-    </View>
-  );
+  return <Text style={styles.date}>{currentDate}</Text>;
 }
 
 const styles = StyleSheet.create({
   date: {
-    fontSize: 14,
+    fontSize: 13,
     color: colors.textSecondary,
-    marginTop: 4,
-    marginBottom: 30,
+    marginTop: 2,
+    textTransform: "capitalize",
   },
 });

@@ -2,12 +2,15 @@ import { Meal } from "@/storage/meals";
 import { colors } from "@/styles/global";
 import { Ionicons } from "@expo/vector-icons";
 import { Share, TouchableOpacity } from "react-native";
+import { useTranslation } from "react-i18next";
 
 type ShareButtonProps = {
   meals: Meal[];
 };
 
 export default function ShareButton({ meals }: ShareButtonProps) {
+  const { t } = useTranslation();
+
   const handleShare = async () => {
     const totals = meals.reduce(
       (acc, meal) => ({
@@ -20,13 +23,19 @@ export default function ShareButton({ meals }: ShareButtonProps) {
     );
 
     await Share.share({
-      message: `MacroZone Daily Summary\n\nCalories: ${totals.calories}\nProtein: ${totals.protein}g\nCarbs: ${totals.carbs}g\nFat: ${totals.fat}g\n\nMeals: ${meals.length} logged today`,
+      message: t("macros.summary", {
+        calories: totals.calories,
+        protein: totals.protein,
+        carbs: totals.carbs,
+        fat: totals.fat,
+        count: meals.length,
+      }),
     });
   };
 
   return (
     <TouchableOpacity onPress={handleShare}>
-      <Ionicons name="share-outline" size={24} color={colors.primary} />
+      <Ionicons name="share-outline" size={24} color={colors.accent} />
     </TouchableOpacity>
   );
 }
