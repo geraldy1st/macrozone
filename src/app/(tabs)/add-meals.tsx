@@ -185,18 +185,16 @@ export default function AddMealScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={globalStyles.container}
+      style={[globalStyles.container, styles.screen]}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
+      keyboardVerticalOffset={Platform.OS === "ios" ? insets.top : 0}
     >
-    <ScrollView
-      style={globalStyles.container}
-      contentContainerStyle={[
-        styles.content,
-        { paddingBottom: Math.max(insets.bottom, 16) + 100 },
-      ]}
-      showsVerticalScrollIndicator={false}
-      keyboardShouldPersistTaps="handled"
-    >
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
       <Text style={globalStyles.title}>{t("addMeal.title")}</Text>
 
       <TouchableOpacity style={styles.scanButton} onPress={handleScanMeal}>
@@ -283,25 +281,40 @@ export default function AddMealScreen() {
         />
       </View>
 
-      <TouchableOpacity
-        style={[styles.button, (isSaving || isAnalyzing) && styles.buttonDisabled]}
-        onPress={handleAddMeal}
-        disabled={isSaving || isAnalyzing}
-      >
-        {isSaving ? (
-          <ActivityIndicator color={colors.background} />
-        ) : (
-          <Text style={styles.buttonText}>{t("addMeal.submit")}</Text>
-        )}
-      </TouchableOpacity>
-    </ScrollView>
+      </ScrollView>
+
+      <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 12) }]}>
+        <TouchableOpacity
+          style={[styles.button, (isSaving || isAnalyzing) && styles.buttonDisabled]}
+          onPress={handleAddMeal}
+          disabled={isSaving || isAnalyzing}
+        >
+          {isSaving ? (
+            <ActivityIndicator color={colors.background} />
+          ) : (
+            <Text style={styles.buttonText}>{t("addMeal.submit")}</Text>
+          )}
+        </TouchableOpacity>
+      </View>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  content: {
-    paddingBottom: 40,
+  screen: {
+    paddingBottom: 0,
+  },
+  scroll: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 16,
+  },
+  footer: {
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: colors.cardBorder,
+    backgroundColor: colors.background,
   },
   scanButton: {
     flexDirection: "row",
@@ -403,7 +416,6 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 12,
     alignItems: "center",
-    marginTop: 24,
     minHeight: 52,
     justifyContent: "center",
   },
