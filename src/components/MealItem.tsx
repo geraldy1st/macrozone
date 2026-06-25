@@ -1,5 +1,6 @@
 import { deleteMeal } from "@/storage/meals";
 import { colors } from "@/styles/global";
+import { Image } from "expo-image";
 import * as Haptics from "expo-haptics";
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useTranslation } from "react-i18next";
@@ -11,6 +12,7 @@ type MealItemProps = {
   protein: number;
   carbs: number;
   fat: number;
+  photoUri?: string;
   onDelete: () => void;
 };
 
@@ -21,6 +23,7 @@ export default function MealItem({
   protein,
   carbs,
   fat,
+  photoUri,
   onDelete,
 }: MealItemProps) {
   const { t } = useTranslation();
@@ -46,6 +49,9 @@ export default function MealItem({
 
   return (
     <TouchableOpacity style={styles.container} onLongPress={handleLongPress}>
+      {photoUri && (
+        <Image source={{ uri: photoUri }} style={styles.thumbnail} contentFit="cover" />
+      )}
       <View style={styles.content}>
         <Text style={styles.name}>{name}</Text>
         <Text style={styles.macros}>
@@ -70,6 +76,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderWidth: 1,
     borderColor: colors.cardBorder,
+  },
+  thumbnail: {
+    width: 52,
+    height: 52,
+    borderRadius: 10,
+    marginRight: 12,
   },
   content: {
     flex: 1,

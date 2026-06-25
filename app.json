@@ -39,7 +39,14 @@
           "backgroundColor": "#1a1a2e"
         }
       ],
-      "expo-localization"
+      "expo-localization",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "MacroZone needs access to your photos to scan meals.",
+          "cameraPermission": "MacroZone needs access to your camera to scan meals."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
@@ -47,6 +54,7 @@
     },
     "extra": {
       "router": {},
+      "analyzeApiUrl": "",
       "eas": {
         "projectId": "b08f5b4a-5028-4051-baf5-bff0318dd539"
       }
