@@ -1,7 +1,7 @@
-import { Directory, File, Paths } from "expo-file-system";
+import { File, Paths } from "expo-file-system";
 import * as ImageManipulator from "expo-image-manipulator";
 
-const MEAL_PHOTOS_DIR = new Directory(Paths.document, "meal-photos");
+const MEAL_PHOTOS_DIR = new File(Paths.document, "meal-photos");
 
 async function ensurePhotosDirectory() {
   if (!MEAL_PHOTOS_DIR.exists) {
@@ -9,9 +9,21 @@ async function ensurePhotosDirectory() {
   }
 }
 
+async function normalizeImageUri(uri: string): Promise<string> {
+  if (uri.startsWith("file://")) {
+    return uri;
+  }
+
+  const cacheFile = new File(Paths.cache, `meal-upload-${Date.now()}.jpg`);
+  const source = new File(uri);
+  source.copy(cacheFile);
+  return cacheFile.uri;
+}
+
 export async function prepareImageForUpload(uri: string) {
+  const normalizedUri = await normalizeImageUri(uri);
   const result = await ImageManipulator.manipulateAsync(
-    uri,
+    normalizedUri,
     [{ resize: { width: 1024 } }],
     {
       compress: 0.7,
@@ -20,7 +32,7 @@ export async function prepareImageForUpload(uri: string) {
     },
   );
 
-  if (!result.base64) {
+  if (!result.base64 || result.base64.length < 100) {
     throw new Error("Failed to encode image");
   }
 
@@ -35,8 +47,9 @@ export async function saveMealPhoto(
   mealId: string,
 ): Promise<string> {
   await ensurePhotosDirectory();
+  const normalizedUri = await normalizeImageUri(tempUri);
   const destination = new File(MEAL_PHOTOS_DIR, `${mealId}.jpg`);
-  const source = new File(tempUri);
+  const source = new File(normalizedUri);
   source.copy(destination);
   return destination.uri;
 }

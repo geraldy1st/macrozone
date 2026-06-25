@@ -13,6 +13,7 @@ export type AnalyzeMealErrorCode =
   | "UNAUTHORIZED"
   | "IMAGE_TOO_LARGE"
   | "RATE_LIMITED"
+  | "AI_QUOTA_EXCEEDED"
   | "ANALYSIS_FAILED";
 
 export class AnalyzeMealError extends Error {
@@ -53,6 +54,14 @@ export async function analyzeMealPhoto(
   }
 
   if (response.status === 429) {
+    const body = (await response.json().catch(() => null)) as
+      | { error?: string }
+      | null;
+
+    if (body?.error === "AI quota exceeded") {
+      throw new AnalyzeMealError("AI_QUOTA_EXCEEDED");
+    }
+
     throw new AnalyzeMealError("RATE_LIMITED");
   }
 

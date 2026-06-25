@@ -19,7 +19,7 @@ type MealAnalysis = {
   fat: number;
 };
 
-const GEMINI_MODEL = "gemini-2.0-flash";
+const GEMINI_MODEL = "gemini-2.5-flash";
 
 function buildPrompt(language: "en" | "fr") {
   if (language === "fr") {
@@ -124,7 +124,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     );
 
     if (!response.ok) {
-      console.error("Gemini API error:", await response.text());
+      const errorText = await response.text();
+      console.error("Gemini API error:", errorText);
+
+      if (response.status === 429) {
+        return res.status(429).json({ error: "AI quota exceeded" });
+      }
+
       return res.status(502).json({ error: "AI analysis failed" });
     }
 

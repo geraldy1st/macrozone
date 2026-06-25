@@ -54,7 +54,9 @@
     "imageTooLargeTitle": "Image trop grande",
     "imageTooLargeMessage": "Choisissez une photo plus petite (max 2 Mo).",
     "rateLimitedTitle": "Limite quotidienne atteinte",
-    "rateLimitedMessage": "Vous avez atteint la limite de scans du jour. Réessayez demain ou saisissez les macros manuellement."
+    "rateLimitedMessage": "Vous avez atteint la limite de scans du jour. Réessayez demain ou saisissez les macros manuellement.",
+    "aiQuotaTitle": "IA temporairement indisponible",
+    "aiQuotaMessage": "Le quota du service IA est atteint. Réessayez dans quelques minutes ou saisissez les macros manuellement."
   },
   "allMeals": {
     "title": "Tous les repas",

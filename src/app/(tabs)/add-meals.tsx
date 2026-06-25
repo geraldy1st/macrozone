@@ -71,6 +71,7 @@ export default function AddMealScreen() {
           UNAUTHORIZED: ["unauthorizedTitle", "unauthorizedMessage"],
           IMAGE_TOO_LARGE: ["imageTooLargeTitle", "imageTooLargeMessage"],
           RATE_LIMITED: ["rateLimitedTitle", "rateLimitedMessage"],
+          AI_QUOTA_EXCEEDED: ["aiQuotaTitle", "aiQuotaMessage"],
           API_NOT_CONFIGURED: ["apiNotConfiguredTitle", "apiNotConfiguredMessage"],
           ANALYSIS_FAILED: ["analysisErrorTitle", "analysisErrorMessage"],
         } as const;
