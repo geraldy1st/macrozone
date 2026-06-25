@@ -35,6 +35,8 @@
     "errorMessage": "Veuillez saisir un nom de repas et les calories.",
     "successTitle": "Succès",
     "successMessage": "Repas ajouté avec succès !",
+    "saveErrorTitle": "Enregistrement impossible",
+    "saveErrorMessage": "Le repas n'a pas pu être enregistré. Réessayez ou supprimez la photo.",
     "scanMeal": "Scanner le repas",
     "takePhoto": "Prendre une photo",
     "choosePhoto": "Choisir dans la galerie",

@@ -50,7 +50,21 @@ export async function saveMealPhoto(
   const normalizedUri = await normalizeImageUri(tempUri);
   const destination = new File(MEAL_PHOTOS_DIR, `${mealId}.jpg`);
   const source = new File(normalizedUri);
+
+  if (!source.exists) {
+    throw new Error("Source photo not found");
+  }
+
+  if (destination.exists) {
+    destination.delete();
+  }
+
   source.copy(destination);
+
+  if (!destination.exists) {
+    throw new Error("Failed to save meal photo");
+  }
+
   return destination.uri;
 }
 

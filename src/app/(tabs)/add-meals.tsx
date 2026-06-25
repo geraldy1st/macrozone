@@ -13,6 +13,8 @@ import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -20,9 +22,11 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function AddMealScreen() {
   const { t, i18n } = useTranslation();
+  const insets = useSafeAreaInsets();
   const [name, setName] = useState("");
   const [calories, setCalories] = useState("");
   const [protein, setProtein] = useState("");
@@ -30,6 +34,7 @@ export default function AddMealScreen() {
   const [fat, setFat] = useState("");
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [hasAiResult, setHasAiResult] = useState(false);
 
   const resetForm = () => {
@@ -54,7 +59,8 @@ export default function AddMealScreen() {
     setIsAnalyzing(true);
 
     try {
-      const { base64 } = await prepareImageForUpload(uri);
+      const { base64, uri: preparedUri } = await prepareImageForUpload(uri);
+      setPhotoUri(preparedUri);
       const language = i18n.language === "fr" ? "fr" : "en";
       const analysis = await analyzeMealPhoto(base64, language);
 
@@ -93,7 +99,6 @@ export default function AddMealScreen() {
   };
 
   const handlePhotoSelected = async (uri: string) => {
-    setPhotoUri(uri);
     setHasAiResult(false);
     await runAnalysis(uri);
   };
@@ -148,33 +153,49 @@ export default function AddMealScreen() {
   };
 
   const handleAddMeal = async () => {
-    if (!name || !calories) {
+    if (!name.trim() || calories.trim() === "") {
       Alert.alert(t("addMeal.errorTitle"), t("addMeal.errorMessage"));
       return;
     }
 
-    await addMeal(
-      {
-        name,
-        calories: Number(calories),
-        protein: Number(protein) || 0,
-        carbs: Number(carbs) || 0,
-        fat: Number(fat) || 0,
-      },
-      photoUri ?? undefined,
-    );
+    setIsSaving(true);
 
-    resetForm();
-    Alert.alert(t("addMeal.successTitle"), t("addMeal.successMessage"));
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    router.push("/");
+    try {
+      await addMeal(
+        {
+          name: name.trim(),
+          calories: Number(calories),
+          protein: Number(protein) || 0,
+          carbs: Number(carbs) || 0,
+          fat: Number(fat) || 0,
+        },
+        photoUri ?? undefined,
+      );
+
+      resetForm();
+      Alert.alert(t("addMeal.successTitle"), t("addMeal.successMessage"));
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      router.push("/");
+    } catch {
+      Alert.alert(t("addMeal.saveErrorTitle"), t("addMeal.saveErrorMessage"));
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
+    <KeyboardAvoidingView
+      style={globalStyles.container}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    >
     <ScrollView
       style={globalStyles.container}
-      contentContainerStyle={styles.content}
+      contentContainerStyle={[
+        styles.content,
+        { paddingBottom: Math.max(insets.bottom, 16) + 100 },
+      ]}
       showsVerticalScrollIndicator={false}
+      keyboardShouldPersistTaps="handled"
     >
       <Text style={globalStyles.title}>{t("addMeal.title")}</Text>
 
@@ -262,10 +283,19 @@ export default function AddMealScreen() {
         />
       </View>
 
-      <TouchableOpacity style={styles.button} onPress={handleAddMeal}>
-        <Text style={styles.buttonText}>{t("addMeal.submit")}</Text>
+      <TouchableOpacity
+        style={[styles.button, (isSaving || isAnalyzing) && styles.buttonDisabled]}
+        onPress={handleAddMeal}
+        disabled={isSaving || isAnalyzing}
+      >
+        {isSaving ? (
+          <ActivityIndicator color={colors.background} />
+        ) : (
+          <Text style={styles.buttonText}>{t("addMeal.submit")}</Text>
+        )}
       </TouchableOpacity>
     </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -374,6 +404,11 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: "center",
     marginTop: 24,
+    minHeight: 52,
+    justifyContent: "center",
+  },
+  buttonDisabled: {
+    opacity: 0.7,
   },
   buttonText: {
     color: colors.background,

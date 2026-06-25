@@ -35,6 +35,8 @@
     "errorMessage": "Please enter a meal name and calories.",
     "successTitle": "Success",
     "successMessage": "Meal added successfully!",
+    "saveErrorTitle": "Could not save",
+    "saveErrorMessage": "The meal could not be saved. Try again or remove the photo.",
     "scanMeal": "Scan Meal",
     "takePhoto": "Take Photo",
     "choosePhoto": "Choose from Gallery",
