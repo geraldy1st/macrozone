@@ -2,7 +2,7 @@ appId: com.geraldy.macrozone
 ---
 - launchApp
 - extendedWaitUntil:
-    visible: "nutriFlow|MacroZone|Recent Meals|Repas récents"
+    visible: "nutriFlow|Recent Meals|Repas récents"
     timeout: 20000
 - tapOn:
     id: "settings-tab"
@@ -10,11 +10,11 @@ appId: com.geraldy.macrozone
     id: "language-fr"
 - tapOn:
     id: "home-tab"
-- assertVisible: "Repas récents|Progression du jour"
+- assertVisible: "Accueil"
 - tapOn:
     id: "settings-tab"
 - tapOn:
     id: "language-en"
 - tapOn:
     id: "home-tab"
-- assertVisible: "Recent Meals|Daily Progress"
+- assertVisible: "Home"
