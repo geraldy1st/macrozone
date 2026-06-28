@@ -1,0 +1,18 @@
+appId: com.geraldy.macrozone
+---
+- launchApp
+- tapOn:
+    id: "add-meal-tab"
+- tapOn:
+    id: "meal-name-input"
+- inputText: "Repas test"
+- tapOn:
+    id: "meal-calories-input"
+- inputText: "300"
+- tapOn:
+    id: "add-meal-submit"
+- tapOn:
+    id: "all-meals-tab"
+- longPressOn: "Repas test"
+- tapOn: "Supprimer|Delete"
+- assertNotVisible: "Repas test"

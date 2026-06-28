@@ -1,0 +1,17 @@
+appId: com.geraldy.macrozone
+---
+- launchApp
+- tapOn:
+    id: "settings-tab"
+- tapOn:
+    id: "language-en"
+- tapOn:
+    id: "home-tab"
+- assertVisible: "Recent Meals|Daily Progress"
+- tapOn:
+    id: "settings-tab"
+- tapOn:
+    id: "language-fr"
+- tapOn:
+    id: "home-tab"
+- assertVisible: "Repas récents|Progression du jour"

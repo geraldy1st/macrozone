@@ -197,7 +197,11 @@ export default function AddMealScreen() {
       >
       <Text style={globalStyles.title}>{t("addMeal.title")}</Text>
 
-      <TouchableOpacity style={styles.scanButton} onPress={handleScanMeal}>
+      <TouchableOpacity
+        style={styles.scanButton}
+        onPress={handleScanMeal}
+        testID="scan-meal-btn"
+      >
         <Ionicons name="camera" size={22} color={colors.text} />
         <Text style={styles.scanButtonText}>{t("addMeal.scanMeal")}</Text>
       </TouchableOpacity>
@@ -243,6 +247,7 @@ export default function AddMealScreen() {
         placeholderTextColor={colors.textSecondary}
         value={name}
         onChangeText={setName}
+        testID="meal-name-input"
       />
 
       <TextInput
@@ -252,6 +257,7 @@ export default function AddMealScreen() {
         keyboardType="numeric"
         value={calories}
         onChangeText={setCalories}
+        testID="meal-calories-input"
       />
 
       <View style={styles.row}>
@@ -288,6 +294,7 @@ export default function AddMealScreen() {
           style={[styles.button, (isSaving || isAnalyzing) && styles.buttonDisabled]}
           onPress={handleAddMeal}
           disabled={isSaving || isAnalyzing}
+          testID="add-meal-submit"
         >
           {isSaving ? (
             <ActivityIndicator color={colors.background} />

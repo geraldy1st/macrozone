@@ -1,0 +1,17 @@
+appId: com.geraldy.macrozone
+---
+- launchApp
+- tapOn:
+    id: "add-meal-tab"
+- tapOn:
+    id: "meal-name-input"
+- inputText: "Salade César"
+- tapOn:
+    id: "meal-calories-input"
+- inputText: "450"
+- tapOn:
+    id: "add-meal-submit"
+- assertVisible: "Repas ajouté avec succès|Meal added successfully"
+- tapOn:
+    id: "home-tab"
+- assertVisible: "Salade César"

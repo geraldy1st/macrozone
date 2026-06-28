@@ -1,3 +1,4 @@
+import { parseAnalysis } from "./lib/parseAnalysis";
 import {
   isRateLimited,
   isValidApiKey,
@@ -9,14 +10,6 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 type AnalyzeRequest = {
   image: string;
   language?: "en" | "fr";
-};
-
-type MealAnalysis = {
-  name: string;
-  calories: number;
-  protein: number;
-  carbs: number;
-  fat: number;
 };
 
 const GEMINI_MODEL = "gemini-2.5-flash";
@@ -33,23 +26,6 @@ Utilise des nombres entiers pour toutes les valeurs.`;
 Respond ONLY with valid JSON using this exact structure:
 {"name":"meal name in English","calories":0,"protein":0,"carbs":0,"fat":0}
 Use whole numbers for all values.`;
-}
-
-function parseAnalysis(text: string): MealAnalysis {
-  const cleaned = text.replace(/```json|```/g, "").trim();
-  const parsed = JSON.parse(cleaned) as Partial<MealAnalysis>;
-
-  if (!parsed.name || typeof parsed.name !== "string") {
-    throw new Error("Invalid meal name in AI response");
-  }
-
-  return {
-    name: parsed.name.trim().slice(0, 120),
-    calories: Math.max(0, Math.min(10000, Math.round(Number(parsed.calories) || 0))),
-    protein: Math.max(0, Math.min(1000, Math.round(Number(parsed.protein) || 0))),
-    carbs: Math.max(0, Math.min(1000, Math.round(Number(parsed.carbs) || 0))),
-    fat: Math.max(0, Math.min(1000, Math.round(Number(parsed.fat) || 0))),
-  };
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {

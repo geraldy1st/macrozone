@@ -21,6 +21,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
+          tabBarButtonTestID: "home-tab",
           title: t("tabs.home"),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="home" size={size} color={color} />
@@ -30,6 +31,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="add-meals"
         options={{
+          tabBarButtonTestID: "add-meal-tab",
           title: t("tabs.addMeals"),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="add-circle" size={size} color={color} />
@@ -39,6 +41,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="meals"
         options={{
+          tabBarButtonTestID: "all-meals-tab",
           title: t("tabs.allMeals"),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="list" size={size} color={color} />
@@ -48,6 +51,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="settings"
         options={{
+          tabBarButtonTestID: "settings-tab",
           title: t("tabs.settings"),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="settings-outline" size={size} color={color} />

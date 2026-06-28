@@ -107,6 +107,7 @@ export default function SettingsScreen() {
               key={language}
               style={[styles.option, isSelected && styles.optionSelected]}
               onPress={() => handleLanguageChange(language)}
+              testID={`language-${language}`}
             >
               <Text
                 style={[styles.optionText, isSelected && styles.optionTextSelected]}
