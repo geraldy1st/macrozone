@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "macrozone",
+    "name": "nutriFlow",
     "slug": "macrozone",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -43,8 +43,8 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "MacroZone needs access to your photos to scan meals.",
-          "cameraPermission": "MacroZone needs access to your camera to scan meals."
+          "photosPermission": "nutriFlow needs access to your photos to scan meals.",
+          "cameraPermission": "nutriFlow needs access to your camera to scan meals."
         }
       ]
     ],

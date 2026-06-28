@@ -1,6 +1,6 @@
 {
   "app": {
-    "name": "MacroZone"
+    "name": "nutriFlow"
   },
   "tabs": {
     "home": "Accueil",
@@ -20,7 +20,7 @@
     "carbs": "Glucides",
     "fat": "Lipides",
     "ofGoal": "sur {{goal}} objectif",
-    "summary": "Résumé MacroZone\n\nCalories : {{calories}}\nProtéines : {{protein}}g\nGlucides : {{carbs}}g\nLipides : {{fat}}g\n\nRepas : {{count}} enregistrés aujourd'hui",
+    "summary": "Résumé nutriFlow\n\nCalories : {{calories}}\nProtéines : {{protein}}g\nGlucides : {{carbs}}g\nLipides : {{fat}}g\n\nRepas : {{count}} enregistrés aujourd'hui",
     "mealMacros": "{{calories}} cal • {{protein}}g P • {{carbs}}g G • {{fat}}g L"
   },
   "addMeal": {

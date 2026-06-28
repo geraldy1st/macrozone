@@ -1,6 +1,6 @@
 {
   "app": {
-    "name": "MacroZone"
+    "name": "nutriFlow"
   },
   "tabs": {
     "home": "Home",
@@ -20,7 +20,7 @@
     "carbs": "Carbs",
     "fat": "Fat",
     "ofGoal": "of {{goal}} goal",
-    "summary": "MacroZone Daily Summary\n\nCalories: {{calories}}\nProtein: {{protein}}g\nCarbs: {{carbs}}g\nFat: {{fat}}g\n\nMeals: {{count}} logged today",
+    "summary": "nutriFlow Daily Summary\n\nCalories: {{calories}}\nProtein: {{protein}}g\nCarbs: {{carbs}}g\nFat: {{fat}}g\n\nMeals: {{count}} logged today",
     "mealMacros": "{{calories}} cal • {{protein}}g P • {{carbs}}g C • {{fat}}g F"
   },
   "addMeal": {
