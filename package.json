@@ -12,7 +12,7 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:api": "jest __tests__/api",
-    "test:e2e": "maestro test maestro/flows"
+    "test:e2e": "bash scripts/run-maestro.sh maestro/flows"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "2.2.0",

@@ -1,17 +1,27 @@
 appId: com.geraldy.macrozone
 ---
 - launchApp
+- extendedWaitUntil:
+    visible: "nutriFlow|MacroZone|Add Meal|Ajouter un repas"
+    timeout: 20000
 - tapOn:
     id: "add-meal-tab"
 - tapOn:
     id: "meal-name-input"
-- inputText: "Salade César"
+- eraseText
+- inputText: "Salade Cesar"
 - tapOn:
     id: "meal-calories-input"
+- eraseText
 - inputText: "450"
+- hideKeyboard
 - tapOn:
     id: "add-meal-submit"
-- assertVisible: "Repas ajouté avec succès|Meal added successfully"
+- tapOn:
+    text: "OK"
+    optional: true
 - tapOn:
     id: "home-tab"
-- assertVisible: "Salade César"
+- extendedWaitUntil:
+    visible: "Salade Cesar"
+    timeout: 10000

@@ -1,18 +1,27 @@
 appId: com.geraldy.macrozone
 ---
 - launchApp
+- extendedWaitUntil:
+    visible: "nutriFlow|MacroZone|Recent Meals|Repas récents"
+    timeout: 20000
 - tapOn:
     id: "add-meal-tab"
 - tapOn:
     id: "meal-name-input"
+- eraseText
 - inputText: "Repas test"
 - tapOn:
     id: "meal-calories-input"
+- eraseText
 - inputText: "300"
+- hideKeyboard
 - tapOn:
     id: "add-meal-submit"
 - tapOn:
+    text: "OK"
+    optional: true
+- tapOn:
     id: "all-meals-tab"
 - longPressOn: "Repas test"
-- tapOn: "Supprimer|Delete"
+- tapOn: "Delete|Supprimer"
 - assertNotVisible: "Repas test"
