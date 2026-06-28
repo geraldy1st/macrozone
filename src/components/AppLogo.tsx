@@ -17,6 +17,6 @@ export default function AppLogo({ size = 36 }: AppLogoProps) {
 
 const styles = StyleSheet.create({
   logo: {
-    borderRadius: 999,
+    borderRadius: 0,
   },
 });

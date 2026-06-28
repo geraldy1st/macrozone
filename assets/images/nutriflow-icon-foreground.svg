@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" fill="none">
+  <defs>
+    <linearGradient id="nf" x1="300" y1="280" x2="720" y2="720" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#4fc3f7"/>
+      <stop offset="55%" stop-color="#4ecdc4"/>
+      <stop offset="100%" stop-color="#6bcb77"/>
+    </linearGradient>
+    <linearGradient id="flow" x1="180" y1="760" x2="860" y2="560" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#ff6b35" stop-opacity="0"/>
+      <stop offset="45%" stop-color="#ff6b35" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#ffd93d" stop-opacity="0.4"/>
+    </linearGradient>
+  </defs>
+
+  <path
+    d="M170 700 C320 610, 420 760, 560 690 C700 620, 760 540, 860 500"
+    stroke="url(#flow)"
+    stroke-width="28"
+    stroke-linecap="round"
+    fill="none"
+  />
+
+  <text
+    x="512"
+    y="590"
+    text-anchor="middle"
+    font-family="Arial, Helvetica, sans-serif"
+    font-size="360"
+    font-weight="800"
+    letter-spacing="-18"
+    fill="url(#nf)"
+  >NF</text>
+</svg>

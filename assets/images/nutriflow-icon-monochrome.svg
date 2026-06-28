@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" fill="none">
+  <path
+    d="M170 700 C320 610, 420 760, 560 690 C700 620, 760 540, 860 500"
+    stroke="#ffffff"
+    stroke-width="28"
+    stroke-linecap="round"
+    fill="none"
+  />
+
+  <text
+    x="512"
+    y="590"
+    text-anchor="middle"
+    font-family="Arial, Helvetica, sans-serif"
+    font-size="360"
+    font-weight="800"
+    letter-spacing="-18"
+    fill="#ffffff"
+  >NF</text>
+</svg>
