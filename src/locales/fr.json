@@ -103,9 +103,27 @@
     "signUpSuccessTitle": "Compte créé",
     "signUpSuccessMessage": "Vérifiez votre boîte mail si la confirmation est requise, puis connectez-vous.",
     "oauthErrorMessage": "La connexion sociale a échoué. Réessayez.",
+    "oauthSessionErrorMessage": "La connexion Google n'a pas pu être finalisée. Vérifiez l'URL de redirection dans Supabase, puis réessayez.",
+    "callbackSuccessMessage": "Votre compte est confirmé. Bienvenue !",
+    "callbackErrorMessage": "Le lien de confirmation est invalide ou a expiré.",
     "signOutErrorMessage": "La déconnexion a échoué.",
     "notConfiguredTitle": "Authentification non configurée",
     "notConfiguredMessage": "Ajoutez EXPO_PUBLIC_SUPABASE_URL et EXPO_PUBLIC_SUPABASE_ANON_KEY pour activer la connexion."
+  },
+  "verifyEmail": {
+    "title": "Confirmez votre e-mail",
+    "subtitle": "Nous avons envoyé un lien de confirmation dans votre boîte mail. Ouvrez-le pour activer votre compte.",
+    "stepInbox": "Ouvrez votre boîte mail et cherchez l'e-mail de confirmation nutriFlow.",
+    "stepSpam": "Si vous ne le voyez pas, vérifiez vos spams ou l'onglet promotions.",
+    "stepConfirm": "Appuyez sur le lien de confirmation, puis revenez ici pour vous connecter.",
+    "oauthNote": "La connexion Google ne nécessite pas de confirmation par e-mail. Cette étape concerne uniquement les comptes créés avec e-mail et mot de passe.",
+    "openMail": "Ouvrir l'application mail",
+    "openMailUnavailable": "Aucune application mail trouvée sur cet appareil.",
+    "resend": "Renvoyer l'e-mail de confirmation",
+    "resendSuccess": "E-mail de confirmation renvoyé.",
+    "resendError": "Impossible de renvoyer l'e-mail de confirmation.",
+    "missingEmail": "Adresse e-mail manquante. Revenez en arrière et recréez votre compte.",
+    "goToSignIn": "J'ai confirmé mon e-mail — me connecter"
   },
   "allMeals": {
     "title": "Tous les repas",

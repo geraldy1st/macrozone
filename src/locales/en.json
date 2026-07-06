@@ -103,9 +103,27 @@
     "signUpSuccessTitle": "Account created",
     "signUpSuccessMessage": "Check your inbox if confirmation is required, then sign in.",
     "oauthErrorMessage": "Social sign-in failed. Please try again.",
+    "oauthSessionErrorMessage": "Google sign-in could not be completed. Check the redirect URL in Supabase, then try again.",
+    "callbackSuccessMessage": "Your account is confirmed. Welcome!",
+    "callbackErrorMessage": "The confirmation link is invalid or has expired.",
     "signOutErrorMessage": "Sign out failed.",
     "notConfiguredTitle": "Authentication not configured",
     "notConfiguredMessage": "Add EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY to enable sign-in."
+  },
+  "verifyEmail": {
+    "title": "Confirm your email",
+    "subtitle": "We sent a confirmation link to your inbox. Open it to activate your account.",
+    "stepInbox": "Open your inbox and look for the nutriFlow confirmation email.",
+    "stepSpam": "If you do not see it, check your spam or promotions folder.",
+    "stepConfirm": "Tap the confirmation link, then return here and sign in.",
+    "oauthNote": "Google sign-in does not require email confirmation. This step only applies to email and password accounts.",
+    "openMail": "Open mail app",
+    "openMailUnavailable": "No mail app found on this device.",
+    "resend": "Resend confirmation email",
+    "resendSuccess": "Confirmation email sent again.",
+    "resendError": "Unable to resend the confirmation email.",
+    "missingEmail": "Email address missing. Go back and create your account again.",
+    "goToSignIn": "I confirmed my email — sign in"
   },
   "allMeals": {
     "title": "All Meals",

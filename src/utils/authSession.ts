@@ -1,7 +1,27 @@
 import { supabase } from "@/lib/supabase";
+import type { Session } from "@supabase/supabase-js";
 import * as QueryParams from "expo-auth-session/build/QueryParams";
 
-export async function createSessionFromUrl(url: string) {
+type EmailOtpType =
+  | "signup"
+  | "email"
+  | "recovery"
+  | "invite"
+  | "email_change"
+  | "magiclink";
+
+function isEmailOtpType(value: string): value is EmailOtpType {
+  return [
+    "signup",
+    "email",
+    "recovery",
+    "invite",
+    "email_change",
+    "magiclink",
+  ].includes(value);
+}
+
+export async function createSessionFromUrl(url: string): Promise<Session | null> {
   if (!supabase) {
     throw new Error("Supabase is not configured");
   }
@@ -12,6 +32,31 @@ export async function createSessionFromUrl(url: string) {
     throw new Error(errorCode);
   }
 
+  if (params.code) {
+    const { data, error } = await supabase.auth.exchangeCodeForSession(
+      params.code,
+    );
+
+    if (error) {
+      throw error;
+    }
+
+    return data.session;
+  }
+
+  if (params.token_hash && params.type && isEmailOtpType(params.type)) {
+    const { data, error } = await supabase.auth.verifyOtp({
+      token_hash: params.token_hash,
+      type: params.type,
+    });
+
+    if (error) {
+      throw error;
+    }
+
+    return data.session;
+  }
+
   const accessToken = params.access_token;
   const refreshToken = params.refresh_token;
 
@@ -19,14 +64,14 @@ export async function createSessionFromUrl(url: string) {
     return null;
   }
 
-  const { error } = await supabase.auth.setSession({
+  const { data, error } = await supabase.auth.setSession({
     access_token: accessToken,
-    refresh_token: refreshToken,
+    refresh_token: refreshToken ?? "",
   });
 
   if (error) {
     throw error;
   }
 
-  return supabase.auth.getSession();
+  return data.session;
 }

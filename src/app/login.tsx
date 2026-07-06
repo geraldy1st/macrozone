@@ -1,8 +1,9 @@
 import AppLogo from "@/components/AppLogo";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
-import { useToast } from "@/contexts/ToastContext";
+
 import { setAuthenticatedOnboarding } from "@/storage/onboarding";
+import { getAuthErrorCode } from "@/utils/authErrors";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
@@ -23,7 +24,6 @@ import {
 export default function LoginScreen() {
   const { t } = useTranslation();
   const { colors } = useTheme();
-  const { showToast } = useToast();
   const { mode } = useLocalSearchParams<{ mode?: string }>();
   const { isConfigured, signInWithEmail, signUpWithEmail, signInWithOAuth } =
     useAuth();
@@ -43,8 +43,17 @@ export default function LoginScreen() {
     router.replace("/(tabs)");
   };
 
+  const goToVerifyEmail = (targetEmail: string) => {
+    router.replace({
+      pathname: "/verify-email",
+      params: { email: targetEmail },
+    });
+  };
+
   const handleEmailAuth = async () => {
-    if (!email.trim() || !password.trim()) {
+    const trimmedEmail = email.trim();
+
+    if (!trimmedEmail || !password.trim()) {
       Alert.alert(t("auth.errorTitle"), t("auth.missingCredentials"));
       return;
     }
@@ -53,14 +62,25 @@ export default function LoginScreen() {
 
     try {
       if (isSignUp) {
-        await signUpWithEmail(email.trim(), password);
-        showToast(t("auth.signUpSuccessMessage"), "success");
+        const result = await signUpWithEmail(trimmedEmail, password);
+
+        if (result.needsEmailConfirmation) {
+          goToVerifyEmail(trimmedEmail);
+          return;
+        }
       } else {
-        await signInWithEmail(email.trim(), password);
+        await signInWithEmail(trimmedEmail, password);
       }
 
       await completeAuth();
-    } catch {
+    } catch (error) {
+      const errorCode = getAuthErrorCode(error);
+
+      if (errorCode === "EMAIL_NOT_CONFIRMED") {
+        goToVerifyEmail(trimmedEmail);
+        return;
+      }
+
       Alert.alert(
         t("auth.errorTitle"),
         isSignUp ? t("auth.signUpErrorMessage") : t("auth.signInErrorMessage"),
@@ -76,8 +96,19 @@ export default function LoginScreen() {
     try {
       await signInWithOAuth(provider);
       await completeAuth();
-    } catch {
-      Alert.alert(t("auth.errorTitle"), t("auth.oauthErrorMessage"));
+    } catch (error) {
+      const errorCode = getAuthErrorCode(error);
+
+      if (errorCode === "OAUTH_CANCELLED") {
+        return;
+      }
+
+      Alert.alert(
+        t("auth.errorTitle"),
+        errorCode === "OAUTH_SESSION_MISSING"
+          ? t("auth.oauthSessionErrorMessage")
+          : t("auth.oauthErrorMessage"),
+      );
     } finally {
       setOauthProvider(null);
     }

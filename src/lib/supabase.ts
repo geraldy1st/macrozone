@@ -49,6 +49,7 @@ export const supabase = isSupabaseConfigured
         autoRefreshToken: true,
         persistSession: true,
         detectSessionInUrl: Platform.OS === "web",
+        flowType: "pkce",
       },
     })
   : null;

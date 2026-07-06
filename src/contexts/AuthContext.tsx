@@ -1,8 +1,8 @@
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 import { setStorageScope } from "@/storage/scopedKey";
+import { getAuthRedirectUri } from "@/utils/authRedirect";
 import { createSessionFromUrl } from "@/utils/authSession";
 import type { Session, User } from "@supabase/supabase-js";
-import { makeRedirectUri } from "expo-auth-session";
 import * as WebBrowser from "expo-web-browser";
 import {
   createContext,
@@ -18,14 +18,20 @@ WebBrowser.maybeCompleteAuthSession();
 
 type OAuthProvider = "google" | "facebook";
 
+export type SignUpResult = {
+  email: string;
+  needsEmailConfirmation: boolean;
+};
+
 type AuthContextValue = {
   user: User | null;
   session: Session | null;
   isLoading: boolean;
   isConfigured: boolean;
   signInWithEmail: (email: string, password: string) => Promise<void>;
-  signUpWithEmail: (email: string, password: string) => Promise<void>;
+  signUpWithEmail: (email: string, password: string) => Promise<SignUpResult>;
   signInWithOAuth: (provider: OAuthProvider) => Promise<void>;
+  resendConfirmationEmail: (email: string) => Promise<void>;
   signOut: () => Promise<void>;
 };
 
@@ -82,7 +88,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error("AUTH_NOT_CONFIGURED");
     }
 
-    const { error } = await supabase.auth.signUp({ email, password });
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: getAuthRedirectUri(),
+      },
+    });
+
+    if (error) {
+      throw error;
+    }
+
+    return {
+      email,
+      needsEmailConfirmation: !data.session && Boolean(data.user),
+    };
+  }, []);
+
+  const resendConfirmationEmail = useCallback(async (email: string) => {
+    if (!supabase) {
+      throw new Error("AUTH_NOT_CONFIGURED");
+    }
+
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email,
+      options: {
+        emailRedirectTo: getAuthRedirectUri(),
+      },
+    });
+
     if (error) {
       throw error;
     }
@@ -93,10 +129,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error("AUTH_NOT_CONFIGURED");
     }
 
-    const redirectTo = makeRedirectUri({
-      scheme: "macrozone",
-      path: "auth/callback",
-    });
+    const redirectTo = getAuthRedirectUri();
 
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider,
@@ -120,7 +153,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error("OAUTH_CANCELLED");
     }
 
-    await createSessionFromUrl(result.url);
+    const nextSession = await createSessionFromUrl(result.url);
+
+    if (!nextSession) {
+      throw new Error("OAUTH_SESSION_MISSING");
+    }
   }, []);
 
   const signOut = useCallback(async () => {
@@ -143,6 +180,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signInWithEmail,
       signUpWithEmail,
       signInWithOAuth,
+      resendConfirmationEmail,
       signOut,
     }),
     [
@@ -152,6 +190,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signInWithEmail,
       signUpWithEmail,
       signInWithOAuth,
+      resendConfirmationEmail,
       signOut,
     ],
   );
