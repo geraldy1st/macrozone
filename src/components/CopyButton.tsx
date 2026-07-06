@@ -1,6 +1,8 @@
 import { useTheme } from "@/contexts/ThemeContext";
 import { useToast } from "@/contexts/ToastContext";
+import { useThemedStyles } from "@/hooks/useThemedStyles";
 import { Meal } from "@/storage/meals";
+import type { ThemeColors } from "@/styles/themes";
 import { Ionicons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
 import * as Haptics from "expo-haptics";
@@ -15,6 +17,7 @@ export default function CopyButton({ meals }: CopyButtonProps) {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const { showToast } = useToast();
+  const styles = useThemedStyles(createStyles);
 
   const handleCopy = async () => {
     const totals = meals.reduce(
@@ -48,15 +51,17 @@ export default function CopyButton({ meals }: CopyButtonProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  button: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  text: {
-    color: colors.accent,
-    fontSize: 15,
-    fontWeight: "600",
-  },
-});
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    button: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+    },
+    text: {
+      color: colors.accent,
+      fontSize: 15,
+      fontWeight: "600",
+    },
+  });
+}

@@ -1,12 +1,9 @@
-import {
-  getStoredTheme,
-  setStoredTheme,
-  type ThemeMode,
-} from "@/storage/settings";
+import { getStoredTheme, setStoredTheme } from "@/storage/settings";
 import {
   darkTheme,
   lightTheme,
   type ThemeColors,
+  type ThemeMode,
 } from "@/styles/themes";
 import {
   createContext,
