@@ -1,4 +1,5 @@
-import { colors } from "@/styles/global";
+import { useThemedStyles } from "@/hooks/useThemedStyles";
+import type { ThemeColors } from "@/styles/themes";
 import { StyleSheet, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import ProgressBar from "./ProgressBar";
@@ -21,6 +22,7 @@ export default function MacroCard({
   variant = "compact",
 }: MacroCardProps) {
   const { t } = useTranslation();
+  const styles = useThemedStyles(createStyles);
   const progress = goal > 0 ? current / goal : 0;
   const percent = Math.round(Math.min(progress, 1) * 100);
   const isHero = variant === "hero";
@@ -54,7 +56,8 @@ export default function MacroCard({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
   card: {
     backgroundColor: colors.card,
     borderRadius: 16,
@@ -109,4 +112,5 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     marginBottom: 12,
   },
-});
+  });
+}

@@ -1,4 +1,6 @@
-import { colors } from "@/styles/global";
+import { useTheme } from "@/contexts/ThemeContext";
+import { useThemedStyles } from "@/hooks/useThemedStyles";
+import type { ThemeColors } from "@/styles/themes";
 import {
   cancelMealReminders,
   requestPermissions,
@@ -16,6 +18,8 @@ function getRemindersKey() {
 
 export default function ReminderToggle() {
   const { t } = useTranslation();
+  const { colors } = useTheme();
+  const styles = useThemedStyles(createStyles);
   const [enabled, setEnabled] = useState(false);
 
   useEffect(() => {
@@ -51,15 +55,17 @@ export default function ReminderToggle() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  label: {
-    color: colors.text,
-    fontSize: 15,
-    fontWeight: "500",
-  },
-});
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+    },
+    label: {
+      color: colors.text,
+      fontSize: 15,
+      fontWeight: "500",
+    },
+  });
+}

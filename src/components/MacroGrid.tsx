@@ -1,6 +1,7 @@
 import { getMacroGoals, MacroGoals } from "@/storage/goals";
 import { Meal } from "@/storage/meals";
-import { macroColors } from "@/styles/global";
+import { useThemedStyles } from "@/hooks/useThemedStyles";
+import { macroColors, type ThemeColors } from "@/styles/themes";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -13,6 +14,7 @@ type MacroGridProps = {
 
 export default function MacroGrid({ meals }: MacroGridProps) {
   const { t } = useTranslation();
+  const styles = useThemedStyles(createStyles);
   const [goals, setGoals] = useState<MacroGoals | null>(null);
 
   useFocusEffect(
@@ -74,20 +76,22 @@ export default function MacroGrid({ meals }: MacroGridProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    gap: 12,
-  },
-  sectionTitle: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: macroColors.accent,
-    textTransform: "uppercase",
-    letterSpacing: 1.2,
-    marginBottom: 4,
-  },
-  row: {
-    flexDirection: "row",
-    gap: 10,
-  },
-});
+function createStyles(_colors: ThemeColors) {
+  return StyleSheet.create({
+    container: {
+      gap: 12,
+    },
+    sectionTitle: {
+      fontSize: 13,
+      fontWeight: "700",
+      color: macroColors.accent,
+      textTransform: "uppercase",
+      letterSpacing: 1.2,
+      marginBottom: 4,
+    },
+    row: {
+      flexDirection: "row",
+      gap: 10,
+    },
+  });
+}

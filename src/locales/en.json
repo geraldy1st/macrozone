@@ -6,7 +6,27 @@
     "home": "Home",
     "addMeals": "Add Meal",
     "allMeals": "All Meals",
-    "settings": "Settings"
+    "settings": "Settings",
+    "profile": "Profile"
+  },
+  "welcome": {
+    "title": "Welcome to nutriFlow",
+    "subtitle": "Track your meals, monitor your macros, and progress every day.",
+    "signIn": "Sign in",
+    "signUp": "Create account",
+    "continueGuest": "Continue as guest"
+  },
+  "profile": {
+    "title": "Profile",
+    "openSettings": "Settings",
+    "name": "Name",
+    "age": "Age",
+    "height": "Height (cm)",
+    "weight": "Weight (kg)",
+    "save": "Save profile",
+    "savedMessage": "Profile updated successfully",
+    "saveErrorMessage": "Unable to save profile",
+    "signOut": "Sign out"
   },
   "home": {
     "recentMeals": "Recent Meals",
@@ -98,7 +118,8 @@
     "deleteTitle": "Delete Meal",
     "deleteMessage": "Are you sure you want to delete \"{{name}}\"?",
     "cancel": "Cancel",
-    "delete": "Delete"
+    "delete": "Delete",
+    "deletedMessage": "Meal deleted successfully"
   },
   "copy": {
     "title": "Copied!",
@@ -124,6 +145,14 @@
   },
   "settings": {
     "title": "Settings",
+    "theme": {
+      "title": "Theme",
+      "description": "Choose how the app looks",
+      "dark": "Dark mode",
+      "light": "Light mode",
+      "darkEnabled": "Dark mode enabled",
+      "lightEnabled": "Light mode enabled"
+    },
     "account": {
       "title": "Account",
       "guestDescription": "Sign in to use AI scanning and access your meals across devices.",

@@ -3,13 +3,15 @@ import { useAuth } from "@/contexts/AuthContext";
 import { addMeal } from "@/storage/meals";
 import { AnalyzeMealError, analyzeMealPhoto } from "@/utils/analyzeMeal";
 import { prepareImageForUpload } from "@/utils/photos";
-import { colors, globalStyles, macroColors } from "@/styles/global";
+import { useTheme } from "@/contexts/ThemeContext";
+import { useToast } from "@/contexts/ToastContext";
+import { macroColors } from "@/styles/themes";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import * as Haptics from "expo-haptics";
 import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
@@ -28,7 +30,10 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 export default function AddMealScreen() {
   const { t, i18n } = useTranslation();
   const { user, session, isConfigured } = useAuth();
+  const { colors } = useTheme();
+  const { showToast } = useToast();
   const insets = useSafeAreaInsets();
+  const styles = useMemo(() => createScreenStyles(colors), [colors]);
   const canUseAiScan = isConfigured && Boolean(user && session?.access_token);
   const [name, setName] = useState("");
   const [calories, setCalories] = useState("");
@@ -186,7 +191,7 @@ export default function AddMealScreen() {
       );
 
       resetForm();
-      Alert.alert(t("addMeal.successTitle"), t("addMeal.successMessage"));
+      showToast(t("addMeal.successMessage"), "success");
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       router.push("/");
     } catch {
@@ -198,7 +203,7 @@ export default function AddMealScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={[globalStyles.container, styles.screen]}
+      style={[styles.container, styles.screen]}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       keyboardVerticalOffset={Platform.OS === "ios" ? insets.top : 0}
     >
@@ -208,7 +213,7 @@ export default function AddMealScreen() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-      <Text style={globalStyles.title}>{t("addMeal.title")}</Text>
+      <Text style={styles.title}>{t("addMeal.title")}</Text>
 
       {canUseAiScan ? (
         <TouchableOpacity
@@ -341,7 +346,20 @@ export default function AddMealScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+function createScreenStyles(colors: ReturnType<typeof useTheme>["colors"]) {
+  return StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+    paddingTop: 60,
+    paddingHorizontal: 20,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: "800",
+    color: colors.text,
+    letterSpacing: -0.5,
+  },
   screen: {
     paddingBottom: 0,
   },
@@ -502,4 +520,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
   },
-});
+  });
+}

@@ -1,9 +1,10 @@
+import { useTheme } from "@/contexts/ThemeContext";
+import { useToast } from "@/contexts/ToastContext";
 import { Meal } from "@/storage/meals";
-import { colors } from "@/styles/global";
 import { Ionicons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
 import * as Haptics from "expo-haptics";
-import { Alert, StyleSheet, Text, TouchableOpacity } from "react-native";
+import { StyleSheet, Text, TouchableOpacity } from "react-native";
 import { useTranslation } from "react-i18next";
 
 type CopyButtonProps = {
@@ -12,6 +13,8 @@ type CopyButtonProps = {
 
 export default function CopyButton({ meals }: CopyButtonProps) {
   const { t } = useTranslation();
+  const { colors } = useTheme();
+  const { showToast } = useToast();
 
   const handleCopy = async () => {
     const totals = meals.reduce(
@@ -34,7 +37,7 @@ export default function CopyButton({ meals }: CopyButtonProps) {
 
     await Clipboard.setStringAsync(summary);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    Alert.alert(t("copy.title"), t("copy.message"));
+    showToast(t("copy.message"), "success");
   };
 
   return (

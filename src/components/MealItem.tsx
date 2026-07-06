@@ -1,5 +1,7 @@
+import { useToast } from "@/contexts/ToastContext";
+import { useThemedStyles } from "@/hooks/useThemedStyles";
 import { deleteMeal } from "@/storage/meals";
-import { colors } from "@/styles/global";
+import type { ThemeColors } from "@/styles/themes";
 import { Image } from "expo-image";
 import * as Haptics from "expo-haptics";
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
@@ -27,6 +29,8 @@ export default function MealItem({
   onDelete,
 }: MealItemProps) {
   const { t } = useTranslation();
+  const { showToast } = useToast();
+  const styles = useThemedStyles(createStyles);
 
   const handleLongPress = () => {
     Alert.alert(
@@ -40,6 +44,7 @@ export default function MealItem({
           onPress: async () => {
             await deleteMeal(id);
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            showToast(t("mealItem.deletedMessage"), "success");
             onDelete();
           },
         },
@@ -66,7 +71,8 @@ export default function MealItem({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
   container: {
     backgroundColor: colors.card,
     borderRadius: 14,
@@ -115,4 +121,5 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     textTransform: "uppercase",
   },
-});
+  });
+}

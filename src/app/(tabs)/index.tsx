@@ -8,7 +8,10 @@ import ShareButton from "@/components/ShareButton";
 import { getRandomQuote } from "@/data/motivationalQuotes";
 import { useAuth } from "@/contexts/AuthContext";
 import { getMeals, Meal } from "@/storage/meals";
-import { colors, globalStyles } from "@/styles/global";
+import { useTheme } from "@/contexts/ThemeContext";
+import { useThemedStyles } from "@/hooks/useThemedStyles";
+import { globalStyles } from "@/styles/global";
+import type { ThemeColors } from "@/styles/themes";
 import { filterMealsForToday } from "@/utils/groupMealsByDay";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
@@ -18,6 +21,8 @@ import { ScrollView, StyleSheet, Text, View } from "react-native";
 export default function HomeScreen() {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
+  const { colors } = useTheme();
+  const styles = useThemedStyles(createStyles);
   const [meals, setMeals] = useState<Meal[]>([]);
   const [quote, setQuote] = useState(() => getRandomQuote());
 
@@ -37,7 +42,7 @@ export default function HomeScreen() {
 
   return (
     <ScrollView
-      style={globalStyles.container}
+      style={[globalStyles.container, { backgroundColor: colors.background }]}
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
     >
@@ -46,7 +51,9 @@ export default function HomeScreen() {
           <View style={styles.titleRow}>
             <AppLogo size={44} />
             <View>
-              <Text style={globalStyles.title}>{t("app.name")}</Text>
+              <Text style={[globalStyles.title, { color: colors.text }]}>
+                {t("app.name")}
+              </Text>
               <HomeHeader />
             </View>
           </View>
@@ -72,53 +79,55 @@ export default function HomeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  content: {
-    paddingBottom: 40,
-  },
-  heroSection: {
-    marginBottom: 28,
-  },
-  titleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 14,
-    flex: 1,
-  },
-  quoteCard: {
-    flexDirection: "row",
-    backgroundColor: colors.surface,
-    borderRadius: 14,
-    marginTop: 20,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: colors.cardBorder,
-  },
-  quoteAccent: {
-    width: 4,
-    backgroundColor: colors.accent,
-  },
-  quote: {
-    flex: 1,
-    fontSize: 15,
-    fontStyle: "italic",
-    fontWeight: "500",
-    color: colors.primary,
-    padding: 16,
-    lineHeight: 22,
-  },
-  actionsCard: {
-    backgroundColor: colors.card,
-    borderRadius: 16,
-    padding: 18,
-    marginTop: 20,
-    borderWidth: 1,
-    borderColor: colors.cardBorder,
-    gap: 4,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: colors.cardBorder,
-    marginVertical: 8,
-  },
-});
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    content: {
+      paddingBottom: 40,
+    },
+    heroSection: {
+      marginBottom: 28,
+    },
+    titleRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 14,
+      flex: 1,
+    },
+    quoteCard: {
+      flexDirection: "row",
+      backgroundColor: colors.surface,
+      borderRadius: 14,
+      marginTop: 20,
+      overflow: "hidden",
+      borderWidth: 1,
+      borderColor: colors.cardBorder,
+    },
+    quoteAccent: {
+      width: 4,
+      backgroundColor: colors.accent,
+    },
+    quote: {
+      flex: 1,
+      fontSize: 15,
+      fontStyle: "italic",
+      fontWeight: "500",
+      color: colors.primary,
+      padding: 16,
+      lineHeight: 22,
+    },
+    actionsCard: {
+      backgroundColor: colors.card,
+      borderRadius: 16,
+      padding: 18,
+      marginTop: 20,
+      borderWidth: 1,
+      borderColor: colors.cardBorder,
+      gap: 4,
+    },
+    divider: {
+      height: 1,
+      backgroundColor: colors.cardBorder,
+      marginVertical: 8,
+    },
+  });
+}

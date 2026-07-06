@@ -5,7 +5,8 @@ import {
   type MacroGoals,
 } from "@/storage/goals";
 import { Meal } from "@/storage/meals";
-import { colors } from "@/styles/global";
+import { useTheme } from "@/contexts/ThemeContext";
+import { useToast } from "@/contexts/ToastContext";
 import { formatDateKey, formatMealDayLabel } from "@/utils/groupMealsByDay";
 import { captureAndShareSummary } from "@/utils/shareSummaryImage";
 import { Ionicons } from "@expo/vector-icons";
@@ -13,7 +14,6 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
-  Alert,
   StyleSheet,
   TouchableOpacity,
   View,
@@ -25,6 +25,8 @@ type ShareButtonProps = {
 
 export default function ShareButton({ meals }: ShareButtonProps) {
   const { t, i18n } = useTranslation();
+  const { colors } = useTheme();
+  const { showToast } = useToast();
   const cardRef = useRef<View>(null);
   const [goals, setGoals] = useState<MacroGoals>(defaultMacroGoals);
   const [isSharing, setIsSharing] = useState(false);
@@ -47,7 +49,7 @@ export default function ShareButton({ meals }: ShareButtonProps) {
 
   const handleShare = async () => {
     if (meals.length === 0) {
-      Alert.alert(t("share.noMealsTitle"), t("share.noMealsMessage"));
+      showToast(t("share.noMealsMessage"), "info");
       return;
     }
 
@@ -57,7 +59,7 @@ export default function ShareButton({ meals }: ShareButtonProps) {
       await waitForLayout();
       await captureAndShareSummary(cardRef, t("share.dialogTitle"));
     } catch {
-      Alert.alert(t("share.errorTitle"), t("share.errorMessage"));
+      showToast(t("share.errorMessage"), "error");
     } finally {
       setIsSharing(false);
     }

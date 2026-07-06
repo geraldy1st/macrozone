@@ -1,4 +1,4 @@
-import { colors } from "@/styles/global";
+import { useTheme } from "@/contexts/ThemeContext";
 import { StyleSheet, View } from "react-native";
 
 type ProgressBarProps = {
@@ -12,10 +12,11 @@ export default function ProgressBar({
   color,
   height = 8,
 }: ProgressBarProps) {
+  const { colors } = useTheme();
   const clampedProgress = Math.min(Math.max(progress, 0), 1);
 
   return (
-    <View style={[styles.track, { height }]}>
+    <View style={[styles.track, { height, backgroundColor: colors.surface }]}>
       <View
         style={[
           styles.fill,
@@ -33,7 +34,6 @@ export default function ProgressBar({
 const styles = StyleSheet.create({
   track: {
     width: "100%",
-    backgroundColor: colors.background,
     borderRadius: 999,
     overflow: "hidden",
   },

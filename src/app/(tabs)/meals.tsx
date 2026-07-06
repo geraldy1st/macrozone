@@ -1,6 +1,9 @@
 import MealItem from "@/components/MealItem";
 import { clearAllMeals, getMeals, Meal } from "@/storage/meals";
-import { colors, globalStyles } from "@/styles/global";
+import { useTheme } from "@/contexts/ThemeContext";
+import { useThemedStyles } from "@/hooks/useThemedStyles";
+import { globalStyles } from "@/styles/global";
+import type { ThemeColors } from "@/styles/themes";
 import {
   formatMealDayLabel,
   groupMealsByDay,
@@ -18,6 +21,8 @@ import {
 
 export default function AllMealsScreen() {
   const { t, i18n } = useTranslation();
+  const { colors } = useTheme();
+  const styles = useThemedStyles(createStyles);
   const [meals, setMeals] = useState<Meal[]>([]);
 
   const loadMeals = async () => {
@@ -51,21 +56,27 @@ export default function AllMealsScreen() {
 
   return (
     <SectionList
-      style={globalStyles.container}
+      style={[globalStyles.container, { backgroundColor: colors.background }]}
       sections={sections}
       keyExtractor={(meal) => meal.id}
       stickySectionHeadersEnabled={false}
       contentContainerStyle={styles.content}
       ListHeaderComponent={
         <View style={globalStyles.header}>
-          <Text style={globalStyles.title}>{t("allMeals.title")}</Text>
+          <Text style={[globalStyles.title, { color: colors.text }]}>
+            {t("allMeals.title")}
+          </Text>
           <TouchableOpacity onPress={handleClearAll}>
             <Text style={styles.clearButton}>{t("allMeals.clearAll")}</Text>
           </TouchableOpacity>
         </View>
       }
       ListEmptyComponent={
-        <Text style={[globalStyles.empty, styles.empty]}>{t("allMeals.noMeals")}</Text>
+        <Text
+          style={[globalStyles.empty, styles.empty, { color: colors.textSecondary }]}
+        >
+          {t("allMeals.noMeals")}
+        </Text>
       }
       renderSectionHeader={({ section }) => (
         <View style={styles.sectionHeader}>
@@ -89,43 +100,45 @@ export default function AllMealsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  content: {
-    paddingBottom: 40,
-    flexGrow: 1,
-  },
-  clearButton: {
-    color: colors.alert,
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  empty: {
-    marginTop: 30,
-  },
-  sectionHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginTop: 28,
-    marginBottom: 12,
-    paddingBottom: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.cardBorder,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: colors.primary,
-    textTransform: "capitalize",
-  },
-  sectionCount: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: colors.textSecondary,
-    backgroundColor: colors.surface,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 999,
-    overflow: "hidden",
-  },
-});
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    content: {
+      paddingBottom: 40,
+      flexGrow: 1,
+    },
+    clearButton: {
+      color: colors.alert,
+      fontSize: 16,
+      fontWeight: "600",
+    },
+    empty: {
+      marginTop: 30,
+    },
+    sectionHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginTop: 28,
+      marginBottom: 12,
+      paddingBottom: 8,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.cardBorder,
+    },
+    sectionTitle: {
+      fontSize: 16,
+      fontWeight: "700",
+      color: colors.primary,
+      textTransform: "capitalize",
+    },
+    sectionCount: {
+      fontSize: 13,
+      fontWeight: "700",
+      color: colors.textSecondary,
+      backgroundColor: colors.surface,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: 999,
+      overflow: "hidden",
+    },
+  });
+}

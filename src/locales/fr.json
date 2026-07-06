@@ -6,7 +6,27 @@
     "home": "Accueil",
     "addMeals": "Ajouter",
     "allMeals": "Repas",
-    "settings": "Paramètres"
+    "settings": "Paramètres",
+    "profile": "Profil"
+  },
+  "welcome": {
+    "title": "Bienvenue sur nutriFlow",
+    "subtitle": "Suivez vos repas, vos macros et progressez chaque jour.",
+    "signIn": "Se connecter",
+    "signUp": "Créer un compte",
+    "continueGuest": "Continuer en tant qu'invité"
+  },
+  "profile": {
+    "title": "Profil",
+    "openSettings": "Paramètres",
+    "name": "Nom",
+    "age": "Âge",
+    "height": "Taille (cm)",
+    "weight": "Poids (kg)",
+    "save": "Enregistrer le profil",
+    "savedMessage": "Profil mis à jour avec succès",
+    "saveErrorMessage": "Impossible d'enregistrer le profil",
+    "signOut": "Se déconnecter"
   },
   "home": {
     "recentMeals": "Repas récents",
@@ -98,7 +118,8 @@
     "deleteTitle": "Supprimer le repas",
     "deleteMessage": "Voulez-vous vraiment supprimer « {{name}} » ?",
     "cancel": "Annuler",
-    "delete": "Supprimer"
+    "delete": "Supprimer",
+    "deletedMessage": "Repas supprimé avec succès"
   },
   "copy": {
     "title": "Copié !",
@@ -124,6 +145,14 @@
   },
   "settings": {
     "title": "Paramètres",
+    "theme": {
+      "title": "Thème",
+      "description": "Choisissez l'apparence de l'application",
+      "dark": "Mode sombre",
+      "light": "Mode clair",
+      "darkEnabled": "Mode sombre activé",
+      "lightEnabled": "Mode clair activé"
+    },
     "account": {
       "title": "Compte",
       "guestDescription": "Connectez-vous pour utiliser le scan IA et retrouver vos repas sur tous vos appareils.",

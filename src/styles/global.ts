@@ -1,25 +1,8 @@
+import { darkTheme, macroColors as themeMacroColors } from "@/styles/themes";
 import { StyleSheet } from "react-native";
 
-export const colors = {
-  background: "#0f0f1a",
-  header: "#1a1a2e",
-  surface: "#1e1e32",
-  card: "#16162a",
-  cardBorder: "#2a2a4a",
-  primary: "#4fc3f7",
-  accent: "#ff6b35",
-  text: "#ffffff",
-  textSecondary: "#8b8ba0",
-  alert: "#ff5252",
-};
-
-export const macroColors = {
-  accent: "#ff6b35",
-  calories: "#ff6b35",
-  protein: "#4ecdc4",
-  carbs: "#ffd93d",
-  fat: "#6bcb77",
-};
+export const colors = darkTheme;
+export const macroColors = themeMacroColors;
 
 export const globalStyles = StyleSheet.create({
   container: {

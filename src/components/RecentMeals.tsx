@@ -1,5 +1,6 @@
+import { useThemedStyles } from "@/hooks/useThemedStyles";
 import { Meal } from "@/storage/meals";
-import { colors, macroColors } from "@/styles/global";
+import { macroColors, type ThemeColors } from "@/styles/themes";
 import { StyleSheet, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import MealItem from "./MealItem";
@@ -11,6 +12,7 @@ type RecentMealsProps = {
 
 export default function RecentMeals({ meals, onDelete }: RecentMealsProps) {
   const { t } = useTranslation();
+  const styles = useThemedStyles(createStyles);
 
   return (
     <View style={styles.container}>
@@ -48,7 +50,8 @@ export default function RecentMeals({ meals, onDelete }: RecentMealsProps) {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
   container: {
     marginTop: 28,
   },
@@ -86,4 +89,5 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     fontSize: 14,
   },
-});
+  });
+}

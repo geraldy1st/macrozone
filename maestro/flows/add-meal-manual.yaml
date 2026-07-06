@@ -2,6 +2,15 @@ appId: com.geraldy.macrozone
 ---
 - launchApp
 - extendedWaitUntil:
+    visible: "Bienvenue|Welcome|nutriFlow"
+    timeout: 20000
+- runFlow:
+    when:
+      visible: "Continuer en tant qu'invité|Continue as guest"
+    commands:
+      - tapOn:
+          id: "welcome-guest-btn"
+- extendedWaitUntil:
     visible: "nutriFlow|Add Meal|Ajouter un repas"
     timeout: 20000
 - tapOn:
@@ -18,9 +27,8 @@ appId: com.geraldy.macrozone
 - tapOn:
     id: "add-meal-submit"
 - extendedWaitUntil:
-    visible: "Success|Succès|Meal added|Repas ajouté"
+    visible: "Meal added successfully|Repas ajouté avec succès"
     timeout: 8000
-- tapOn: "OK"
 - tapOn:
     id: "all-meals-tab"
 - assertVisible: "Salade Cesar"

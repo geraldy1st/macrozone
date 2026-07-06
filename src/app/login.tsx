@@ -1,9 +1,11 @@
 import AppLogo from "@/components/AppLogo";
 import { useAuth } from "@/contexts/AuthContext";
-import { colors, globalStyles } from "@/styles/global";
+import { useTheme } from "@/contexts/ThemeContext";
+import { useToast } from "@/contexts/ToastContext";
+import { setAuthenticatedOnboarding } from "@/storage/onboarding";
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
-import { useState } from "react";
+import { router, useLocalSearchParams } from "expo-router";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
@@ -20,13 +22,26 @@ import {
 
 export default function LoginScreen() {
   const { t } = useTranslation();
+  const { colors } = useTheme();
+  const { showToast } = useToast();
+  const { mode } = useLocalSearchParams<{ mode?: string }>();
   const { isConfigured, signInWithEmail, signUpWithEmail, signInWithOAuth } =
     useAuth();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isSignUp, setIsSignUp] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(mode === "signup");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [oauthProvider, setOauthProvider] = useState<string | null>(null);
+
+  useEffect(() => {
+    setIsSignUp(mode === "signup");
+  }, [mode]);
+
+  const completeAuth = async () => {
+    await setAuthenticatedOnboarding();
+    router.replace("/(tabs)");
+  };
 
   const handleEmailAuth = async () => {
     if (!email.trim() || !password.trim()) {
@@ -39,12 +54,12 @@ export default function LoginScreen() {
     try {
       if (isSignUp) {
         await signUpWithEmail(email.trim(), password);
-        Alert.alert(t("auth.signUpSuccessTitle"), t("auth.signUpSuccessMessage"));
+        showToast(t("auth.signUpSuccessMessage"), "success");
       } else {
         await signInWithEmail(email.trim(), password);
       }
 
-      router.replace("/(tabs)");
+      await completeAuth();
     } catch {
       Alert.alert(
         t("auth.errorTitle"),
@@ -60,7 +75,7 @@ export default function LoginScreen() {
 
     try {
       await signInWithOAuth(provider);
-      router.replace("/(tabs)");
+      await completeAuth();
     } catch {
       Alert.alert(t("auth.errorTitle"), t("auth.oauthErrorMessage"));
     } finally {
@@ -70,7 +85,7 @@ export default function LoginScreen() {
 
   if (!isConfigured) {
     return (
-      <View style={[globalStyles.container, styles.centered]}>
+      <View style={[styles.container, styles.centered]}>
         <AppLogo size={64} />
         <Text style={styles.title}>{t("auth.notConfiguredTitle")}</Text>
         <Text style={styles.subtitle}>{t("auth.notConfiguredMessage")}</Text>
@@ -83,7 +98,7 @@ export default function LoginScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={globalStyles.container}
+      style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <ScrollView
@@ -193,133 +208,141 @@ export default function LoginScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  content: {
-    paddingBottom: 40,
-  },
-  centered: {
-    justifyContent: "center",
-    alignItems: "center",
-    gap: 16,
-  },
-  hero: {
-    alignItems: "center",
-    marginTop: 20,
-    marginBottom: 28,
-    gap: 12,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: "800",
-    color: colors.text,
-    textAlign: "center",
-  },
-  subtitle: {
-    fontSize: 15,
-    color: colors.textSecondary,
-    textAlign: "center",
-    lineHeight: 22,
-    paddingHorizontal: 12,
-  },
-  formCard: {
-    backgroundColor: colors.card,
-    borderRadius: 18,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: colors.cardBorder,
-    gap: 12,
-  },
-  input: {
-    backgroundColor: colors.surface,
-    color: colors.text,
-    padding: 16,
-    borderRadius: 12,
-    fontSize: 16,
-    borderWidth: 1,
-    borderColor: colors.cardBorder,
-  },
-  primaryButton: {
-    backgroundColor: colors.accent,
-    padding: 16,
-    borderRadius: 12,
-    alignItems: "center",
-    marginTop: 4,
-    minHeight: 52,
-    justifyContent: "center",
-  },
-  primaryButtonText: {
-    color: colors.background,
-    fontSize: 16,
-    fontWeight: "700",
-  },
-  buttonDisabled: {
-    opacity: 0.7,
-  },
-  switchModeButton: {
-    alignItems: "center",
-    paddingVertical: 4,
-  },
-  switchModeText: {
-    color: colors.primary,
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  dividerRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    marginVertical: 24,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: colors.cardBorder,
-  },
-  dividerText: {
-    color: colors.textSecondary,
-    fontSize: 13,
-    fontWeight: "600",
-  },
-  socialButtons: {
-    gap: 12,
-  },
-  socialButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 10,
-    backgroundColor: colors.card,
-    borderRadius: 12,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: colors.cardBorder,
-    minHeight: 52,
-  },
-  socialButtonText: {
-    color: colors.text,
-    fontSize: 15,
-    fontWeight: "600",
-  },
-  guestButton: {
-    alignItems: "center",
-    marginTop: 24,
-    padding: 12,
-  },
-  guestButtonText: {
-    color: colors.textSecondary,
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  secondaryButton: {
-    marginTop: 8,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.cardBorder,
-  },
-  secondaryButtonText: {
-    color: colors.text,
-    fontWeight: "600",
-  },
-});
+function createStyles(colors: ReturnType<typeof useTheme>["colors"]) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+      paddingTop: 60,
+      paddingHorizontal: 20,
+    },
+    content: {
+      paddingBottom: 40,
+    },
+    centered: {
+      justifyContent: "center",
+      alignItems: "center",
+      gap: 16,
+    },
+    hero: {
+      alignItems: "center",
+      marginTop: 20,
+      marginBottom: 28,
+      gap: 12,
+    },
+    title: {
+      fontSize: 28,
+      fontWeight: "800",
+      color: colors.text,
+      textAlign: "center",
+    },
+    subtitle: {
+      fontSize: 15,
+      color: colors.textSecondary,
+      textAlign: "center",
+      lineHeight: 22,
+      paddingHorizontal: 12,
+    },
+    formCard: {
+      backgroundColor: colors.card,
+      borderRadius: 18,
+      padding: 20,
+      borderWidth: 1,
+      borderColor: colors.cardBorder,
+      gap: 12,
+    },
+    input: {
+      backgroundColor: colors.surface,
+      color: colors.text,
+      padding: 16,
+      borderRadius: 12,
+      fontSize: 16,
+      borderWidth: 1,
+      borderColor: colors.cardBorder,
+    },
+    primaryButton: {
+      backgroundColor: colors.accent,
+      padding: 16,
+      borderRadius: 12,
+      alignItems: "center",
+      marginTop: 4,
+      minHeight: 52,
+      justifyContent: "center",
+    },
+    primaryButtonText: {
+      color: colors.background,
+      fontSize: 16,
+      fontWeight: "700",
+    },
+    buttonDisabled: {
+      opacity: 0.7,
+    },
+    switchModeButton: {
+      alignItems: "center",
+      paddingVertical: 4,
+    },
+    switchModeText: {
+      color: colors.primary,
+      fontSize: 14,
+      fontWeight: "600",
+    },
+    dividerRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+      marginVertical: 24,
+    },
+    dividerLine: {
+      flex: 1,
+      height: 1,
+      backgroundColor: colors.cardBorder,
+    },
+    dividerText: {
+      color: colors.textSecondary,
+      fontSize: 13,
+      fontWeight: "600",
+    },
+    socialButtons: {
+      gap: 12,
+    },
+    socialButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 10,
+      backgroundColor: colors.card,
+      borderRadius: 12,
+      padding: 16,
+      borderWidth: 1,
+      borderColor: colors.cardBorder,
+      minHeight: 52,
+    },
+    socialButtonText: {
+      color: colors.text,
+      fontSize: 15,
+      fontWeight: "600",
+    },
+    guestButton: {
+      alignItems: "center",
+      marginTop: 24,
+      padding: 12,
+    },
+    guestButtonText: {
+      color: colors.textSecondary,
+      fontSize: 14,
+      fontWeight: "600",
+    },
+    secondaryButton: {
+      marginTop: 8,
+      paddingHorizontal: 20,
+      paddingVertical: 12,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: colors.cardBorder,
+    },
+    secondaryButtonText: {
+      color: colors.text,
+      fontWeight: "600",
+    },
+  });
+}

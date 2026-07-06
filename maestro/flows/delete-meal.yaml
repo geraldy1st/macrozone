@@ -2,6 +2,15 @@ appId: com.geraldy.macrozone
 ---
 - launchApp
 - extendedWaitUntil:
+    visible: "Bienvenue|Welcome|nutriFlow"
+    timeout: 20000
+- runFlow:
+    when:
+      visible: "Continuer en tant qu'invité|Continue as guest"
+    commands:
+      - tapOn:
+          id: "welcome-guest-btn"
+- extendedWaitUntil:
     visible: "nutriFlow|MacroZone|Recent Meals|Repas récents"
     timeout: 20000
 - tapOn:
@@ -17,9 +26,6 @@ appId: com.geraldy.macrozone
 - hideKeyboard
 - tapOn:
     id: "add-meal-submit"
-- tapOn:
-    text: "OK"
-    optional: true
 - tapOn:
     id: "all-meals-tab"
 - longPressOn: "Repas test"
