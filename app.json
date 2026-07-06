@@ -46,7 +46,9 @@
           "photosPermission": "nutriFlow needs access to your photos to scan meals.",
           "cameraPermission": "nutriFlow needs access to your camera to scan meals."
         }
-      ]
+      ],
+      "expo-sharing",
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true,

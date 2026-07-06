@@ -14,7 +14,10 @@ import {
   cancelMealReminders,
   scheduleMealReminders,
 } from "@/utils/notifications";
+import { useAuth } from "@/contexts/AuthContext";
+import { scopedKey } from "@/storage/scopedKey";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { router } from "expo-router";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -28,7 +31,9 @@ import {
   View,
 } from "react-native";
 
-const REMINDERS_KEY = "remindersEnabled";
+function getRemindersKey() {
+  return scopedKey("remindersEnabled");
+}
 
 const languageLabels: Record<AppLanguage, string> = {
   en: "settings.english",
@@ -44,6 +49,7 @@ const goalFields: { key: keyof MacroGoals; labelKey: string }[] = [
 
 export default function SettingsScreen() {
   const { t, i18n } = useTranslation();
+  const { user, isConfigured, signOut } = useAuth();
   const currentLanguage = i18n.language as AppLanguage;
   const [goals, setGoals] = useState<Record<keyof MacroGoals, string>>({
     calories: String(defaultMacroGoals.calories),
@@ -72,10 +78,19 @@ export default function SettingsScreen() {
 
     await changeAppLanguage(language);
 
-    const remindersEnabled = await AsyncStorage.getItem(REMINDERS_KEY);
+    const remindersEnabled = await AsyncStorage.getItem(getRemindersKey());
     if (remindersEnabled === "true") {
       await cancelMealReminders();
       await scheduleMealReminders();
+    }
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      router.replace("/(tabs)");
+    } catch {
+      Alert.alert(t("auth.errorTitle"), t("auth.signOutErrorMessage"));
     }
   };
 
@@ -94,6 +109,30 @@ export default function SettingsScreen() {
   return (
     <ScrollView style={globalStyles.container} showsVerticalScrollIndicator={false}>
       <Text style={globalStyles.title}>{t("settings.title")}</Text>
+
+      <Text style={globalStyles.sectionTitle}>{t("settings.account.title")}</Text>
+      <View style={styles.accountCard}>
+        {user ? (
+          <>
+            <Text style={styles.accountEmail}>{user.email}</Text>
+            <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
+              <Text style={styles.signOutText}>{t("settings.account.signOut")}</Text>
+            </TouchableOpacity>
+          </>
+        ) : (
+          <>
+            <Text style={styles.description}>{t("settings.account.guestDescription")}</Text>
+            {isConfigured && (
+              <TouchableOpacity
+                style={styles.signInButton}
+                onPress={() => router.push("/login")}
+              >
+                <Text style={styles.signInText}>{t("auth.signIn")}</Text>
+              </TouchableOpacity>
+            )}
+          </>
+        )}
+      </View>
 
       <Text style={globalStyles.sectionTitle}>{t("settings.language")}</Text>
       <Text style={styles.description}>{t("settings.languageDescription")}</Text>
@@ -147,6 +186,41 @@ export default function SettingsScreen() {
 }
 
 const styles = StyleSheet.create({
+  accountCard: {
+    backgroundColor: colors.card,
+    borderRadius: 16,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: colors.cardBorder,
+    gap: 12,
+    marginBottom: 8,
+  },
+  accountEmail: {
+    color: colors.text,
+    fontSize: 15,
+    fontWeight: "600",
+  },
+  signOutButton: {
+    alignSelf: "flex-start",
+    paddingVertical: 4,
+  },
+  signOutText: {
+    color: colors.alert,
+    fontSize: 15,
+    fontWeight: "600",
+  },
+  signInButton: {
+    alignSelf: "flex-start",
+    backgroundColor: colors.accent,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 10,
+  },
+  signInText: {
+    color: colors.background,
+    fontSize: 15,
+    fontWeight: "700",
+  },
   description: {
     color: colors.textSecondary,
     fontSize: 14,

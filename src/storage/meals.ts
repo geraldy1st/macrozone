@@ -1,3 +1,4 @@
+import { scopedKey } from "@/storage/scopedKey";
 import { deleteMealPhoto, saveMealPhoto, clearAllMealPhotos } from "@/utils/photos";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -14,8 +15,12 @@ export type Meal = {
 
 const MEALS_KEY = "meals";
 
+function getMealsKey() {
+  return scopedKey(MEALS_KEY);
+}
+
 export const getMeals = async (): Promise<Meal[]> => {
-  const data = await AsyncStorage.getItem(MEALS_KEY);
+  const data = await AsyncStorage.getItem(getMealsKey());
   return data ? JSON.parse(data) : [];
 };
 
@@ -38,7 +43,7 @@ export const addMeal = async (
     createdAt: new Date().toISOString(),
   };
 
-  await AsyncStorage.setItem(MEALS_KEY, JSON.stringify([newMeal, ...meals]));
+  await AsyncStorage.setItem(getMealsKey(), JSON.stringify([newMeal, ...meals]));
   return newMeal;
 };
 
@@ -51,10 +56,10 @@ export const deleteMeal = async (id: string): Promise<void> => {
   }
 
   const filtered = meals.filter((item) => item.id !== id);
-  await AsyncStorage.setItem(MEALS_KEY, JSON.stringify(filtered));
+  await AsyncStorage.setItem(getMealsKey(), JSON.stringify(filtered));
 };
 
 export const clearAllMeals = async (): Promise<void> => {
   await clearAllMealPhotos();
-  await AsyncStorage.removeItem(MEALS_KEY);
+  await AsyncStorage.removeItem(getMealsKey());
 };

@@ -1,4 +1,4 @@
-import { ANALYZE_API_URL, MACROZONE_API_KEY } from "@/constants/api";
+import { ANALYZE_API_URL } from "@/constants/api";
 
 export type MealAnalysis = {
   name: string;
@@ -10,6 +10,7 @@ export type MealAnalysis = {
 
 export type AnalyzeMealErrorCode =
   | "API_NOT_CONFIGURED"
+  | "AUTH_REQUIRED"
   | "UNAUTHORIZED"
   | "IMAGE_TOO_LARGE"
   | "RATE_LIMITED"
@@ -28,16 +29,21 @@ export class AnalyzeMealError extends Error {
 export async function analyzeMealPhoto(
   imageBase64: string,
   language: "en" | "fr",
+  accessToken?: string,
 ): Promise<MealAnalysis> {
-  if (!ANALYZE_API_URL || !MACROZONE_API_KEY) {
+  if (!ANALYZE_API_URL) {
     throw new AnalyzeMealError("API_NOT_CONFIGURED");
+  }
+
+  if (!accessToken) {
+    throw new AnalyzeMealError("AUTH_REQUIRED");
   }
 
   const response = await fetch(ANALYZE_API_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "X-API-Key": MACROZONE_API_KEY,
+      Authorization: `Bearer ${accessToken}`,
     },
     body: JSON.stringify({
       image: imageBase64,

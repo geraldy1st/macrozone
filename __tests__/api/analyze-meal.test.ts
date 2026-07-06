@@ -59,6 +59,8 @@ describe("analyze-meal handler", () => {
     jest.clearAllMocks();
     process.env.MACROZONE_API_KEY = "test-api-key";
     process.env.GEMINI_API_KEY = "gemini-test-key";
+    delete process.env.SUPABASE_URL;
+    delete process.env.SUPABASE_SERVICE_ROLE_KEY;
     mockedIsRateLimited.mockResolvedValue({ limited: false, remaining: 19 });
     global.fetch = jest.fn();
   });

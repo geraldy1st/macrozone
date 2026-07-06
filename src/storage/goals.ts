@@ -1,3 +1,4 @@
+import { scopedKey } from "@/storage/scopedKey";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export type MacroGoals = {
@@ -16,11 +17,15 @@ export const defaultMacroGoals: MacroGoals = {
 
 const GOALS_KEY = "macroGoals";
 
+function getGoalsKey() {
+  return scopedKey(GOALS_KEY);
+}
+
 export const getMacroGoals = async (): Promise<MacroGoals> => {
-  const data = await AsyncStorage.getItem(GOALS_KEY);
+  const data = await AsyncStorage.getItem(getGoalsKey());
   return data ? { ...defaultMacroGoals, ...JSON.parse(data) } : defaultMacroGoals;
 };
 
 export const setMacroGoals = async (goals: MacroGoals): Promise<void> => {
-  await AsyncStorage.setItem(GOALS_KEY, JSON.stringify(goals));
+  await AsyncStorage.setItem(getGoalsKey(), JSON.stringify(goals));
 };

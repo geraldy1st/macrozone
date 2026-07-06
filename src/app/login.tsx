@@ -1,0 +1,325 @@
+import AppLogo from "@/components/AppLogo";
+import { useAuth } from "@/contexts/AuthContext";
+import { colors, globalStyles } from "@/styles/global";
+import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import {
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+
+export default function LoginScreen() {
+  const { t } = useTranslation();
+  const { isConfigured, signInWithEmail, signUpWithEmail, signInWithOAuth } =
+    useAuth();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [oauthProvider, setOauthProvider] = useState<string | null>(null);
+
+  const handleEmailAuth = async () => {
+    if (!email.trim() || !password.trim()) {
+      Alert.alert(t("auth.errorTitle"), t("auth.missingCredentials"));
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      if (isSignUp) {
+        await signUpWithEmail(email.trim(), password);
+        Alert.alert(t("auth.signUpSuccessTitle"), t("auth.signUpSuccessMessage"));
+      } else {
+        await signInWithEmail(email.trim(), password);
+      }
+
+      router.replace("/(tabs)");
+    } catch {
+      Alert.alert(
+        t("auth.errorTitle"),
+        isSignUp ? t("auth.signUpErrorMessage") : t("auth.signInErrorMessage"),
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleOAuth = async (provider: "google" | "facebook") => {
+    setOauthProvider(provider);
+
+    try {
+      await signInWithOAuth(provider);
+      router.replace("/(tabs)");
+    } catch {
+      Alert.alert(t("auth.errorTitle"), t("auth.oauthErrorMessage"));
+    } finally {
+      setOauthProvider(null);
+    }
+  };
+
+  if (!isConfigured) {
+    return (
+      <View style={[globalStyles.container, styles.centered]}>
+        <AppLogo size={64} />
+        <Text style={styles.title}>{t("auth.notConfiguredTitle")}</Text>
+        <Text style={styles.subtitle}>{t("auth.notConfiguredMessage")}</Text>
+        <TouchableOpacity style={styles.secondaryButton} onPress={() => router.back()}>
+          <Text style={styles.secondaryButtonText}>{t("auth.back")}</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  return (
+    <KeyboardAvoidingView
+      style={globalStyles.container}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    >
+      <ScrollView
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.hero}>
+          <AppLogo size={72} />
+          <Text style={styles.title}>{t("auth.title")}</Text>
+          <Text style={styles.subtitle}>{t("auth.subtitle")}</Text>
+        </View>
+
+        <View style={styles.formCard}>
+          <TextInput
+            style={styles.input}
+            placeholder={t("auth.email")}
+            placeholderTextColor={colors.textSecondary}
+            value={email}
+            onChangeText={setEmail}
+            autoCapitalize="none"
+            keyboardType="email-address"
+            textContentType="emailAddress"
+            testID="auth-email-input"
+          />
+          <TextInput
+            style={styles.input}
+            placeholder={t("auth.password")}
+            placeholderTextColor={colors.textSecondary}
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+            textContentType={isSignUp ? "newPassword" : "password"}
+            testID="auth-password-input"
+          />
+
+          <TouchableOpacity
+            style={[styles.primaryButton, isSubmitting && styles.buttonDisabled]}
+            onPress={handleEmailAuth}
+            disabled={isSubmitting}
+            testID="auth-submit-btn"
+          >
+            {isSubmitting ? (
+              <ActivityIndicator color={colors.background} />
+            ) : (
+              <Text style={styles.primaryButtonText}>
+                {isSignUp ? t("auth.createAccount") : t("auth.signIn")}
+              </Text>
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.switchModeButton}
+            onPress={() => setIsSignUp((current) => !current)}
+          >
+            <Text style={styles.switchModeText}>
+              {isSignUp ? t("auth.haveAccount") : t("auth.needAccount")}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.dividerRow}>
+          <View style={styles.dividerLine} />
+          <Text style={styles.dividerText}>{t("auth.orContinueWith")}</Text>
+          <View style={styles.dividerLine} />
+        </View>
+
+        <View style={styles.socialButtons}>
+          <TouchableOpacity
+            style={styles.socialButton}
+            onPress={() => handleOAuth("google")}
+            disabled={oauthProvider !== null}
+            testID="auth-google-btn"
+          >
+            {oauthProvider === "google" ? (
+              <ActivityIndicator color={colors.text} />
+            ) : (
+              <>
+                <Ionicons name="logo-google" size={20} color={colors.text} />
+                <Text style={styles.socialButtonText}>{t("auth.google")}</Text>
+              </>
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.socialButton}
+            onPress={() => handleOAuth("facebook")}
+            disabled={oauthProvider !== null}
+            testID="auth-facebook-btn"
+          >
+            {oauthProvider === "facebook" ? (
+              <ActivityIndicator color={colors.text} />
+            ) : (
+              <>
+                <Ionicons name="logo-facebook" size={20} color={colors.text} />
+                <Text style={styles.socialButtonText}>{t("auth.facebook")}</Text>
+              </>
+            )}
+          </TouchableOpacity>
+        </View>
+
+        <TouchableOpacity style={styles.guestButton} onPress={() => router.back()}>
+          <Text style={styles.guestButtonText}>{t("auth.continueAsGuest")}</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </KeyboardAvoidingView>
+  );
+}
+
+const styles = StyleSheet.create({
+  content: {
+    paddingBottom: 40,
+  },
+  centered: {
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 16,
+  },
+  hero: {
+    alignItems: "center",
+    marginTop: 20,
+    marginBottom: 28,
+    gap: 12,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: "800",
+    color: colors.text,
+    textAlign: "center",
+  },
+  subtitle: {
+    fontSize: 15,
+    color: colors.textSecondary,
+    textAlign: "center",
+    lineHeight: 22,
+    paddingHorizontal: 12,
+  },
+  formCard: {
+    backgroundColor: colors.card,
+    borderRadius: 18,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: colors.cardBorder,
+    gap: 12,
+  },
+  input: {
+    backgroundColor: colors.surface,
+    color: colors.text,
+    padding: 16,
+    borderRadius: 12,
+    fontSize: 16,
+    borderWidth: 1,
+    borderColor: colors.cardBorder,
+  },
+  primaryButton: {
+    backgroundColor: colors.accent,
+    padding: 16,
+    borderRadius: 12,
+    alignItems: "center",
+    marginTop: 4,
+    minHeight: 52,
+    justifyContent: "center",
+  },
+  primaryButtonText: {
+    color: colors.background,
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  buttonDisabled: {
+    opacity: 0.7,
+  },
+  switchModeButton: {
+    alignItems: "center",
+    paddingVertical: 4,
+  },
+  switchModeText: {
+    color: colors.primary,
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  dividerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    marginVertical: 24,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: colors.cardBorder,
+  },
+  dividerText: {
+    color: colors.textSecondary,
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  socialButtons: {
+    gap: 12,
+  },
+  socialButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    backgroundColor: colors.card,
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: colors.cardBorder,
+    minHeight: 52,
+  },
+  socialButtonText: {
+    color: colors.text,
+    fontSize: 15,
+    fontWeight: "600",
+  },
+  guestButton: {
+    alignItems: "center",
+    marginTop: 24,
+    padding: 12,
+  },
+  guestButtonText: {
+    color: colors.textSecondary,
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  secondaryButton: {
+    marginTop: 8,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.cardBorder,
+  },
+  secondaryButtonText: {
+    color: colors.text,
+    fontWeight: "600",
+  },
+});

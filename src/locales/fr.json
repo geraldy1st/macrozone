@@ -58,12 +58,41 @@
     "rateLimitedTitle": "Limite quotidienne atteinte",
     "rateLimitedMessage": "Vous avez atteint la limite de scans du jour. Réessayez demain ou saisissez les macros manuellement.",
     "aiQuotaTitle": "IA temporairement indisponible",
-    "aiQuotaMessage": "Le quota du service IA est atteint. Réessayez dans quelques minutes ou saisissez les macros manuellement."
+    "aiQuotaMessage": "Le quota du service IA est atteint. Réessayez dans quelques minutes ou saisissez les macros manuellement.",
+    "authRequiredTitle": "Connexion requise",
+    "authRequiredMessage": "Connectez-vous pour scanner vos repas avec l'IA. Vous pouvez toujours saisir les repas manuellement."
+  },
+  "auth": {
+    "title": "Connexion",
+    "subtitle": "Connectez-vous pour débloquer le scan IA et synchroniser vos données.",
+    "email": "Adresse e-mail",
+    "password": "Mot de passe",
+    "signIn": "Se connecter",
+    "createAccount": "Créer un compte",
+    "haveAccount": "Déjà un compte ? Se connecter",
+    "needAccount": "Pas de compte ? Créer un compte",
+    "orContinueWith": "ou continuer avec",
+    "google": "Google",
+    "facebook": "Facebook",
+    "continueAsGuest": "Continuer sans compte",
+    "back": "Retour",
+    "errorTitle": "Erreur d'authentification",
+    "missingCredentials": "Veuillez saisir votre e-mail et votre mot de passe.",
+    "signInErrorMessage": "E-mail ou mot de passe incorrect.",
+    "signUpErrorMessage": "Impossible de créer le compte. Vérifiez vos informations.",
+    "signUpSuccessTitle": "Compte créé",
+    "signUpSuccessMessage": "Vérifiez votre boîte mail si la confirmation est requise, puis connectez-vous.",
+    "oauthErrorMessage": "La connexion sociale a échoué. Réessayez.",
+    "signOutErrorMessage": "La déconnexion a échoué.",
+    "notConfiguredTitle": "Authentification non configurée",
+    "notConfiguredMessage": "Ajoutez EXPO_PUBLIC_SUPABASE_URL et EXPO_PUBLIC_SUPABASE_ANON_KEY pour activer la connexion."
   },
   "allMeals": {
     "title": "Tous les repas",
     "clearAll": "Tout effacer",
-    "noMeals": "Aucun repas enregistré."
+    "noMeals": "Aucun repas enregistré.",
+    "today": "Aujourd'hui",
+    "yesterday": "Hier"
   },
   "mealItem": {
     "deleteTitle": "Supprimer le repas",
@@ -75,6 +104,17 @@
     "title": "Copié !",
     "message": "Résumé des macros copié dans le presse-papiers."
   },
+  "share": {
+    "buttonLabel": "Partager le résumé du jour",
+    "dialogTitle": "Partager le résumé nutriFlow",
+    "mealsTitle": "Repas du jour",
+    "dailyTotal": "Total du jour",
+    "footer": "Suivi nutritionnel avec nutriFlow",
+    "noMealsTitle": "Aucun repas aujourd'hui",
+    "noMealsMessage": "Ajoutez au moins un repas pour partager votre résumé du jour.",
+    "errorTitle": "Partage impossible",
+    "errorMessage": "L'image n'a pas pu être générée. Réessayez dans quelques instants."
+  },
   "reminders": {
     "label": "Rappels de repas"
   },
@@ -84,6 +124,11 @@
   },
   "settings": {
     "title": "Paramètres",
+    "account": {
+      "title": "Compte",
+      "guestDescription": "Connectez-vous pour utiliser le scan IA et retrouver vos repas sur tous vos appareils.",
+      "signOut": "Se déconnecter"
+    },
     "language": "Langue",
     "languageDescription": "Choisissez votre langue préférée",
     "english": "Anglais",

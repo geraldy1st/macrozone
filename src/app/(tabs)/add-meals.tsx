@@ -1,4 +1,5 @@
-import { ANALYZE_API_URL, MACROZONE_API_KEY } from "@/constants/api";
+import { ANALYZE_API_URL } from "@/constants/api";
+import { useAuth } from "@/contexts/AuthContext";
 import { addMeal } from "@/storage/meals";
 import { AnalyzeMealError, analyzeMealPhoto } from "@/utils/analyzeMeal";
 import { prepareImageForUpload } from "@/utils/photos";
@@ -26,7 +27,9 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function AddMealScreen() {
   const { t, i18n } = useTranslation();
+  const { user, session, isConfigured } = useAuth();
   const insets = useSafeAreaInsets();
+  const canUseAiScan = isConfigured && Boolean(user && session?.access_token);
   const [name, setName] = useState("");
   const [calories, setCalories] = useState("");
   const [protein, setProtein] = useState("");
@@ -48,11 +51,16 @@ export default function AddMealScreen() {
   };
 
   const runAnalysis = async (uri: string) => {
-    if (!ANALYZE_API_URL || !MACROZONE_API_KEY) {
+    if (!ANALYZE_API_URL) {
       Alert.alert(
         t("addMeal.apiNotConfiguredTitle"),
         t("addMeal.apiNotConfiguredMessage"),
       );
+      return;
+    }
+
+    if (!session?.access_token) {
+      Alert.alert(t("addMeal.authRequiredTitle"), t("addMeal.authRequiredMessage"));
       return;
     }
 
@@ -62,7 +70,11 @@ export default function AddMealScreen() {
       const { base64, uri: preparedUri } = await prepareImageForUpload(uri);
       setPhotoUri(preparedUri);
       const language = i18n.language === "fr" ? "fr" : "en";
-      const analysis = await analyzeMealPhoto(base64, language);
+      const analysis = await analyzeMealPhoto(
+        base64,
+        language,
+        session.access_token,
+      );
 
       setName(analysis.name);
       setCalories(String(analysis.calories));
@@ -79,6 +91,7 @@ export default function AddMealScreen() {
           RATE_LIMITED: ["rateLimitedTitle", "rateLimitedMessage"],
           AI_QUOTA_EXCEEDED: ["aiQuotaTitle", "aiQuotaMessage"],
           API_NOT_CONFIGURED: ["apiNotConfiguredTitle", "apiNotConfiguredMessage"],
+          AUTH_REQUIRED: ["authRequiredTitle", "authRequiredMessage"],
           ANALYSIS_FAILED: ["analysisErrorTitle", "analysisErrorMessage"],
         } as const;
 
@@ -197,14 +210,35 @@ export default function AddMealScreen() {
       >
       <Text style={globalStyles.title}>{t("addMeal.title")}</Text>
 
-      <TouchableOpacity
-        style={styles.scanButton}
-        onPress={handleScanMeal}
-        testID="scan-meal-btn"
-      >
-        <Ionicons name="camera" size={22} color={colors.text} />
-        <Text style={styles.scanButtonText}>{t("addMeal.scanMeal")}</Text>
-      </TouchableOpacity>
+      {canUseAiScan ? (
+        <TouchableOpacity
+          style={styles.scanButton}
+          onPress={handleScanMeal}
+          testID="scan-meal-btn"
+        >
+          <Ionicons name="camera" size={22} color={colors.text} />
+          <Text style={styles.scanButtonText}>{t("addMeal.scanMeal")}</Text>
+        </TouchableOpacity>
+      ) : (
+        <View style={styles.authBanner}>
+          <Ionicons name="lock-closed-outline" size={20} color={colors.accent} />
+          <View style={styles.authBannerText}>
+            <Text style={styles.authBannerTitle}>{t("addMeal.authRequiredTitle")}</Text>
+            <Text style={styles.authBannerMessage}>
+              {t("addMeal.authRequiredMessage")}
+            </Text>
+          </View>
+          {isConfigured && (
+            <TouchableOpacity
+              style={styles.authBannerButton}
+              onPress={() => router.push("/login")}
+              testID="auth-prompt-btn"
+            >
+              <Text style={styles.authBannerButtonText}>{t("auth.signIn")}</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      )}
 
       {photoUri && (
         <View style={styles.photoCard}>
@@ -322,6 +356,40 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: colors.cardBorder,
     backgroundColor: colors.background,
+  },
+  authBanner: {
+    marginTop: 20,
+    backgroundColor: colors.card,
+    borderRadius: 14,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: colors.cardBorder,
+    gap: 12,
+  },
+  authBannerText: {
+    gap: 4,
+  },
+  authBannerTitle: {
+    color: colors.text,
+    fontSize: 15,
+    fontWeight: "700",
+  },
+  authBannerMessage: {
+    color: colors.textSecondary,
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  authBannerButton: {
+    alignSelf: "flex-start",
+    backgroundColor: colors.accent,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 10,
+  },
+  authBannerButtonText: {
+    color: colors.background,
+    fontSize: 14,
+    fontWeight: "700",
   },
   scanButton: {
     flexDirection: "row",

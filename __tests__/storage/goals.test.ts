@@ -4,9 +4,11 @@ import {
   getMacroGoals,
   setMacroGoals,
 } from "@/storage/goals";
+import { scopedKey, setStorageScope } from "@/storage/scopedKey";
 
 describe("macro goals storage", () => {
   beforeEach(async () => {
+    setStorageScope("test-user");
     await AsyncStorage.clear();
   });
 
@@ -27,7 +29,10 @@ describe("macro goals storage", () => {
   });
 
   it("merges partial updates with defaults", async () => {
-    await AsyncStorage.setItem("macroGoals", JSON.stringify({ calories: 1800 }));
+    await AsyncStorage.setItem(
+      scopedKey("macroGoals"),
+      JSON.stringify({ calories: 1800 }),
+    );
 
     await expect(getMacroGoals()).resolves.toEqual({
       ...defaultMacroGoals,

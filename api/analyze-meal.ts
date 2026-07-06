@@ -1,8 +1,8 @@
 import { parseAnalysis } from "./lib/parseAnalysis";
 import {
   isRateLimited,
-  isValidApiKey,
   isValidImagePayload,
+  resolveRequestIdentity,
   setCorsHeaders,
 } from "./lib/security";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
@@ -39,11 +39,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  if (!process.env.MACROZONE_API_KEY) {
-    return res.status(500).json({ error: "Server misconfigured" });
-  }
+  const identity = await resolveRequestIdentity(req);
 
-  if (!isValidApiKey(req)) {
+  if (!identity) {
     return res.status(401).json({ error: "Unauthorized" });
   }
 
@@ -61,7 +59,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(413).json({ error: "Image too large" });
   }
 
-  const { limited, remaining } = await isRateLimited(req);
+  const rateLimitKey =
+    identity.source === "user" ? `user:${identity.id}` : `ip:${identity.id}`;
+  const { limited, remaining } = await isRateLimited(rateLimitKey);
   if (limited) {
     res.setHeader("X-RateLimit-Remaining", "0");
     return res.status(429).json({ error: "Rate limit exceeded" });

@@ -1,5 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { addMeal, deleteMeal, getMeals } from "@/storage/meals";
+import { setStorageScope } from "@/storage/scopedKey";
 
 jest.mock("@/utils/photos", () => ({
   saveMealPhoto: jest.fn(async () => "file://meal-photos/1.jpg"),
@@ -9,6 +10,7 @@ jest.mock("@/utils/photos", () => ({
 
 describe("meals storage", () => {
   beforeEach(async () => {
+    setStorageScope("test-user");
     await AsyncStorage.clear();
   });
 

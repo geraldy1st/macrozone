@@ -4,12 +4,15 @@ import {
   requestPermissions,
   scheduleMealReminders,
 } from "@/utils/notifications";
+import { scopedKey } from "@/storage/scopedKey";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useState } from "react";
 import { StyleSheet, Switch, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 
-const REMINDERS_KEY = "remindersEnabled";
+function getRemindersKey() {
+  return scopedKey("remindersEnabled");
+}
 
 export default function ReminderToggle() {
   const { t } = useTranslation();
@@ -17,7 +20,7 @@ export default function ReminderToggle() {
 
   useEffect(() => {
     const load = async () => {
-      const val = await AsyncStorage.getItem(REMINDERS_KEY);
+      const val = await AsyncStorage.getItem(getRemindersKey());
       setEnabled(val === "true");
     };
     load();
@@ -32,7 +35,7 @@ export default function ReminderToggle() {
       await cancelMealReminders();
     }
     setEnabled(value);
-    await AsyncStorage.setItem(REMINDERS_KEY, value.toString());
+    await AsyncStorage.setItem(getRemindersKey(), value.toString());
   };
 
   return (

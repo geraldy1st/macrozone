@@ -1,0 +1,1 @@
+export { captureAndShareSummary } from "./shareSummaryImage.native";

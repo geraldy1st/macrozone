@@ -6,15 +6,18 @@ import RecentMeals from "@/components/RecentMeals";
 import ReminderToggle from "@/components/ReminderToggle";
 import ShareButton from "@/components/ShareButton";
 import { getRandomQuote } from "@/data/motivationalQuotes";
+import { useAuth } from "@/contexts/AuthContext";
 import { getMeals, Meal } from "@/storage/meals";
 import { colors, globalStyles } from "@/styles/global";
+import { filterMealsForToday } from "@/utils/groupMealsByDay";
 import { useFocusEffect } from "expo-router";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 
 export default function HomeScreen() {
   const { t, i18n } = useTranslation();
+  const { user } = useAuth();
   const [meals, setMeals] = useState<Meal[]>([]);
   const [quote, setQuote] = useState(() => getRandomQuote());
 
@@ -27,8 +30,10 @@ export default function HomeScreen() {
     useCallback(() => {
       loadMeals();
       setQuote((currentQuote) => getRandomQuote(currentQuote));
-    }, [i18n.language]),
+    }, [i18n.language, user?.id]),
   );
+
+  const todayMeals = useMemo(() => filterMealsForToday(meals), [meals]);
 
   return (
     <ScrollView
@@ -45,7 +50,7 @@ export default function HomeScreen() {
               <HomeHeader />
             </View>
           </View>
-          <ShareButton meals={meals} />
+          <ShareButton meals={todayMeals} />
         </View>
 
         <View style={styles.quoteCard}>
@@ -54,15 +59,15 @@ export default function HomeScreen() {
         </View>
       </View>
 
-      <MacroGrid meals={meals} />
+      <MacroGrid meals={todayMeals} />
 
       <View style={styles.actionsCard}>
-        <CopyButton meals={meals} />
+        <CopyButton meals={todayMeals} />
         <View style={styles.divider} />
         <ReminderToggle />
       </View>
 
-      <RecentMeals meals={meals} onDelete={loadMeals} />
+      <RecentMeals meals={todayMeals} onDelete={loadMeals} />
     </ScrollView>
   );
 }

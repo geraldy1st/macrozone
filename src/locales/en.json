@@ -58,12 +58,41 @@
     "rateLimitedTitle": "Daily limit reached",
     "rateLimitedMessage": "You have reached the daily scan limit. Try again tomorrow or enter macros manually.",
     "aiQuotaTitle": "AI temporarily unavailable",
-    "aiQuotaMessage": "The AI service quota has been reached. Please try again in a few minutes or enter macros manually."
+    "aiQuotaMessage": "The AI service quota has been reached. Please try again in a few minutes or enter macros manually.",
+    "authRequiredTitle": "Sign in required",
+    "authRequiredMessage": "Sign in to scan meals with AI. You can still log meals manually."
+  },
+  "auth": {
+    "title": "Sign in",
+    "subtitle": "Sign in to unlock AI meal scanning and keep your data in sync.",
+    "email": "Email address",
+    "password": "Password",
+    "signIn": "Sign in",
+    "createAccount": "Create account",
+    "haveAccount": "Already have an account? Sign in",
+    "needAccount": "No account yet? Create one",
+    "orContinueWith": "or continue with",
+    "google": "Google",
+    "facebook": "Facebook",
+    "continueAsGuest": "Continue without an account",
+    "back": "Back",
+    "errorTitle": "Authentication error",
+    "missingCredentials": "Please enter your email and password.",
+    "signInErrorMessage": "Incorrect email or password.",
+    "signUpErrorMessage": "Unable to create the account. Check your details.",
+    "signUpSuccessTitle": "Account created",
+    "signUpSuccessMessage": "Check your inbox if confirmation is required, then sign in.",
+    "oauthErrorMessage": "Social sign-in failed. Please try again.",
+    "signOutErrorMessage": "Sign out failed.",
+    "notConfiguredTitle": "Authentication not configured",
+    "notConfiguredMessage": "Add EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY to enable sign-in."
   },
   "allMeals": {
     "title": "All Meals",
     "clearAll": "Clear All",
-    "noMeals": "No meals logged yet."
+    "noMeals": "No meals logged yet.",
+    "today": "Today",
+    "yesterday": "Yesterday"
   },
   "mealItem": {
     "deleteTitle": "Delete Meal",
@@ -75,6 +104,17 @@
     "title": "Copied!",
     "message": "Macro summary copied to clipboard."
   },
+  "share": {
+    "buttonLabel": "Share daily summary",
+    "dialogTitle": "Share nutriFlow summary",
+    "mealsTitle": "Today's meals",
+    "dailyTotal": "Daily total",
+    "footer": "Nutrition tracking with nutriFlow",
+    "noMealsTitle": "No meals today",
+    "noMealsMessage": "Log at least one meal to share your daily summary.",
+    "errorTitle": "Unable to share",
+    "errorMessage": "The image could not be generated. Please try again in a moment."
+  },
   "reminders": {
     "label": "Meal Reminders"
   },
@@ -84,6 +124,11 @@
   },
   "settings": {
     "title": "Settings",
+    "account": {
+      "title": "Account",
+      "guestDescription": "Sign in to use AI scanning and access your meals across devices.",
+      "signOut": "Sign out"
+    },
     "language": "Language",
     "languageDescription": "Choose your preferred language",
     "english": "English",
