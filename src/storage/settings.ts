@@ -32,7 +32,9 @@ function getThemeKey() {
 
 export async function getStoredTheme(): Promise<ThemeMode | null> {
   const value = await AsyncStorage.getItem(getThemeKey());
-  return value === "light" || value === "dark" ? value : null;
+  return value === "light" || value === "dark" || value === "system"
+    ? value
+    : null;
 }
 
 export async function setStoredTheme(theme: ThemeMode): Promise<void> {

@@ -54,4 +54,15 @@ export const lightTheme: ThemeColors = {
   toastInfo: "#e3f2fd",
 };
 
-export type ThemeMode = "dark" | "light";
+export type ThemeMode = "system" | "dark" | "light";
+
+export function resolveThemeMode(
+  mode: ThemeMode,
+  systemScheme: "light" | "dark" | null | undefined,
+): "light" | "dark" {
+  if (mode === "system") {
+    return systemScheme === "light" ? "light" : "dark";
+  }
+
+  return mode;
+}

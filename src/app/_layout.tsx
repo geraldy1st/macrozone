@@ -1,6 +1,7 @@
 import NavigationGuard from "@/components/NavigationGuard";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { AlertProvider } from "@/contexts/AlertContext";
 import { ToastProvider } from "@/contexts/ToastContext";
 import { initI18n } from "@/i18n";
 import { Stack } from "expo-router";
@@ -31,15 +32,18 @@ export default function RootLayout() {
       <ThemeProvider>
         <AuthProvider>
           <ToastProvider>
-            <NavigationGuard />
-            <Stack screenOptions={{ headerShown: false }}>
-              <Stack.Screen name="welcome" />
-              <Stack.Screen name="(tabs)" />
-              <Stack.Screen name="settings" />
-              <Stack.Screen name="login" />
-              <Stack.Screen name="verify-email" />
-              <Stack.Screen name="auth/callback" />
-            </Stack>
+            <AlertProvider>
+              <NavigationGuard />
+              <Stack screenOptions={{ headerShown: false }}>
+                <Stack.Screen name="welcome" />
+                <Stack.Screen name="(tabs)" />
+                <Stack.Screen name="settings" />
+                <Stack.Screen name="favorite-meals" />
+                <Stack.Screen name="login" />
+                <Stack.Screen name="verify-email" />
+                <Stack.Screen name="auth/callback" />
+              </Stack>
+            </AlertProvider>
           </ToastProvider>
         </AuthProvider>
       </ThemeProvider>

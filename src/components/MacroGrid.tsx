@@ -91,7 +91,7 @@ function createStyles(_colors: ThemeColors) {
     },
     row: {
       flexDirection: "row",
-      gap: 10,
+      gap: 8,
     },
   });
 }

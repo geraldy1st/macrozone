@@ -2,6 +2,9 @@
   "app": {
     "name": "nutriFlow"
   },
+  "common": {
+    "ok": "OK"
+  },
   "tabs": {
     "home": "Home",
     "addMeals": "Add Meal",
@@ -130,14 +133,19 @@
     "clearAll": "Clear All",
     "noMeals": "No meals logged yet.",
     "today": "Today",
-    "yesterday": "Yesterday"
+    "yesterday": "Yesterday",
+    "favoritesButton": "My favorite meals",
+    "favoritesTitle": "Favorite meals",
+    "favoritesEmpty": "No favorite meals yet. Tap a meal on the All Meals page to add it to your favorites."
   },
   "mealItem": {
     "deleteTitle": "Delete Meal",
     "deleteMessage": "Are you sure you want to delete \"{{name}}\"?",
     "cancel": "Cancel",
     "delete": "Delete",
-    "deletedMessage": "Meal deleted successfully"
+    "deletedMessage": "Meal deleted successfully",
+    "favoriteAdded": "Meal added to favorites",
+    "favoriteRemoved": "Meal removed from favorites"
   },
   "copy": {
     "title": "Copied!",
@@ -166,8 +174,10 @@
     "theme": {
       "title": "Theme",
       "description": "Choose how the app looks",
+      "system": "System",
       "dark": "Dark mode",
       "light": "Light mode",
+      "systemEnabled": "System theme enabled",
       "darkEnabled": "Dark mode enabled",
       "lightEnabled": "Light mode enabled"
     },

@@ -2,6 +2,7 @@ import { getStoredTheme, setStoredTheme } from "@/storage/settings";
 import {
   darkTheme,
   lightTheme,
+  resolveThemeMode,
   type ThemeColors,
   type ThemeMode,
 } from "@/styles/themes";
@@ -28,30 +29,32 @@ const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const systemScheme = useColorScheme();
-  const [mode, setModeState] = useState<ThemeMode>("dark");
+  const [mode, setModeState] = useState<ThemeMode>("system");
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
     getStoredTheme().then((stored) => {
-      setModeState(stored ?? (systemScheme === "light" ? "light" : "dark"));
+      setModeState(stored ?? "system");
       setIsReady(true);
     });
-  }, [systemScheme]);
+  }, []);
 
   const setMode = useCallback(async (nextMode: ThemeMode) => {
     setModeState(nextMode);
     await setStoredTheme(nextMode);
   }, []);
 
+  const resolvedMode = resolveThemeMode(mode, systemScheme);
+
   const value = useMemo(
     () => ({
       mode,
-      colors: mode === "light" ? lightTheme : darkTheme,
-      isDark: mode === "dark",
+      colors: resolvedMode === "light" ? lightTheme : darkTheme,
+      isDark: resolvedMode === "dark",
       setMode,
       isReady,
     }),
-    [mode, setMode, isReady],
+    [mode, resolvedMode, setMode, isReady],
   );
 
   return (

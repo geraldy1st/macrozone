@@ -1,4 +1,5 @@
 import AppLogo from "@/components/AppLogo";
+import { useAlert } from "@/contexts/AlertContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 
@@ -10,7 +11,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -24,6 +24,7 @@ import {
 export default function LoginScreen() {
   const { t } = useTranslation();
   const { colors } = useTheme();
+  const { showAlert } = useAlert();
   const { mode } = useLocalSearchParams<{ mode?: string }>();
   const { isConfigured, signInWithEmail, signUpWithEmail, signInWithOAuth } =
     useAuth();
@@ -54,7 +55,10 @@ export default function LoginScreen() {
     const trimmedEmail = email.trim();
 
     if (!trimmedEmail || !password.trim()) {
-      Alert.alert(t("auth.errorTitle"), t("auth.missingCredentials"));
+      showAlert({
+        title: t("auth.errorTitle"),
+        message: t("auth.missingCredentials"),
+      });
       return;
     }
 
@@ -81,10 +85,12 @@ export default function LoginScreen() {
         return;
       }
 
-      Alert.alert(
-        t("auth.errorTitle"),
-        isSignUp ? t("auth.signUpErrorMessage") : t("auth.signInErrorMessage"),
-      );
+      showAlert({
+        title: t("auth.errorTitle"),
+        message: isSignUp
+          ? t("auth.signUpErrorMessage")
+          : t("auth.signInErrorMessage"),
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -103,12 +109,13 @@ export default function LoginScreen() {
         return;
       }
 
-      Alert.alert(
-        t("auth.errorTitle"),
-        errorCode === "OAUTH_SESSION_MISSING"
-          ? t("auth.oauthSessionErrorMessage")
-          : t("auth.oauthErrorMessage"),
-      );
+      showAlert({
+        title: t("auth.errorTitle"),
+        message:
+          errorCode === "OAUTH_SESSION_MISSING"
+            ? t("auth.oauthSessionErrorMessage")
+            : t("auth.oauthErrorMessage"),
+      });
     } finally {
       setOauthProvider(null);
     }

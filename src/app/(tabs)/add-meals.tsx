@@ -3,6 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { addMeal } from "@/storage/meals";
 import { AnalyzeMealError, analyzeMealPhoto } from "@/utils/analyzeMeal";
 import { prepareImageForUpload } from "@/utils/photos";
+import { useAlert } from "@/contexts/AlertContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useToast } from "@/contexts/ToastContext";
 import { macroColors } from "@/styles/themes";
@@ -15,7 +16,6 @@ import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -32,6 +32,7 @@ export default function AddMealScreen() {
   const { user, session, isConfigured } = useAuth();
   const { colors } = useTheme();
   const { showToast } = useToast();
+  const { showAlert } = useAlert();
   const insets = useSafeAreaInsets();
   const styles = useMemo(() => createScreenStyles(colors), [colors]);
   const canUseAiScan = isConfigured && Boolean(user && session?.access_token);
@@ -57,15 +58,18 @@ export default function AddMealScreen() {
 
   const runAnalysis = async (uri: string) => {
     if (!ANALYZE_API_URL) {
-      Alert.alert(
-        t("addMeal.apiNotConfiguredTitle"),
-        t("addMeal.apiNotConfiguredMessage"),
-      );
+      showAlert({
+        title: t("addMeal.apiNotConfiguredTitle"),
+        message: t("addMeal.apiNotConfiguredMessage"),
+      });
       return;
     }
 
     if (!session?.access_token) {
-      Alert.alert(t("addMeal.authRequiredTitle"), t("addMeal.authRequiredMessage"));
+      showAlert({
+        title: t("addMeal.authRequiredTitle"),
+        message: t("addMeal.authRequiredMessage"),
+      });
       return;
     }
 
@@ -103,14 +107,17 @@ export default function AddMealScreen() {
         const [titleKey, messageKey] =
           errorMessages[error.code] ?? errorMessages.ANALYSIS_FAILED;
 
-        Alert.alert(t(`addMeal.${titleKey}`), t(`addMeal.${messageKey}`));
+        showAlert({
+          title: t(`addMeal.${titleKey}`),
+          message: t(`addMeal.${messageKey}`),
+        });
         return;
       }
 
-      Alert.alert(
-        t("addMeal.analysisErrorTitle"),
-        t("addMeal.analysisErrorMessage"),
-      );
+      showAlert({
+        title: t("addMeal.analysisErrorTitle"),
+        message: t("addMeal.analysisErrorMessage"),
+      });
     } finally {
       setIsAnalyzing(false);
     }
@@ -138,10 +145,10 @@ export default function AddMealScreen() {
     const permission = await ImagePicker.requestCameraPermissionsAsync();
 
     if (!permission.granted) {
-      Alert.alert(
-        t("addMeal.cameraPermissionTitle"),
-        t("addMeal.cameraPermissionMessage"),
-      );
+      showAlert({
+        title: t("addMeal.cameraPermissionTitle"),
+        message: t("addMeal.cameraPermissionMessage"),
+      });
       return;
     }
 
@@ -158,11 +165,14 @@ export default function AddMealScreen() {
   };
 
   const handleScanMeal = () => {
-    Alert.alert(t("addMeal.photoPickerTitle"), undefined, [
-      { text: t("addMeal.takePhoto"), onPress: takePhoto },
-      { text: t("addMeal.choosePhoto"), onPress: pickFromLibrary },
-      { text: t("mealItem.cancel"), style: "cancel" },
-    ]);
+    showAlert({
+      title: t("addMeal.photoPickerTitle"),
+      buttons: [
+        { text: t("addMeal.takePhoto"), onPress: takePhoto },
+        { text: t("addMeal.choosePhoto"), onPress: pickFromLibrary },
+        { text: t("mealItem.cancel"), style: "cancel" },
+      ],
+    });
   };
 
   const handleRemovePhoto = () => {
@@ -172,7 +182,10 @@ export default function AddMealScreen() {
 
   const handleAddMeal = async () => {
     if (!name.trim() || calories.trim() === "") {
-      Alert.alert(t("addMeal.errorTitle"), t("addMeal.errorMessage"));
+      showAlert({
+        title: t("addMeal.errorTitle"),
+        message: t("addMeal.errorMessage"),
+      });
       return;
     }
 
@@ -195,7 +208,10 @@ export default function AddMealScreen() {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       router.push("/");
     } catch {
-      Alert.alert(t("addMeal.saveErrorTitle"), t("addMeal.saveErrorMessage"));
+      showAlert({
+        title: t("addMeal.saveErrorTitle"),
+        message: t("addMeal.saveErrorMessage"),
+      });
     } finally {
       setIsSaving(false);
     }

@@ -2,6 +2,9 @@
   "app": {
     "name": "nutriFlow"
   },
+  "common": {
+    "ok": "OK"
+  },
   "tabs": {
     "home": "Accueil",
     "addMeals": "Ajouter",
@@ -130,14 +133,19 @@
     "clearAll": "Tout effacer",
     "noMeals": "Aucun repas enregistré.",
     "today": "Aujourd'hui",
-    "yesterday": "Hier"
+    "yesterday": "Hier",
+    "favoritesButton": "Mes repas favoris",
+    "favoritesTitle": "Repas favoris",
+    "favoritesEmpty": "Aucun repas favori pour le moment. Appuyez sur un repas dans la page Repas pour l'ajouter à vos favoris."
   },
   "mealItem": {
     "deleteTitle": "Supprimer le repas",
     "deleteMessage": "Voulez-vous vraiment supprimer « {{name}} » ?",
     "cancel": "Annuler",
     "delete": "Supprimer",
-    "deletedMessage": "Repas supprimé avec succès"
+    "deletedMessage": "Repas supprimé avec succès",
+    "favoriteAdded": "Repas ajouté aux favoris",
+    "favoriteRemoved": "Repas retiré des favoris"
   },
   "copy": {
     "title": "Copié !",
@@ -166,8 +174,10 @@
     "theme": {
       "title": "Thème",
       "description": "Choisissez l'apparence de l'application",
+      "system": "Système",
       "dark": "Mode sombre",
       "light": "Mode clair",
+      "systemEnabled": "Thème système activé",
       "darkEnabled": "Mode sombre activé",
       "lightEnabled": "Mode clair activé"
     },

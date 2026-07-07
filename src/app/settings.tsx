@@ -95,9 +95,7 @@ export default function SettingsScreen() {
 
     await setMode(nextMode);
     showToast(
-      nextMode === "dark"
-        ? t("settings.theme.darkEnabled")
-        : t("settings.theme.lightEnabled"),
+      t(`settings.theme.${nextMode}Enabled`),
       "info",
     );
   };
@@ -135,7 +133,7 @@ export default function SettingsScreen() {
       </Text>
 
       <View style={styles.options}>
-        {(["dark", "light"] as ThemeMode[]).map((themeMode) => {
+        {(["system", "dark", "light"] as ThemeMode[]).map((themeMode) => {
           const isSelected = mode === themeMode;
 
           return (

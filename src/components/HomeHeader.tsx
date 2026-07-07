@@ -13,13 +13,20 @@ export default function HomeHeader() {
   });
 
   return (
-    <Text style={[styles.date, { color: colors.textSecondary }]}>{currentDate}</Text>
+    <Text
+      style={[styles.date, { color: colors.textSecondary }]}
+      numberOfLines={1}
+      adjustsFontSizeToFit
+      minimumFontScale={0.8}
+    >
+      {currentDate}
+    </Text>
   );
 }
 
 const styles = StyleSheet.create({
   date: {
-    fontSize: 13,
+    fontSize: 12,
     marginTop: 2,
     textTransform: "capitalize",
   },

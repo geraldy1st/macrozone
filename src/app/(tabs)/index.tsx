@@ -50,8 +50,11 @@ export default function HomeScreen() {
         <View style={globalStyles.header}>
           <View style={styles.titleRow}>
             <AppLogo size={44} />
-            <View>
-              <Text style={[globalStyles.title, { color: colors.text }]}>
+            <View style={styles.titleBlock}>
+              <Text
+                style={[globalStyles.title, styles.appTitle, { color: colors.text }]}
+                numberOfLines={1}
+              >
                 {t("app.name")}
               </Text>
               <HomeHeader />
@@ -62,7 +65,9 @@ export default function HomeScreen() {
 
         <View style={styles.quoteCard}>
           <View style={styles.quoteAccent} />
-          <Text style={styles.quote}>{quote}</Text>
+          <Text style={styles.quote} numberOfLines={4}>
+            {quote}
+          </Text>
         </View>
       </View>
 
@@ -92,6 +97,14 @@ function createStyles(colors: ThemeColors) {
       alignItems: "center",
       gap: 14,
       flex: 1,
+      minWidth: 0,
+    },
+    titleBlock: {
+      flex: 1,
+      minWidth: 0,
+    },
+    appTitle: {
+      fontSize: 24,
     },
     quoteCard: {
       flexDirection: "row",
@@ -108,12 +121,12 @@ function createStyles(colors: ThemeColors) {
     },
     quote: {
       flex: 1,
-      fontSize: 15,
+      fontSize: 13,
       fontStyle: "italic",
       fontWeight: "500",
       color: colors.primary,
-      padding: 16,
-      lineHeight: 22,
+      padding: 14,
+      lineHeight: 19,
     },
     actionsCard: {
       backgroundColor: colors.card,

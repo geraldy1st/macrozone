@@ -30,18 +30,28 @@ export default function MacroCard({
   return (
     <View style={[styles.card, isHero && styles.heroCard]}>
       <View style={styles.header}>
-        <Text style={[styles.label, isHero && styles.heroLabel]}>{label}</Text>
+        <Text
+          style={[styles.label, isHero && styles.heroLabel]}
+          numberOfLines={1}
+        >
+          {label}
+        </Text>
         <View style={[styles.badge, { backgroundColor: `${color}22` }]}>
           <Text style={[styles.badgeText, { color }]}>{percent}%</Text>
         </View>
       </View>
 
-      <Text style={[styles.value, isHero && styles.heroValue]}>
+      <Text
+        style={[styles.value, isHero && styles.heroValue]}
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        minimumFontScale={0.7}
+      >
         {current.toLocaleString()}
         {unit}
       </Text>
 
-      <Text style={styles.goal}>
+      <Text style={styles.goal} numberOfLines={1}>
         {t("macros.ofGoal", {
           goal: `${goal.toLocaleString()}${unit}`,
         })}
@@ -61,15 +71,15 @@ function createStyles(colors: ThemeColors) {
   card: {
     backgroundColor: colors.card,
     borderRadius: 16,
-    padding: 16,
+    padding: 12,
     borderWidth: 1,
     borderColor: colors.cardBorder,
     flex: 1,
-    minWidth: "30%",
+    minWidth: 0,
   },
   heroCard: {
     width: "100%",
-    padding: 24,
+    padding: 18,
     marginBottom: 4,
   },
   header: {
@@ -79,14 +89,15 @@ function createStyles(colors: ThemeColors) {
     marginBottom: 8,
   },
   label: {
-    fontSize: 13,
+    flex: 1,
+    fontSize: 11,
     fontWeight: "600",
     color: colors.textSecondary,
     textTransform: "uppercase",
-    letterSpacing: 0.8,
+    letterSpacing: 0.5,
   },
   heroLabel: {
-    fontSize: 14,
+    fontSize: 12,
   },
   badge: {
     paddingHorizontal: 10,
@@ -98,19 +109,19 @@ function createStyles(colors: ThemeColors) {
     fontWeight: "700",
   },
   value: {
-    fontSize: 20,
+    fontSize: 16,
     fontWeight: "800",
     color: colors.text,
     marginBottom: 4,
   },
   heroValue: {
-    fontSize: 42,
-    marginBottom: 6,
+    fontSize: 30,
+    marginBottom: 4,
   },
   goal: {
-    fontSize: 13,
+    fontSize: 11,
     color: colors.textSecondary,
-    marginBottom: 12,
+    marginBottom: 10,
   },
   });
 }
