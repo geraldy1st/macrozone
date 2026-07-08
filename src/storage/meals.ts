@@ -11,6 +11,9 @@ export type Meal = {
   fat: number;
   createdAt: string;
   photoUri?: string;
+  description?: string;
+  recipe?: string;
+  templateId?: string;
 };
 
 const MEALS_KEY = "meals";
@@ -24,9 +27,21 @@ export const getMeals = async (): Promise<Meal[]> => {
   return data ? JSON.parse(data) : [];
 };
 
+export const getMealById = async (id: string): Promise<Meal | null> => {
+  const meals = await getMeals();
+  return meals.find((meal) => meal.id === id) ?? null;
+};
+
+type MealInput = Omit<Meal, "id" | "createdAt" | "photoUri">;
+
+type AddMealOptions = {
+  copyPhotoUri?: string;
+};
+
 export const addMeal = async (
-  meal: Omit<Meal, "id" | "createdAt" | "photoUri">,
+  meal: MealInput,
   tempPhotoUri?: string,
+  options?: AddMealOptions,
 ): Promise<Meal> => {
   const meals = await getMeals();
   const id = Date.now().toString();
@@ -34,6 +49,8 @@ export const addMeal = async (
 
   if (tempPhotoUri) {
     photoUri = await saveMealPhoto(tempPhotoUri, id);
+  } else if (options?.copyPhotoUri) {
+    photoUri = await saveMealPhoto(options.copyPhotoUri, id);
   }
 
   const newMeal: Meal = {
@@ -47,15 +64,61 @@ export const addMeal = async (
   return newMeal;
 };
 
-export const deleteMeal = async (id: string): Promise<void> => {
+export const updateMeal = async (
+  id: string,
+  updates: Partial<MealInput> & { photoUri?: string | null },
+): Promise<Meal | null> => {
   const meals = await getMeals();
-  const meal = meals.find((item) => item.id === id);
+  const index = meals.findIndex((meal) => meal.id === id);
 
-  if (meal?.photoUri) {
-    await deleteMealPhoto(meal.photoUri);
+  if (index === -1) {
+    return null;
   }
 
-  const filtered = meals.filter((item) => item.id !== id);
+  const current = meals[index];
+  let photoUri = current.photoUri;
+
+  if (updates.photoUri === null) {
+    if (photoUri) {
+      await deleteMealPhoto(photoUri);
+    }
+    photoUri = undefined;
+  } else if (updates.photoUri) {
+    photoUri = updates.photoUri;
+  }
+
+  const updatedMeal: Meal = {
+    ...current,
+    ...updates,
+    photoUri,
+    id: current.id,
+    createdAt: current.createdAt,
+  };
+
+  meals[index] = updatedMeal;
+  await AsyncStorage.setItem(getMealsKey(), JSON.stringify(meals));
+  return updatedMeal;
+};
+
+export const deleteMeal = async (id: string): Promise<void> => {
+  await deleteMeals([id]);
+};
+
+export const deleteMeals = async (ids: string[]): Promise<void> => {
+  if (ids.length === 0) {
+    return;
+  }
+
+  const meals = await getMeals();
+  const idSet = new Set(ids);
+
+  for (const meal of meals) {
+    if (idSet.has(meal.id) && meal.photoUri) {
+      await deleteMealPhoto(meal.photoUri);
+    }
+  }
+
+  const filtered = meals.filter((item) => !idSet.has(item.id));
   await AsyncStorage.setItem(getMealsKey(), JSON.stringify(filtered));
 };
 

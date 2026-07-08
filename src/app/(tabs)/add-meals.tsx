@@ -25,6 +25,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useBottomContentPadding } from "@/hooks/useBottomContentPadding";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function AddMealScreen() {
@@ -34,6 +35,7 @@ export default function AddMealScreen() {
   const { showToast } = useToast();
   const { showAlert } = useAlert();
   const insets = useSafeAreaInsets();
+  const bottomPadding = useBottomContentPadding(16);
   const styles = useMemo(() => createScreenStyles(colors), [colors]);
   const canUseAiScan = isConfigured && Boolean(user && session?.access_token);
   const [name, setName] = useState("");
@@ -44,6 +46,8 @@ export default function AddMealScreen() {
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [description, setDescription] = useState("");
+  const [recipe, setRecipe] = useState("");
   const [hasAiResult, setHasAiResult] = useState(false);
 
   const resetForm = () => {
@@ -53,6 +57,8 @@ export default function AddMealScreen() {
     setCarbs("");
     setFat("");
     setPhotoUri(null);
+    setDescription("");
+    setRecipe("");
     setHasAiResult(false);
   };
 
@@ -199,6 +205,8 @@ export default function AddMealScreen() {
           protein: Number(protein) || 0,
           carbs: Number(carbs) || 0,
           fat: Number(fat) || 0,
+          description: description.trim() || undefined,
+          recipe: recipe.trim() || undefined,
         },
         photoUri ?? undefined,
       );
@@ -225,7 +233,7 @@ export default function AddMealScreen() {
     >
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomPadding }]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
@@ -341,6 +349,24 @@ export default function AddMealScreen() {
           onChangeText={setFat}
         />
       </View>
+
+      <TextInput
+        style={[styles.input, styles.multiline]}
+        placeholder={t("addMeal.description")}
+        placeholderTextColor={colors.textSecondary}
+        value={description}
+        onChangeText={setDescription}
+        multiline
+      />
+
+      <TextInput
+        style={[styles.input, styles.multiline]}
+        placeholder={t("addMeal.recipe")}
+        placeholderTextColor={colors.textSecondary}
+        value={recipe}
+        onChangeText={setRecipe}
+        multiline
+      />
 
       </ScrollView>
 
@@ -519,6 +545,10 @@ function createScreenStyles(colors: ReturnType<typeof useTheme>["colors"]) {
   },
   rowInput: {
     flex: 1,
+  },
+  multiline: {
+    minHeight: 100,
+    textAlignVertical: "top",
   },
   button: {
     backgroundColor: colors.primary,

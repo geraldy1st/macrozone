@@ -22,7 +22,19 @@
   "profile": {
     "title": "Profil",
     "openSettings": "Paramètres",
+    "personalInfo": "Informations personnelles",
+    "health": "Santé",
     "name": "Nom",
+    "country": "Pays",
+    "selectCountry": "Sélectionner un pays",
+    "gender": "Genre",
+    "phone": "Téléphone",
+    "genderOptions": {
+      "male": "Homme",
+      "female": "Femme",
+      "other": "Autre",
+      "prefer_not_to_say": "Ne pas préciser"
+    },
     "age": "Âge",
     "height": "Taille (cm)",
     "weight": "Poids (kg)",
@@ -53,6 +65,8 @@
     "protein": "Protéines (g)",
     "carbs": "Glucides (g)",
     "fat": "Lipides (g)",
+    "description": "Description (optionnel)",
+    "recipe": "Recette (optionnel)",
     "submit": "Ajouter le repas",
     "errorTitle": "Erreur",
     "errorMessage": "Veuillez saisir un nom de repas et les calories.",
@@ -130,13 +144,39 @@
   },
   "allMeals": {
     "title": "Tous les repas",
-    "clearAll": "Tout effacer",
+    "editMode": "Modifier",
+    "done": "Terminer",
+    "deleteSelected": "Supprimer ({{count}})",
+    "deleteSelectedTitle": "Supprimer les repas sélectionnés",
+    "deleteSelectedMessage": "Supprimer {{count}} repas sélectionné(s) ?",
+    "deleteSelectedSuccess": "{{count}} repas supprimé(s)",
+    "addForToday": "Ajouter pour aujourd'hui",
+    "addedForToday": "Repas ajouté au journal du jour",
+    "duplicateTitle": "Déjà enregistré aujourd'hui",
+    "duplicateMessage": "« {{name}} » est déjà dans vos repas récents du jour. L'ajouter à nouveau ?",
+    "duplicateConfirm": "Ajouter quand même",
     "noMeals": "Aucun repas enregistré.",
     "today": "Aujourd'hui",
     "yesterday": "Hier",
     "favoritesButton": "Mes repas favoris",
     "favoritesTitle": "Repas favoris",
-    "favoritesEmpty": "Aucun repas favori pour le moment. Appuyez sur un repas dans la page Repas pour l'ajouter à vos favoris."
+    "favoritesEmpty": "Aucun repas favori pour le moment. Appuyez sur l'étoile d'un repas dans la page Repas pour l'ajouter à vos favoris."
+  },
+  "mealDetail": {
+    "description": "Description",
+    "recipe": "Recette",
+    "noDescription": "Aucune description pour le moment.",
+    "noRecipe": "Aucune recette pour le moment.",
+    "shareTitle": "Partager le repas"
+  },
+  "mealEdit": {
+    "title": "Modifier le repas",
+    "save": "Enregistrer",
+    "savedMessage": "Repas mis à jour avec succès",
+    "addPhoto": "Ajouter une photo",
+    "changePhoto": "Changer la photo",
+    "notFoundTitle": "Repas introuvable",
+    "notFoundMessage": "Ce repas n'existe plus."
   },
   "mealItem": {
     "deleteTitle": "Supprimer le repas",

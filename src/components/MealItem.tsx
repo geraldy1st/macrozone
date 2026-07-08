@@ -1,3 +1,4 @@
+import FavoriteStar from "@/components/FavoriteStar";
 import { useAlert } from "@/contexts/AlertContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useToast } from "@/contexts/ToastContext";
@@ -20,8 +21,12 @@ type MealItemProps = {
   fat: number;
   photoUri?: string;
   isFavorite?: boolean;
-  enableFavorite?: boolean;
+  showFavoriteStar?: boolean;
   onToggleFavorite?: () => void;
+  onPress?: () => void;
+  selectionMode?: boolean;
+  isSelected?: boolean;
+  onToggleSelect?: () => void;
   onDelete: () => void;
 };
 
@@ -34,8 +39,12 @@ export default function MealItem({
   fat,
   photoUri,
   isFavorite = false,
-  enableFavorite = false,
+  showFavoriteStar = false,
   onToggleFavorite,
+  onPress,
+  selectionMode = false,
+  isSelected = false,
+  onToggleSelect,
   onDelete,
 }: MealItemProps) {
   const { t } = useTranslation();
@@ -44,11 +53,7 @@ export default function MealItem({
   const { showAlert } = useAlert();
   const styles = useThemedStyles(createStyles);
 
-  const handlePress = async () => {
-    if (!enableFavorite) {
-      return;
-    }
-
+  const handleFavoritePress = async () => {
     const favorited = await toggleFavorite(id);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     showToast(
@@ -59,6 +64,10 @@ export default function MealItem({
   };
 
   const handleLongPress = () => {
+    if (selectionMode) {
+      return;
+    }
+
     showAlert({
       title: t("mealItem.deleteTitle"),
       message: t("mealItem.deleteMessage", { name }),
@@ -78,29 +87,60 @@ export default function MealItem({
     });
   };
 
+  const handlePress = () => {
+    if (selectionMode) {
+      onToggleSelect?.();
+      return;
+    }
+
+    onPress?.();
+  };
+
   return (
     <TouchableOpacity
-      style={styles.container}
+      style={[
+        styles.container,
+        selectionMode && isSelected && styles.containerSelected,
+      ]}
       onPress={handlePress}
       onLongPress={handleLongPress}
       delayLongPress={400}
     >
+      {selectionMode && (
+        <TouchableOpacity
+          style={[
+            styles.checkbox,
+            {
+              borderColor: isSelected ? colors.accent : colors.cardBorder,
+              backgroundColor: isSelected ? colors.accent : colors.surface,
+            },
+          ]}
+          onPress={onToggleSelect}
+        >
+          {isSelected && <Ionicons name="checkmark" size={14} color={colors.background} />}
+        </TouchableOpacity>
+      )}
+
       {photoUri && (
         <Image source={{ uri: photoUri }} style={styles.thumbnail} contentFit="cover" />
       )}
       <View style={styles.content}>
-        <View style={styles.nameRow}>
-          <Text style={styles.name} numberOfLines={1}>
-            {name}
-          </Text>
-          {isFavorite && (
-            <Ionicons name="star" size={16} color={colors.accent} />
-          )}
-        </View>
+        <Text style={styles.name} numberOfLines={1}>
+          {name}
+        </Text>
         <Text style={styles.macros} numberOfLines={1}>
           {t("macros.mealMacros", { calories, protein, carbs, fat })}
         </Text>
       </View>
+
+      {showFavoriteStar && (
+        <FavoriteStar
+          isFavorite={isFavorite}
+          onPress={handleFavoritePress}
+          testID={`favorite-star-${id}`}
+        />
+      )}
+
       <View style={styles.calorieBadge}>
         <Text style={styles.calorieValue}>{calories}</Text>
         <Text style={styles.calorieUnit}>cal</Text>
@@ -121,6 +161,18 @@ function createStyles(colors: ThemeColors) {
       borderWidth: 1,
       borderColor: colors.cardBorder,
     },
+    containerSelected: {
+      borderColor: colors.accent,
+    },
+    checkbox: {
+      width: 22,
+      height: 22,
+      borderRadius: 6,
+      borderWidth: 2,
+      alignItems: "center",
+      justifyContent: "center",
+      marginRight: 10,
+    },
     thumbnail: {
       width: 52,
       height: 52,
@@ -131,13 +183,7 @@ function createStyles(colors: ThemeColors) {
       flex: 1,
       minWidth: 0,
     },
-    nameRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 6,
-    },
     name: {
-      flex: 1,
       fontSize: 16,
       fontWeight: "700",
       color: colors.text,
@@ -154,7 +200,7 @@ function createStyles(colors: ThemeColors) {
       paddingHorizontal: 10,
       paddingVertical: 8,
       minWidth: 52,
-      marginLeft: 8,
+      marginLeft: 4,
     },
     calorieValue: {
       fontSize: 16,

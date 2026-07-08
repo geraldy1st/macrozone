@@ -9,6 +9,7 @@ import { getRandomQuote } from "@/data/motivationalQuotes";
 import { useAuth } from "@/contexts/AuthContext";
 import { getMeals, Meal } from "@/storage/meals";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useBottomContentPadding } from "@/hooks/useBottomContentPadding";
 import { useThemedStyles } from "@/hooks/useThemedStyles";
 import { globalStyles } from "@/styles/global";
 import type { ThemeColors } from "@/styles/themes";
@@ -23,6 +24,7 @@ export default function HomeScreen() {
   const { user } = useAuth();
   const { colors } = useTheme();
   const styles = useThemedStyles(createStyles);
+  const bottomPadding = useBottomContentPadding();
   const [meals, setMeals] = useState<Meal[]>([]);
   const [quote, setQuote] = useState(() => getRandomQuote());
 
@@ -43,7 +45,7 @@ export default function HomeScreen() {
   return (
     <ScrollView
       style={[globalStyles.container, { backgroundColor: colors.background }]}
-      contentContainerStyle={styles.content}
+      contentContainerStyle={[styles.content, { paddingBottom: bottomPadding }]}
       showsVerticalScrollIndicator={false}
     >
       <View style={styles.heroSection}>
@@ -86,9 +88,7 @@ export default function HomeScreen() {
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-    content: {
-      paddingBottom: 40,
-    },
+    content: {},
     heroSection: {
       marginBottom: 28,
     },

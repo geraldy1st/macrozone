@@ -1,5 +1,8 @@
+import { defaultCountryCode } from "@/data/countries";
 import { scopedKey } from "@/storage/scopedKey";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+
+export type GenderOption = "male" | "female" | "other" | "prefer_not_to_say" | "";
 
 export type UserProfile = {
   name: string;
@@ -7,6 +10,10 @@ export type UserProfile = {
   height: string;
   weight: string;
   photoUri?: string;
+  countryCode: string;
+  gender: GenderOption;
+  phoneDialCode: string;
+  phoneNumber: string;
 };
 
 export const defaultProfile: UserProfile = {
@@ -14,6 +21,10 @@ export const defaultProfile: UserProfile = {
   age: "",
   height: "",
   weight: "",
+  countryCode: defaultCountryCode,
+  gender: "",
+  phoneDialCode: "+33",
+  phoneNumber: "",
 };
 
 const PROFILE_KEY = "userProfile";
@@ -24,7 +35,12 @@ function getProfileKey() {
 
 export async function getUserProfile(): Promise<UserProfile> {
   const data = await AsyncStorage.getItem(getProfileKey());
-  return data ? { ...defaultProfile, ...JSON.parse(data) } : defaultProfile;
+
+  if (!data) {
+    return defaultProfile;
+  }
+
+  return { ...defaultProfile, ...JSON.parse(data) };
 }
 
 export async function setUserProfile(profile: UserProfile): Promise<void> {

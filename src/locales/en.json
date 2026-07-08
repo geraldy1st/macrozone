@@ -22,7 +22,19 @@
   "profile": {
     "title": "Profile",
     "openSettings": "Settings",
+    "personalInfo": "Personal information",
+    "health": "Health",
     "name": "Name",
+    "country": "Country",
+    "selectCountry": "Select a country",
+    "gender": "Gender",
+    "phone": "Phone number",
+    "genderOptions": {
+      "male": "Male",
+      "female": "Female",
+      "other": "Other",
+      "prefer_not_to_say": "Prefer not to say"
+    },
     "age": "Age",
     "height": "Height (cm)",
     "weight": "Weight (kg)",
@@ -53,6 +65,8 @@
     "protein": "Protein (g)",
     "carbs": "Carbs (g)",
     "fat": "Fat (g)",
+    "description": "Description (optional)",
+    "recipe": "Recipe (optional)",
     "submit": "Add Meal",
     "errorTitle": "Error",
     "errorMessage": "Please enter a meal name and calories.",
@@ -130,13 +144,39 @@
   },
   "allMeals": {
     "title": "All Meals",
-    "clearAll": "Clear All",
+    "editMode": "Edit",
+    "done": "Done",
+    "deleteSelected": "Delete ({{count}})",
+    "deleteSelectedTitle": "Delete selected meals",
+    "deleteSelectedMessage": "Delete {{count}} selected meal(s)?",
+    "deleteSelectedSuccess": "{{count}} meal(s) deleted",
+    "addForToday": "Add for today",
+    "addedForToday": "Meal added to today's log",
+    "duplicateTitle": "Already logged today",
+    "duplicateMessage": "\"{{name}}\" is already in your recent meals today. Add it again?",
+    "duplicateConfirm": "Add anyway",
     "noMeals": "No meals logged yet.",
     "today": "Today",
     "yesterday": "Yesterday",
     "favoritesButton": "My favorite meals",
     "favoritesTitle": "Favorite meals",
-    "favoritesEmpty": "No favorite meals yet. Tap a meal on the All Meals page to add it to your favorites."
+    "favoritesEmpty": "No favorite meals yet. Tap the star on a meal in All Meals to add it to your favorites."
+  },
+  "mealDetail": {
+    "description": "Description",
+    "recipe": "Recipe",
+    "noDescription": "No description yet.",
+    "noRecipe": "No recipe yet.",
+    "shareTitle": "Share meal"
+  },
+  "mealEdit": {
+    "title": "Edit meal",
+    "save": "Save changes",
+    "savedMessage": "Meal updated successfully",
+    "addPhoto": "Add a photo",
+    "changePhoto": "Change photo",
+    "notFoundTitle": "Meal not found",
+    "notFoundMessage": "This meal no longer exists."
   },
   "mealItem": {
     "deleteTitle": "Delete Meal",

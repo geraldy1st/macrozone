@@ -1,8 +1,11 @@
 import MealItem from "@/components/MealItem";
-import { clearAllMeals, getMeals, Meal } from "@/storage/meals";
-import { getFavoriteIds } from "@/storage/favorites";
+import { useAlert } from "@/contexts/AlertContext";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useToast } from "@/contexts/ToastContext";
+import { useBottomContentPadding } from "@/hooks/useBottomContentPadding";
 import { useThemedStyles } from "@/hooks/useThemedStyles";
+import { getFavoriteIds } from "@/storage/favorites";
+import { deleteMeals, getMeals, Meal } from "@/storage/meals";
 import { globalStyles } from "@/styles/global";
 import type { ThemeColors } from "@/styles/themes";
 import {
@@ -10,7 +13,8 @@ import {
   groupMealsByDay,
 } from "@/utils/groupMealsByDay";
 import { Ionicons } from "@expo/vector-icons";
-import { router, useFocusEffect } from "expo-router";
+import * as Haptics from "expo-haptics";
+import { router, useFocusEffect, type Href } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -24,19 +28,19 @@ import {
 export default function AllMealsScreen() {
   const { t, i18n } = useTranslation();
   const { colors } = useTheme();
+  const { showToast } = useToast();
+  const { showAlert } = useAlert();
   const styles = useThemedStyles(createStyles);
+  const bottomPadding = useBottomContentPadding();
   const [meals, setMeals] = useState<Meal[]>([]);
   const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const loadMeals = async () => {
     const [data, ids] = await Promise.all([getMeals(), getFavoriteIds()]);
     setMeals(data);
     setFavoriteIds(ids);
-  };
-
-  const handleClearAll = async () => {
-    await clearAllMeals();
-    loadMeals();
   };
 
   useFocusEffect(
@@ -58,23 +62,91 @@ export default function AllMealsScreen() {
     }));
   }, [meals, i18n.language, t]);
 
+  const exitSelectionMode = () => {
+    setSelectionMode(false);
+    setSelectedIds(new Set());
+  };
+
+  const toggleSelectionMode = () => {
+    if (selectionMode) {
+      exitSelectionMode();
+      return;
+    }
+
+    setSelectionMode(true);
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((current) => {
+      const next = new Set(current);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const handleDeleteSelected = () => {
+    const count = selectedIds.size;
+
+    if (count === 0) {
+      return;
+    }
+
+    showAlert({
+      title: t("allMeals.deleteSelectedTitle"),
+      message: t("allMeals.deleteSelectedMessage", { count }),
+      buttons: [
+        { text: t("mealItem.cancel"), style: "cancel" },
+        {
+          text: t("mealItem.delete"),
+          style: "destructive",
+          onPress: async () => {
+            await deleteMeals([...selectedIds]);
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            showToast(t("allMeals.deleteSelectedSuccess", { count }), "success");
+            exitSelectionMode();
+            loadMeals();
+          },
+        },
+      ],
+    });
+  };
+
   return (
     <SectionList
       style={[globalStyles.container, { backgroundColor: colors.background }]}
       sections={sections}
       keyExtractor={(meal) => meal.id}
       stickySectionHeadersEnabled={false}
-      contentContainerStyle={styles.content}
+      contentContainerStyle={[styles.content, { paddingBottom: bottomPadding }]}
       ListHeaderComponent={
         <View>
           <View style={globalStyles.header}>
             <Text style={[globalStyles.title, { color: colors.text }]}>
               {t("allMeals.title")}
             </Text>
-            <TouchableOpacity onPress={handleClearAll}>
-              <Text style={styles.clearButton}>{t("allMeals.clearAll")}</Text>
+            <TouchableOpacity onPress={toggleSelectionMode} testID="toggle-edit-mode">
+              <Text style={[styles.editButton, { color: colors.accent }]}>
+                {selectionMode ? t("allMeals.done") : t("allMeals.editMode")}
+              </Text>
             </TouchableOpacity>
           </View>
+
+          {selectionMode && selectedIds.size > 0 && (
+            <TouchableOpacity
+              style={[styles.deleteSelectedButton, { backgroundColor: colors.alert }]}
+              onPress={handleDeleteSelected}
+              testID="delete-selected-btn"
+            >
+              <Ionicons name="trash-outline" size={18} color={colors.background} />
+              <Text style={[styles.deleteSelectedText, { color: colors.background }]}>
+                {t("allMeals.deleteSelected", { count: selectedIds.size })}
+              </Text>
+            </TouchableOpacity>
+          )}
 
           <TouchableOpacity
             style={[
@@ -121,8 +193,12 @@ export default function AllMealsScreen() {
           fat={item.fat}
           photoUri={item.photoUri}
           isFavorite={favoriteIds.includes(item.id)}
-          enableFavorite
+          showFavoriteStar
           onToggleFavorite={loadMeals}
+          onPress={() => router.push(`/meal/${item.id}` as Href)}
+          selectionMode={selectionMode}
+          isSelected={selectedIds.has(item.id)}
+          onToggleSelect={() => toggleSelect(item.id)}
           onDelete={loadMeals}
         />
       )}
@@ -133,8 +209,25 @@ export default function AllMealsScreen() {
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     content: {
-      paddingBottom: 40,
       flexGrow: 1,
+    },
+    editButton: {
+      fontSize: 16,
+      fontWeight: "600",
+    },
+    deleteSelectedButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 8,
+      borderRadius: 12,
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+      marginBottom: 12,
+    },
+    deleteSelectedText: {
+      fontSize: 15,
+      fontWeight: "700",
     },
     favoritesButton: {
       flexDirection: "row",
@@ -162,11 +255,6 @@ function createStyles(colors: ThemeColors) {
     favoritesCountText: {
       fontSize: 13,
       fontWeight: "800",
-    },
-    clearButton: {
-      color: colors.alert,
-      fontSize: 16,
-      fontWeight: "600",
     },
     empty: {
       marginTop: 30,

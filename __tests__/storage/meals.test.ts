@@ -1,5 +1,12 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { addMeal, deleteMeal, getMeals } from "@/storage/meals";
+import {
+  addMeal,
+  deleteMeal,
+  deleteMeals,
+  getMealById,
+  getMeals,
+  updateMeal,
+} from "@/storage/meals";
 import { setStorageScope } from "@/storage/scopedKey";
 
 jest.mock("@/utils/photos", () => ({
@@ -82,6 +89,71 @@ describe("meals storage", () => {
     );
 
     expect(meal.photoUri).toBe("file://meal-photos/1.jpg");
+  });
+
+  it("gets a meal by id", async () => {
+    jest.spyOn(Date, "now").mockReturnValue(1_700_000_000_005);
+
+    const meal = await addMeal({
+      name: "Wrap",
+      calories: 410,
+      protein: 22,
+      carbs: 35,
+      fat: 18,
+      description: "Déjeuner rapide",
+    });
+
+    await expect(getMealById(meal.id)).resolves.toMatchObject({
+      name: "Wrap",
+      description: "Déjeuner rapide",
+    });
+    await expect(getMealById("missing")).resolves.toBeNull();
+  });
+
+  it("updates a meal", async () => {
+    jest.spyOn(Date, "now").mockReturnValue(1_700_000_000_006);
+
+    const meal = await addMeal({
+      name: "Omelette",
+      calories: 280,
+      protein: 18,
+      carbs: 2,
+      fat: 20,
+    });
+
+    const updated = await updateMeal(meal.id, {
+      name: "Omelette aux herbes",
+      recipe: "Battre les œufs",
+    });
+
+    expect(updated).toMatchObject({
+      id: meal.id,
+      name: "Omelette aux herbes",
+      recipe: "Battre les œufs",
+    });
+  });
+
+  it("deletes multiple meals by id", async () => {
+    jest.spyOn(Date, "now").mockReturnValueOnce(1_700_000_000_007).mockReturnValueOnce(1_700_000_000_008);
+
+    const first = await addMeal({
+      name: "Snack 1",
+      calories: 120,
+      protein: 4,
+      carbs: 18,
+      fat: 3,
+    });
+
+    const second = await addMeal({
+      name: "Snack 2",
+      calories: 150,
+      protein: 5,
+      carbs: 20,
+      fat: 4,
+    });
+
+    await deleteMeals([first.id, second.id]);
+    await expect(getMeals()).resolves.toEqual([]);
   });
 
   it("deletes a meal by id", async () => {

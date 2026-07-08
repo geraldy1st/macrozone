@@ -11,6 +11,7 @@ import {
 } from "@/storage/settings";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useToast } from "@/contexts/ToastContext";
+import { useBottomContentPadding } from "@/hooks/useBottomContentPadding";
 import { useThemedStyles } from "@/hooks/useThemedStyles";
 import { scopedKey } from "@/storage/scopedKey";
 import type { ThemeColors, ThemeMode } from "@/styles/themes";
@@ -53,6 +54,7 @@ export default function SettingsScreen() {
   const { colors, mode, setMode } = useTheme();
   const { showToast } = useToast();
   const styles = useThemedStyles(createStyles);
+  const bottomPadding = useBottomContentPadding(20, false);
   const currentLanguage = i18n.language as AppLanguage;
   const [goals, setGoals] = useState<Record<keyof MacroGoals, string>>({
     calories: String(defaultMacroGoals.calories),
@@ -115,6 +117,7 @@ export default function SettingsScreen() {
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: colors.background }]}
+      contentContainerStyle={{ paddingBottom: bottomPadding }}
       showsVerticalScrollIndicator={false}
     >
       <View style={styles.topBar}>
