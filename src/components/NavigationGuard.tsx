@@ -28,7 +28,11 @@ export default function NavigationGuard() {
     const root = segments[0];
     const onWelcome = root === "welcome";
     const onAuthFlow =
-      root === "login" || root === "auth" || root === "verify-email";
+      root === "login" ||
+      root === "auth" ||
+      root === "verify-email" ||
+      root === "forgot-password" ||
+      root === "reset-password";
     const needsWelcome = onboarding === "pending";
 
     if (needsWelcome && !onWelcome && !onAuthFlow) {

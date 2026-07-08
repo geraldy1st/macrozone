@@ -104,6 +104,8 @@
     "subtitle": "Connectez-vous pour débloquer le scan IA et synchroniser vos données.",
     "email": "Adresse e-mail",
     "password": "Mot de passe",
+    "forgotPassword": "Mot de passe oublié ?",
+    "emailAlreadyRegistered": "Un compte existe déjà avec cet e-mail. Connectez-vous ou réinitialisez votre mot de passe.",
     "signIn": "Se connecter",
     "createAccount": "Créer un compte",
     "haveAccount": "Déjà un compte ? Se connecter",
@@ -126,6 +128,27 @@
     "signOutErrorMessage": "La déconnexion a échoué.",
     "notConfiguredTitle": "Authentification non configurée",
     "notConfiguredMessage": "Ajoutez EXPO_PUBLIC_SUPABASE_URL et EXPO_PUBLIC_SUPABASE_ANON_KEY pour activer la connexion."
+  },
+  "forgotPassword": {
+    "title": "Mot de passe oublié",
+    "subtitle": "Saisissez votre e-mail pour recevoir un lien de réinitialisation.",
+    "submit": "Envoyer le lien",
+    "missingEmail": "Veuillez saisir votre adresse e-mail.",
+    "successMessage": "Si un compte existe, un e-mail de réinitialisation a été envoyé.",
+    "errorMessage": "Impossible d'envoyer l'e-mail de réinitialisation. Réessayez.",
+    "backToSignIn": "Retour à la connexion"
+  },
+  "resetPassword": {
+    "title": "Nouveau mot de passe",
+    "subtitle": "Choisissez un nouveau mot de passe pour votre compte.",
+    "newPassword": "Nouveau mot de passe",
+    "confirmPassword": "Confirmer le mot de passe",
+    "submit": "Enregistrer le mot de passe",
+    "passwordTooShort": "Le mot de passe doit contenir au moins 6 caractères.",
+    "passwordMismatch": "Les mots de passe ne correspondent pas.",
+    "successMessage": "Mot de passe mis à jour avec succès.",
+    "errorMessage": "Impossible de mettre à jour le mot de passe. Réessayez.",
+    "sessionExpired": "Le lien de réinitialisation a expiré. Demandez-en un nouveau."
   },
   "verifyEmail": {
     "title": "Confirmez votre e-mail",

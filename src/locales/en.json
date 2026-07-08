@@ -104,6 +104,8 @@
     "subtitle": "Sign in to unlock AI meal scanning and keep your data in sync.",
     "email": "Email address",
     "password": "Password",
+    "forgotPassword": "Forgot password?",
+    "emailAlreadyRegistered": "An account already exists with this email. Sign in or reset your password.",
     "signIn": "Sign in",
     "createAccount": "Create account",
     "haveAccount": "Already have an account? Sign in",
@@ -126,6 +128,27 @@
     "signOutErrorMessage": "Sign out failed.",
     "notConfiguredTitle": "Authentication not configured",
     "notConfiguredMessage": "Add EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY to enable sign-in."
+  },
+  "forgotPassword": {
+    "title": "Forgot password",
+    "subtitle": "Enter your email to receive a password reset link.",
+    "submit": "Send reset link",
+    "missingEmail": "Please enter your email address.",
+    "successMessage": "If an account exists, a reset email has been sent.",
+    "errorMessage": "Unable to send the reset email. Please try again.",
+    "backToSignIn": "Back to sign in"
+  },
+  "resetPassword": {
+    "title": "New password",
+    "subtitle": "Choose a new password for your account.",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm password",
+    "submit": "Save password",
+    "passwordTooShort": "Password must be at least 6 characters.",
+    "passwordMismatch": "Passwords do not match.",
+    "successMessage": "Password updated successfully.",
+    "errorMessage": "Unable to update password. Please try again.",
+    "sessionExpired": "The reset link has expired. Please request a new one."
   },
   "verifyEmail": {
     "title": "Confirm your email",

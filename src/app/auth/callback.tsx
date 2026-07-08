@@ -2,6 +2,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { useToast } from "@/contexts/ToastContext";
 import { setAuthenticatedOnboarding } from "@/storage/onboarding";
 import { createSessionFromUrl } from "@/utils/authSession";
+import * as QueryParams from "expo-auth-session/build/QueryParams";
 import * as Linking from "expo-linking";
 import { useRouter } from "expo-router";
 import { useEffect } from "react";
@@ -32,9 +33,15 @@ export default function AuthCallbackScreen() {
           return;
         }
 
+        const { params } = QueryParams.getQueryParams(url);
         const session = await createSessionFromUrl(url);
 
         if (session) {
+          if (params.type === "recovery") {
+            router.replace("/reset-password");
+            return;
+          }
+
           await setAuthenticatedOnboarding();
           showToast(t("auth.callbackSuccessMessage"), "success");
           router.replace("/(tabs)");

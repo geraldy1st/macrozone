@@ -85,6 +85,14 @@ export default function LoginScreen() {
         return;
       }
 
+      if (error instanceof Error && error.message === "EMAIL_ALREADY_REGISTERED") {
+        showAlert({
+          title: t("auth.errorTitle"),
+          message: t("auth.emailAlreadyRegistered"),
+        });
+        return;
+      }
+
       showAlert({
         title: t("auth.errorTitle"),
         message: isSignUp
@@ -172,6 +180,18 @@ export default function LoginScreen() {
             textContentType={isSignUp ? "newPassword" : "password"}
             testID="auth-password-input"
           />
+
+          {!isSignUp && (
+            <TouchableOpacity
+              style={styles.forgotPasswordButton}
+              onPress={() => router.push("/forgot-password")}
+              testID="auth-forgot-password-btn"
+            >
+              <Text style={styles.forgotPasswordText}>
+                {t("auth.forgotPassword")}
+              </Text>
+            </TouchableOpacity>
+          )}
 
           <TouchableOpacity
             style={[styles.primaryButton, isSubmitting && styles.buttonDisabled]}
@@ -320,6 +340,15 @@ function createStyles(colors: ReturnType<typeof useTheme>["colors"]) {
       paddingVertical: 4,
     },
     switchModeText: {
+      color: colors.primary,
+      fontSize: 14,
+      fontWeight: "600",
+    },
+    forgotPasswordButton: {
+      alignSelf: "flex-end",
+      paddingVertical: 2,
+    },
+    forgotPasswordText: {
       color: colors.primary,
       fontSize: 14,
       fontWeight: "600",

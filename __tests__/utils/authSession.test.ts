@@ -52,6 +52,23 @@ describe("createSessionFromUrl", () => {
     expect(session).toEqual({ access_token: "verified" });
   });
 
+  it("verifies password recovery links", async () => {
+    mockVerifyOtp.mockResolvedValue({
+      data: { session: { access_token: "recovery" } },
+      error: null,
+    });
+
+    const session = await createSessionFromUrl(
+      "macrozone://auth/callback?token_hash=hash456&type=recovery",
+    );
+
+    expect(mockVerifyOtp).toHaveBeenCalledWith({
+      token_hash: "hash456",
+      type: "recovery",
+    });
+    expect(session).toEqual({ access_token: "recovery" });
+  });
+
   it("falls back to implicit tokens when present", async () => {
     mockSetSession.mockResolvedValue({
       data: { session: { access_token: "implicit" } },

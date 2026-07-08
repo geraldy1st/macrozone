@@ -32,6 +32,8 @@ type AuthContextValue = {
   signUpWithEmail: (email: string, password: string) => Promise<SignUpResult>;
   signInWithOAuth: (provider: OAuthProvider) => Promise<void>;
   resendConfirmationEmail: (email: string) => Promise<void>;
+  resetPasswordForEmail: (email: string) => Promise<void>;
+  updatePassword: (password: string) => Promise<void>;
   signOut: () => Promise<void>;
 };
 
@@ -100,6 +102,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw error;
     }
 
+    if (data.user && data.user.identities?.length === 0) {
+      throw new Error("EMAIL_ALREADY_REGISTERED");
+    }
+
     return {
       email,
       needsEmailConfirmation: !data.session && Boolean(data.user),
@@ -118,6 +124,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         emailRedirectTo: getAuthRedirectUri(),
       },
     });
+
+    if (error) {
+      throw error;
+    }
+  }, []);
+
+  const resetPasswordForEmail = useCallback(async (email: string) => {
+    if (!supabase) {
+      throw new Error("AUTH_NOT_CONFIGURED");
+    }
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: getAuthRedirectUri(),
+    });
+
+    if (error) {
+      throw error;
+    }
+  }, []);
+
+  const updatePassword = useCallback(async (password: string) => {
+    if (!supabase) {
+      throw new Error("AUTH_NOT_CONFIGURED");
+    }
+
+    const { error } = await supabase.auth.updateUser({ password });
 
     if (error) {
       throw error;
@@ -147,7 +179,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error("OAUTH_URL_MISSING");
     }
 
-    const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
+    const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo, {
+      showInRecents: true,
+    });
 
     if (result.type !== "success") {
       throw new Error("OAUTH_CANCELLED");
@@ -181,6 +215,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signUpWithEmail,
       signInWithOAuth,
       resendConfirmationEmail,
+      resetPasswordForEmail,
+      updatePassword,
       signOut,
     }),
     [
@@ -191,6 +227,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signUpWithEmail,
       signInWithOAuth,
       resendConfirmationEmail,
+      resetPasswordForEmail,
+      updatePassword,
       signOut,
     ],
   );
