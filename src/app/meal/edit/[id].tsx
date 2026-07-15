@@ -1,8 +1,13 @@
+import RecipeAttribution from "@/components/RecipeAttribution";
 import { useAlert } from "@/contexts/AlertContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useToast } from "@/contexts/ToastContext";
 import { useBottomContentPadding } from "@/hooks/useBottomContentPadding";
-import { getMealById, updateMeal } from "@/storage/meals";
+import { getUserProfile } from "@/storage/profile";
+import { getMealById, updateMeal, type Meal } from "@/storage/meals";
+import { analyzeRecipeText } from "@/utils/analyzeRecipe";
+import { getMealAiErrorMessage } from "@/utils/mealAiErrors";
 import { saveMealPhoto } from "@/utils/photos";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
@@ -26,13 +31,15 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function EditMealScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const { user, session, isConfigured } = useAuth();
   const { colors } = useTheme();
   const { showToast } = useToast();
   const { showAlert } = useAlert();
   const insets = useSafeAreaInsets();
   const bottomPadding = useBottomContentPadding(20, false);
   const styles = useMemo(() => createScreenStyles(colors), [colors]);
+  const canUseAi = isConfigured && Boolean(user && session?.access_token);
 
   const [name, setName] = useState("");
   const [calories, setCalories] = useState("");
@@ -41,9 +48,12 @@ export default function EditMealScreen() {
   const [fat, setFat] = useState("");
   const [description, setDescription] = useState("");
   const [recipe, setRecipe] = useState("");
+  const [recipeSource, setRecipeSource] = useState<Meal["recipeSource"]>();
+  const [recipeAuthorName, setRecipeAuthorName] = useState<string>();
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isAnalyzingRecipe, setIsAnalyzingRecipe] = useState(false);
 
   const loadMeal = useCallback(async () => {
     if (!id) {
@@ -70,6 +80,8 @@ export default function EditMealScreen() {
     setFat(String(meal.fat));
     setDescription(meal.description ?? "");
     setRecipe(meal.recipe ?? "");
+    setRecipeSource(meal.recipeSource);
+    setRecipeAuthorName(meal.recipeAuthorName);
     setPhotoUri(meal.photoUri ?? null);
   }, [id, showAlert, t]);
 
@@ -78,6 +90,48 @@ export default function EditMealScreen() {
       loadMeal();
     }, [loadMeal]),
   );
+
+  const handleRecipeChange = (nextRecipe: string) => {
+    setRecipe(nextRecipe);
+    setRecipeSource("user");
+    void getUserProfile().then((profile) => {
+      setRecipeAuthorName(
+        profile.name.trim() || user?.email?.split("@")[0] || undefined,
+      );
+    });
+  };
+
+  const handleAnalyzeRecipe = async () => {
+    if (!recipe.trim() || !session?.access_token) {
+      return;
+    }
+
+    setIsAnalyzingRecipe(true);
+
+    try {
+      const language = i18n.language === "fr" ? "fr" : "en";
+      const analysis = await analyzeRecipeText(
+        recipe.trim(),
+        language,
+        session.access_token,
+        name.trim() || undefined,
+      );
+
+      setRecipe(analysis.recipe);
+      setCalories(String(analysis.calories));
+      setProtein(String(analysis.protein));
+      setCarbs(String(analysis.carbs));
+      setFat(String(analysis.fat));
+      setRecipeSource("ai");
+      setRecipeAuthorName(undefined);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } catch (error) {
+      const { title, message } = getMealAiErrorMessage(error, t);
+      showAlert({ title, message });
+    } finally {
+      setIsAnalyzingRecipe(false);
+    }
+  };
 
   const handlePickPhoto = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -124,6 +178,9 @@ export default function EditMealScreen() {
         fat: Number(fat) || 0,
         description: description.trim() || undefined,
         recipe: recipe.trim() || undefined,
+        recipeSource: recipe.trim() ? recipeSource : undefined,
+        recipeAuthorName:
+          recipe.trim() && recipeSource === "user" ? recipeAuthorName : undefined,
         photoUri: savedPhotoUri,
       });
 
@@ -253,14 +310,48 @@ export default function EditMealScreen() {
           placeholder={t("addMeal.recipe")}
           placeholderTextColor={colors.textSecondary}
           value={recipe}
-          onChangeText={setRecipe}
+          onChangeText={handleRecipeChange}
           multiline
+          editable={!isAnalyzingRecipe}
         />
+
+        {recipe.trim() ? (
+          <RecipeAttribution
+            recipeSource={recipeSource}
+            recipeAuthorName={recipeAuthorName}
+          />
+        ) : null}
+
+        {canUseAi && recipe.trim().length >= 10 && (
+          <TouchableOpacity
+            style={[styles.recipeAiButton, { borderColor: colors.cardBorder, backgroundColor: colors.card }]}
+            onPress={handleAnalyzeRecipe}
+            disabled={isAnalyzingRecipe || isSaving}
+            testID="edit-meal-analyze-recipe-btn"
+          >
+            {isAnalyzingRecipe ? (
+              <ActivityIndicator color={colors.accent} />
+            ) : (
+              <>
+                <Ionicons name="sparkles" size={18} color={colors.accent} />
+                <Text style={[styles.recipeAiButtonText, { color: colors.text }]}>
+                  {t("addMeal.analyzeRecipe")}
+                </Text>
+              </>
+            )}
+          </TouchableOpacity>
+        )}
+
+        {isAnalyzingRecipe && (
+          <Text style={[styles.mutedText, { color: colors.textSecondary, marginTop: 8 }]}>
+            {t("addMeal.analyzingRecipe")}
+          </Text>
+        )}
 
         <TouchableOpacity
           style={[styles.saveButton, { backgroundColor: colors.primary }]}
           onPress={handleSave}
-          disabled={isSaving}
+          disabled={isSaving || isAnalyzingRecipe}
         >
           {isSaving ? (
             <ActivityIndicator color={colors.background} />
@@ -361,6 +452,21 @@ function createScreenStyles(colors: ReturnType<typeof useTheme>["colors"]) {
     },
     rowInput: {
       flex: 1,
+    },
+    recipeAiButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 8,
+      marginTop: 12,
+      padding: 14,
+      borderRadius: 12,
+      borderWidth: 1,
+      minHeight: 48,
+    },
+    recipeAiButtonText: {
+      fontSize: 15,
+      fontWeight: "600",
     },
     saveButton: {
       marginTop: 24,

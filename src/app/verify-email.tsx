@@ -16,6 +16,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function VerifyEmailScreen() {
   const { t } = useTranslation();
@@ -24,6 +25,7 @@ export default function VerifyEmailScreen() {
   const { email } = useLocalSearchParams<{ email?: string }>();
   const { resendConfirmationEmail } = useAuth();
   const styles = useMemo(() => createStyles(colors), [colors]);
+  const insets = useSafeAreaInsets();
   const [isResending, setIsResending] = useState(false);
 
   const displayEmail = typeof email === "string" ? email : "";
@@ -69,7 +71,7 @@ export default function VerifyEmailScreen() {
   return (
     <ScrollView
       style={styles.container}
-      contentContainerStyle={styles.content}
+      contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 40 }]}
       showsVerticalScrollIndicator={false}
     >
       <View style={styles.hero}>

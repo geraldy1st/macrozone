@@ -3,6 +3,9 @@
   "functions": {
     "api/analyze-meal.ts": {
       "maxDuration": 30
+    },
+    "api/analyze-recipe.ts": {
+      "maxDuration": 30
     }
   }
 }

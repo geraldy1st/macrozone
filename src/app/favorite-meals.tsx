@@ -1,19 +1,12 @@
 import MealItem from "@/components/MealItem";
-import { useAlert } from "@/contexts/AlertContext";
 import { useTheme } from "@/contexts/ThemeContext";
-import { useToast } from "@/contexts/ToastContext";
 import { useBottomContentPadding } from "@/hooks/useBottomContentPadding";
 import { useThemedStyles } from "@/hooks/useThemedStyles";
 import { getFavoriteIds } from "@/storage/favorites";
 import { getMeals, Meal } from "@/storage/meals";
 import type { ThemeColors } from "@/styles/themes";
-import {
-  addFavoriteMealForToday,
-  checkFavoriteDuplicateToday,
-} from "@/utils/addMealFromFavorite";
 import { Ionicons } from "@expo/vector-icons";
-import * as Haptics from "expo-haptics";
-import { router, useFocusEffect } from "expo-router";
+import { router, useFocusEffect, type Href } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -27,8 +20,6 @@ import {
 export default function FavoriteMealsScreen() {
   const { t } = useTranslation();
   const { colors } = useTheme();
-  const { showToast } = useToast();
-  const { showAlert } = useAlert();
   const styles = useThemedStyles(createStyles);
   const bottomPadding = useBottomContentPadding(20, false);
   const [meals, setMeals] = useState<Meal[]>([]);
@@ -50,33 +41,6 @@ export default function FavoriteMealsScreen() {
     () => meals.filter((meal) => favoriteIds.includes(meal.id)),
     [meals, favoriteIds],
   );
-
-  const confirmAddForToday = async (meal: Meal) => {
-    await addFavoriteMealForToday(meal);
-    showToast(t("allMeals.addedForToday"), "success");
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-  };
-
-  const handleAddForToday = async (meal: Meal) => {
-    const isDuplicate = await checkFavoriteDuplicateToday(meal.id);
-
-    if (isDuplicate) {
-      showAlert({
-        title: t("allMeals.duplicateTitle"),
-        message: t("allMeals.duplicateMessage", { name: meal.name }),
-        buttons: [
-          { text: t("mealItem.cancel"), style: "cancel" },
-          {
-            text: t("allMeals.duplicateConfirm"),
-            onPress: () => confirmAddForToday(meal),
-          },
-        ],
-      });
-      return;
-    }
-
-    await confirmAddForToday(meal);
-  };
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -119,7 +83,7 @@ export default function FavoriteMealsScreen() {
             isFavorite
             showFavoriteStar
             onToggleFavorite={loadData}
-            onPress={() => handleAddForToday(item)}
+            onPress={() => router.push(`/meal/${item.id}` as Href)}
             onDelete={loadData}
           />
         )}

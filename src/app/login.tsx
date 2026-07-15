@@ -3,7 +3,7 @@ import { useAlert } from "@/contexts/AlertContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 
-import { setAuthenticatedOnboarding } from "@/storage/onboarding";
+import { setAuthenticatedOnboarding, setGuestOnboarding } from "@/storage/onboarding";
 import { getAuthErrorCode } from "@/utils/authErrors";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
@@ -258,7 +258,14 @@ export default function LoginScreen() {
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity style={styles.guestButton} onPress={() => router.back()}>
+        <TouchableOpacity
+          style={styles.guestButton}
+          onPress={async () => {
+            await setGuestOnboarding();
+            router.replace("/(tabs)");
+          }}
+          testID="auth-guest-btn"
+        >
           <Text style={styles.guestButtonText}>{t("auth.continueAsGuest")}</Text>
         </TouchableOpacity>
       </ScrollView>

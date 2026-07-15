@@ -13,6 +13,8 @@ export type Meal = {
   photoUri?: string;
   description?: string;
   recipe?: string;
+  recipeSource?: "ai" | "user";
+  recipeAuthorName?: string;
   templateId?: string;
 };
 

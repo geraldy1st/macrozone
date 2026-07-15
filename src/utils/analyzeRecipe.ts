@@ -1,39 +1,22 @@
-import { ANALYZE_API_URL } from "@/constants/api";
+import { ANALYZE_RECIPE_API_URL } from "@/constants/api";
+import type { AnalyzeMealErrorCode } from "@/utils/analyzeMeal";
+import { AnalyzeMealError } from "@/utils/analyzeMeal";
 
-export type MealAnalysis = {
-  name: string;
+export type RecipeAnalysis = {
   calories: number;
   protein: number;
   carbs: number;
   fat: number;
-  description?: string;
-  recipe?: string;
+  recipe: string;
 };
 
-export type AnalyzeMealErrorCode =
-  | "API_NOT_CONFIGURED"
-  | "AUTH_REQUIRED"
-  | "UNAUTHORIZED"
-  | "IMAGE_TOO_LARGE"
-  | "RATE_LIMITED"
-  | "AI_QUOTA_EXCEEDED"
-  | "ANALYSIS_FAILED";
-
-export class AnalyzeMealError extends Error {
-  code: AnalyzeMealErrorCode;
-
-  constructor(code: AnalyzeMealErrorCode) {
-    super(code);
-    this.code = code;
-  }
-}
-
-export async function analyzeMealPhoto(
-  imageBase64: string,
+export async function analyzeRecipeText(
+  recipe: string,
   language: "en" | "fr",
-  accessToken?: string,
-): Promise<MealAnalysis> {
-  if (!ANALYZE_API_URL) {
+  accessToken: string,
+  mealName?: string,
+): Promise<RecipeAnalysis> {
+  if (!ANALYZE_RECIPE_API_URL) {
     throw new AnalyzeMealError("API_NOT_CONFIGURED");
   }
 
@@ -41,15 +24,16 @@ export async function analyzeMealPhoto(
     throw new AnalyzeMealError("AUTH_REQUIRED");
   }
 
-  const response = await fetch(ANALYZE_API_URL, {
+  const response = await fetch(ANALYZE_RECIPE_API_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${accessToken}`,
     },
     body: JSON.stringify({
-      image: imageBase64,
+      recipe,
       language,
+      mealName,
     }),
   });
 
@@ -77,6 +61,5 @@ export async function analyzeMealPhoto(
     throw new AnalyzeMealError("ANALYSIS_FAILED");
   }
 
-  const data = (await response.json()) as MealAnalysis;
-  return data;
+  return (await response.json()) as RecipeAnalysis;
 }

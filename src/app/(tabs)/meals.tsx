@@ -160,13 +160,6 @@ export default function AllMealsScreen() {
             <Text style={[styles.favoritesButtonText, { color: colors.text }]}>
               {t("allMeals.favoritesButton")}
             </Text>
-            {favoriteIds.length > 0 && (
-              <View style={[styles.favoritesCount, { backgroundColor: colors.surface }]}>
-                <Text style={[styles.favoritesCountText, { color: colors.accent }]}>
-                  {favoriteIds.length}
-                </Text>
-              </View>
-            )}
           </TouchableOpacity>
         </View>
       }
@@ -243,18 +236,6 @@ function createStyles(colors: ThemeColors) {
       flex: 1,
       fontSize: 15,
       fontWeight: "700",
-    },
-    favoritesCount: {
-      minWidth: 28,
-      height: 28,
-      borderRadius: 14,
-      alignItems: "center",
-      justifyContent: "center",
-      paddingHorizontal: 8,
-    },
-    favoritesCountText: {
-      fontSize: 13,
-      fontWeight: "800",
     },
     empty: {
       marginTop: 30,

@@ -21,6 +21,8 @@ export async function addFavoriteMealForToday(templateMeal: Meal) {
       fat: templateMeal.fat,
       description: templateMeal.description,
       recipe: templateMeal.recipe,
+      recipeSource: templateMeal.recipeSource,
+      recipeAuthorName: templateMeal.recipeAuthorName,
       templateId: templateMeal.id,
     },
     undefined,

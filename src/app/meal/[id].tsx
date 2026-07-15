@@ -1,4 +1,5 @@
 import FavoriteStar from "@/components/FavoriteStar";
+import RecipeAttribution from "@/components/RecipeAttribution";
 import MealShareCard from "@/components/MealShareCard";
 import { useAlert } from "@/contexts/AlertContext";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -200,6 +201,12 @@ export default function MealDetailScreen() {
           <Text style={[styles.sectionBody, { color: colors.textSecondary }]}>
             {meal.recipe?.trim() || t("mealDetail.noRecipe")}
           </Text>
+          {meal.recipe?.trim() ? (
+            <RecipeAttribution
+              recipeSource={meal.recipeSource}
+              recipeAuthorName={meal.recipeAuthorName}
+            />
+          ) : null}
         </View>
 
         <TouchableOpacity

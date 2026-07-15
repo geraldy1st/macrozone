@@ -1,31 +1,41 @@
-import { parseAnalysis } from "./lib/parseAnalysis";
+import { parseRecipeAnalysis } from "./lib/parseRecipeAnalysis";
 import {
   isRateLimited,
-  isValidImagePayload,
   resolveRequestIdentity,
   setCorsHeaders,
 } from "./lib/security";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
-type AnalyzeRequest = {
-  image: string;
+type AnalyzeRecipeRequest = {
+  recipe: string;
+  mealName?: string;
   language?: "en" | "fr";
 };
 
 const GEMINI_MODEL = "gemini-2.5-flash";
 
-function buildPrompt(language: "en" | "fr") {
+function buildPrompt(language: "en" | "fr", recipe: string, mealName?: string) {
+  const dish = mealName?.trim() ? ` for "${mealName.trim()}"` : "";
+
   if (language === "fr") {
-    return `Analyse cette photo de repas. Estime les macros pour la portion visible et rédige une recette avec ingrédients et quantités proportionnelles.
+    return `À partir de cette recette${dish}, calcule les macros nutritionnelles totales en tenant compte des quantités et proportions des ingrédients.
+Normalise la recette avec des quantités claires si nécessaire.
+Recette:
+${recipe}
+
 Réponds UNIQUEMENT en JSON valide:
-{"name":"nom du plat","calories":0,"protein":0,"carbs":0,"fat":0,"description":"brève description","recipe":"liste d'ingrédients avec quantités et étapes"}
-Utilise des nombres entiers pour les macros. La recette doit inclure les proportions pour ajuster les macros.`;
+{"calories":0,"protein":0,"carbs":0,"fat":0,"recipe":"recette normalisée avec ingrédients, quantités et étapes"}
+Utilise des nombres entiers pour les macros.`;
   }
 
-  return `Analyze this meal photo. Estimate macros for the visible portion and write a recipe with proportional ingredient amounts.
+  return `From this recipe${dish}, calculate total nutritional macros based on ingredient quantities and proportions.
+Normalize the recipe with clear quantities if needed.
+Recipe:
+${recipe}
+
 Respond ONLY with valid JSON:
-{"name":"meal name","calories":0,"protein":0,"carbs":0,"fat":0,"description":"short description","recipe":"ingredient list with quantities and steps"}
-Use whole numbers for macros. The recipe must include proportions to adjust macros.`;
+{"calories":0,"protein":0,"carbs":0,"fat":0,"recipe":"normalized recipe with ingredients, quantities and steps"}
+Use whole numbers for macros.`;
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -50,18 +60,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(500).json({ error: "Server misconfigured" });
   }
 
-  const body = req.body as AnalyzeRequest;
-  if (!body?.image) {
-    return res.status(400).json({ error: "Missing image data" });
+  const body = req.body as AnalyzeRecipeRequest;
+  const recipe = body?.recipe?.trim();
+
+  if (!recipe || recipe.length < 10) {
+    return res.status(400).json({ error: "Recipe text too short" });
   }
 
-  if (!isValidImagePayload(body.image)) {
-    return res.status(413).json({ error: "Image too large" });
+  if (recipe.length > 4000) {
+    return res.status(413).json({ error: "Recipe too long" });
   }
 
   const rateLimitKey =
     identity.source === "user" ? `user:${identity.id}` : `ip:${identity.id}`;
   const { limited, remaining } = await isRateLimited(rateLimitKey);
+
   if (limited) {
     res.setHeader("X-RateLimit-Remaining", "0");
     return res.status(429).json({ error: "Rate limit exceeded" });
@@ -80,15 +93,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         body: JSON.stringify({
           contents: [
             {
-              parts: [
-                { text: buildPrompt(language) },
-                {
-                  inline_data: {
-                    mime_type: "image/jpeg",
-                    data: body.image.replace(/^data:image\/\w+;base64,/, ""),
-                  },
-                },
-              ],
+              parts: [{ text: buildPrompt(language, recipe, body.mealName) }],
             },
           ],
           generationConfig: {
@@ -101,7 +106,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("Gemini API error:", errorText);
+      console.error("Gemini recipe API error:", errorText);
 
       if (response.status === 429) {
         return res.status(429).json({ error: "AI quota exceeded" });
@@ -117,10 +122,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(502).json({ error: "Empty AI response" });
     }
 
-    const analysis = parseAnalysis(text);
+    const analysis = parseRecipeAnalysis(text);
     return res.status(200).json(analysis);
   } catch (error) {
-    console.error("Analyze meal error:", error);
-    return res.status(500).json({ error: "Failed to analyze meal" });
+    console.error("Analyze recipe error:", error);
+    return res.status(500).json({ error: "Failed to analyze recipe" });
   }
 }

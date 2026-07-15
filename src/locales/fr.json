@@ -21,6 +21,9 @@
   },
   "profile": {
     "title": "Profil",
+    "editTitle": "Modifier le profil",
+    "editButton": "Modifier",
+    "notSet": "Non renseigné",
     "openSettings": "Paramètres",
     "personalInfo": "Informations personnelles",
     "health": "Santé",
@@ -67,6 +70,8 @@
     "fat": "Lipides (g)",
     "description": "Description (optionnel)",
     "recipe": "Recette (optionnel)",
+    "analyzeRecipe": "Analyser la recette avec l'I.A.",
+    "analyzingRecipe": "Analyse de la recette...",
     "submit": "Ajouter le repas",
     "errorTitle": "Erreur",
     "errorMessage": "Veuillez saisir un nom de repas et les calories.",
@@ -190,6 +195,9 @@
     "recipe": "Recette",
     "noDescription": "Aucune description pour le moment.",
     "noRecipe": "Aucune recette pour le moment.",
+    "recipeByAi": "Recette générée par l'I.A.",
+    "recipeByUser": "Recette de {{name}}",
+    "recipeByUserFallback": "l'utilisateur",
     "shareTitle": "Partager le repas"
   },
   "mealEdit": {

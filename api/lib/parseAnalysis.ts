@@ -4,6 +4,8 @@ export type MealAnalysis = {
   protein: number;
   carbs: number;
   fat: number;
+  description?: string;
+  recipe?: string;
 };
 
 export function parseAnalysis(text: string): MealAnalysis {
@@ -14,11 +16,21 @@ export function parseAnalysis(text: string): MealAnalysis {
     throw new Error("Invalid meal name in AI response");
   }
 
-  return {
+  const result: MealAnalysis = {
     name: parsed.name.trim().slice(0, 120),
     calories: Math.max(0, Math.min(10000, Math.round(Number(parsed.calories) || 0))),
     protein: Math.max(0, Math.min(1000, Math.round(Number(parsed.protein) || 0))),
     carbs: Math.max(0, Math.min(1000, Math.round(Number(parsed.carbs) || 0))),
     fat: Math.max(0, Math.min(1000, Math.round(Number(parsed.fat) || 0))),
   };
+
+  if (typeof parsed.description === "string" && parsed.description.trim()) {
+    result.description = parsed.description.trim().slice(0, 2000);
+  }
+
+  if (typeof parsed.recipe === "string" && parsed.recipe.trim()) {
+    result.recipe = parsed.recipe.trim().slice(0, 4000);
+  }
+
+  return result;
 }

@@ -1,8 +1,13 @@
 import { ANALYZE_API_URL } from "@/constants/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { addMeal } from "@/storage/meals";
-import { AnalyzeMealError, analyzeMealPhoto } from "@/utils/analyzeMeal";
+import RecipeAttribution from "@/components/RecipeAttribution";
+import { getUserProfile } from "@/storage/profile";
+import { analyzeMealPhoto } from "@/utils/analyzeMeal";
+import { analyzeRecipeText } from "@/utils/analyzeRecipe";
+import { getMealAiErrorMessage } from "@/utils/mealAiErrors";
 import { prepareImageForUpload } from "@/utils/photos";
+import type { Meal } from "@/storage/meals";
 import { useAlert } from "@/contexts/AlertContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useToast } from "@/contexts/ToastContext";
@@ -48,6 +53,9 @@ export default function AddMealScreen() {
   const [isSaving, setIsSaving] = useState(false);
   const [description, setDescription] = useState("");
   const [recipe, setRecipe] = useState("");
+  const [recipeSource, setRecipeSource] = useState<Meal["recipeSource"]>();
+  const [recipeAuthorName, setRecipeAuthorName] = useState<string>();
+  const [isAnalyzingRecipe, setIsAnalyzingRecipe] = useState(false);
   const [hasAiResult, setHasAiResult] = useState(false);
 
   const resetForm = () => {
@@ -59,7 +67,19 @@ export default function AddMealScreen() {
     setPhotoUri(null);
     setDescription("");
     setRecipe("");
+    setRecipeSource(undefined);
+    setRecipeAuthorName(undefined);
     setHasAiResult(false);
+  };
+
+  const handleRecipeChange = (nextRecipe: string) => {
+    setRecipe(nextRecipe);
+    setRecipeSource("user");
+    void getUserProfile().then((profile) => {
+      setRecipeAuthorName(
+        profile.name.trim() || user?.email?.split("@")[0] || undefined,
+      );
+    });
   };
 
   const runAnalysis = async (uri: string) => {
@@ -96,34 +116,19 @@ export default function AddMealScreen() {
       setProtein(String(analysis.protein));
       setCarbs(String(analysis.carbs));
       setFat(String(analysis.fat));
+      if (analysis.description) {
+        setDescription(analysis.description);
+      }
+      if (analysis.recipe) {
+        setRecipe(analysis.recipe);
+        setRecipeSource("ai");
+        setRecipeAuthorName(undefined);
+      }
       setHasAiResult(true);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (error) {
-      if (error instanceof AnalyzeMealError) {
-        const errorMessages = {
-          UNAUTHORIZED: ["unauthorizedTitle", "unauthorizedMessage"],
-          IMAGE_TOO_LARGE: ["imageTooLargeTitle", "imageTooLargeMessage"],
-          RATE_LIMITED: ["rateLimitedTitle", "rateLimitedMessage"],
-          AI_QUOTA_EXCEEDED: ["aiQuotaTitle", "aiQuotaMessage"],
-          API_NOT_CONFIGURED: ["apiNotConfiguredTitle", "apiNotConfiguredMessage"],
-          AUTH_REQUIRED: ["authRequiredTitle", "authRequiredMessage"],
-          ANALYSIS_FAILED: ["analysisErrorTitle", "analysisErrorMessage"],
-        } as const;
-
-        const [titleKey, messageKey] =
-          errorMessages[error.code] ?? errorMessages.ANALYSIS_FAILED;
-
-        showAlert({
-          title: t(`addMeal.${titleKey}`),
-          message: t(`addMeal.${messageKey}`),
-        });
-        return;
-      }
-
-      showAlert({
-        title: t("addMeal.analysisErrorTitle"),
-        message: t("addMeal.analysisErrorMessage"),
-      });
+      const { title, message } = getMealAiErrorMessage(error, t);
+      showAlert({ title, message });
     } finally {
       setIsAnalyzing(false);
     }
@@ -186,6 +191,38 @@ export default function AddMealScreen() {
     setHasAiResult(false);
   };
 
+  const handleAnalyzeRecipe = async () => {
+    if (!recipe.trim() || !session?.access_token) {
+      return;
+    }
+
+    setIsAnalyzingRecipe(true);
+
+    try {
+      const language = i18n.language === "fr" ? "fr" : "en";
+      const analysis = await analyzeRecipeText(
+        recipe.trim(),
+        language,
+        session.access_token,
+        name.trim() || undefined,
+      );
+
+      setRecipe(analysis.recipe);
+      setCalories(String(analysis.calories));
+      setProtein(String(analysis.protein));
+      setCarbs(String(analysis.carbs));
+      setFat(String(analysis.fat));
+      setRecipeSource("ai");
+      setRecipeAuthorName(undefined);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } catch (error) {
+      const { title, message } = getMealAiErrorMessage(error, t);
+      showAlert({ title, message });
+    } finally {
+      setIsAnalyzingRecipe(false);
+    }
+  };
+
   const handleAddMeal = async () => {
     if (!name.trim() || calories.trim() === "") {
       showAlert({
@@ -207,6 +244,11 @@ export default function AddMealScreen() {
           fat: Number(fat) || 0,
           description: description.trim() || undefined,
           recipe: recipe.trim() || undefined,
+          recipeSource: recipe.trim() ? recipeSource : undefined,
+          recipeAuthorName:
+            recipe.trim() && recipeSource === "user"
+              ? recipeAuthorName
+              : undefined,
         },
         photoUri ?? undefined,
       );
@@ -364,9 +406,42 @@ export default function AddMealScreen() {
         placeholder={t("addMeal.recipe")}
         placeholderTextColor={colors.textSecondary}
         value={recipe}
-        onChangeText={setRecipe}
+        onChangeText={handleRecipeChange}
         multiline
+        editable={!isAnalyzingRecipe}
       />
+
+      {recipe.trim() ? (
+        <RecipeAttribution
+          recipeSource={recipeSource}
+          recipeAuthorName={recipeAuthorName}
+        />
+      ) : null}
+
+      {canUseAiScan && recipe.trim().length >= 10 && (
+        <TouchableOpacity
+          style={[styles.recipeAiButton, { borderColor: colors.cardBorder, backgroundColor: colors.card }]}
+          onPress={handleAnalyzeRecipe}
+          disabled={isAnalyzingRecipe || isAnalyzing}
+        >
+          {isAnalyzingRecipe ? (
+            <ActivityIndicator color={colors.accent} />
+          ) : (
+            <>
+              <Ionicons name="sparkles" size={18} color={colors.accent} />
+              <Text style={[styles.recipeAiButtonText, { color: colors.text }]}>
+                {t("addMeal.analyzeRecipe")}
+              </Text>
+            </>
+          )}
+        </TouchableOpacity>
+      )}
+
+      {isAnalyzingRecipe && (
+        <Text style={[styles.analyzingText, { color: colors.textSecondary }]}>
+          {t("addMeal.analyzingRecipe")}
+        </Text>
+      )}
 
       </ScrollView>
 
@@ -549,6 +624,21 @@ function createScreenStyles(colors: ReturnType<typeof useTheme>["colors"]) {
   multiline: {
     minHeight: 100,
     textAlignVertical: "top",
+  },
+  recipeAiButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    marginTop: 12,
+    padding: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    minHeight: 48,
+  },
+  recipeAiButtonText: {
+    fontSize: 15,
+    fontWeight: "600",
   },
   button: {
     backgroundColor: colors.primary,
