@@ -42,6 +42,7 @@ export default function RootLayout() {
                 <Stack.Screen name="favorite-meals" />
                 <Stack.Screen name="meal" />
                 <Stack.Screen name="login" />
+                <Stack.Screen name="signup" />
                 <Stack.Screen name="forgot-password" />
                 <Stack.Screen name="reset-password" />
                 <Stack.Screen name="verify-email" />

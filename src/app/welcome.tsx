@@ -42,7 +42,7 @@ export default function WelcomeScreen() {
 
         <TouchableOpacity
           style={styles.secondaryButton}
-          onPress={() => router.push("/login?mode=signup")}
+          onPress={() => router.push("/signup")}
           testID="welcome-sign-up-btn"
         >
           <Ionicons name="person-add-outline" size={20} color={colors.accent} />

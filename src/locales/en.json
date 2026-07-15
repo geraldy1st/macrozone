@@ -104,6 +104,15 @@
     "authRequiredTitle": "Sign in required",
     "authRequiredMessage": "Sign in to scan meals with AI. You can still log meals manually."
   },
+  "signup": {
+    "title": "Create account",
+    "subtitle": "Join nutriFlow to unlock AI scanning and sync your meals.",
+    "confirmPassword": "Confirm password",
+    "missingFields": "Please fill in all fields.",
+    "passwordTooShort": "Password must be at least 6 characters.",
+    "passwordMismatch": "Passwords do not match.",
+    "welcomeMessage": "Welcome to nutriFlow!"
+  },
   "auth": {
     "title": "Sign in",
     "subtitle": "Sign in to unlock AI meal scanning and keep your data in sync.",
@@ -255,7 +264,14 @@
     "account": {
       "title": "Account",
       "guestDescription": "Sign in to use AI scanning and access your meals across devices.",
-      "signOut": "Sign out"
+      "signOut": "Sign out",
+      "deleteDescription": "Permanently delete your account and all associated data.",
+      "deleteAccount": "Delete account",
+      "deleteTitle": "Delete account?",
+      "deleteMessage": "This action is permanent. Your account and data will be removed and cannot be recovered.",
+      "deleteConfirm": "Delete",
+      "deleteSuccess": "Your account has been deleted.",
+      "deleteError": "Unable to delete your account. Please try again."
     },
     "language": "Language",
     "languageDescription": "Choose your preferred language",

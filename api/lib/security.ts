@@ -48,7 +48,7 @@ export function setCorsHeaders(req: VercelRequest, res: VercelResponse) {
     res.setHeader("Vary", "Origin");
   }
 
-  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Methods", "POST, DELETE, OPTIONS");
   res.setHeader(
     "Access-Control-Allow-Headers",
     "Content-Type, X-API-Key, Authorization",

@@ -17,10 +17,11 @@ import { Image } from "expo-image";
 import * as Haptics from "expo-haptics";
 import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -57,6 +58,32 @@ export default function AddMealScreen() {
   const [recipeAuthorName, setRecipeAuthorName] = useState<string>();
   const [isAnalyzingRecipe, setIsAnalyzingRecipe] = useState(false);
   const [hasAiResult, setHasAiResult] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const scrollRef = useRef<ScrollView>(null);
+  const recipeInputRef = useRef<TextInput>(null);
+
+  useEffect(() => {
+    const showEvent = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+    const hideEvent = Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
+
+    const showListener = Keyboard.addListener(showEvent, (event) => {
+      setKeyboardHeight(event.endCoordinates.height);
+    });
+    const hideListener = Keyboard.addListener(hideEvent, () => {
+      setKeyboardHeight(0);
+    });
+
+    return () => {
+      showListener.remove();
+      hideListener.remove();
+    };
+  }, []);
+
+  const scrollRecipeIntoView = () => {
+    setTimeout(() => {
+      scrollRef.current?.scrollToEnd({ animated: true });
+    }, 150);
+  };
 
   const resetForm = () => {
     setName("");
@@ -270,14 +297,19 @@ export default function AddMealScreen() {
   return (
     <KeyboardAvoidingView
       style={[styles.container, styles.screen]}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-      keyboardVerticalOffset={Platform.OS === "ios" ? insets.top : 0}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? insets.top + 8 : 0}
     >
       <ScrollView
+        ref={scrollRef}
         style={styles.scroll}
-        contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomPadding }]}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingBottom: bottomPadding + keyboardHeight },
+        ]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
+        automaticallyAdjustKeyboardInsets
       >
       <Text style={styles.title}>{t("addMeal.title")}</Text>
 
@@ -402,13 +434,16 @@ export default function AddMealScreen() {
       />
 
       <TextInput
+        ref={recipeInputRef}
         style={[styles.input, styles.multiline]}
         placeholder={t("addMeal.recipe")}
         placeholderTextColor={colors.textSecondary}
         value={recipe}
         onChangeText={handleRecipeChange}
+        onFocus={scrollRecipeIntoView}
         multiline
         editable={!isAnalyzingRecipe}
+        testID="meal-recipe-input"
       />
 
       {recipe.trim() ? (

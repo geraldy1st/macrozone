@@ -1,49 +1,57 @@
 import { useAuth } from "@/contexts/AuthContext";
-import {
-  getOnboardingState,
-  type OnboardingState,
-} from "@/storage/onboarding";
+import { getOnboardingState } from "@/storage/onboarding";
 import { useRouter, useSegments } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+
+const AUTH_FLOW_ROUTES = new Set([
+  "login",
+  "signup",
+  "auth",
+  "verify-email",
+  "forgot-password",
+  "reset-password",
+  "profile-edit",
+]);
 
 export default function NavigationGuard() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
   const segments = useSegments();
-  const [onboarding, setOnboarding] = useState<OnboardingState | null>(null);
+  const segmentKey = segments.join("/");
 
   useEffect(() => {
     if (isLoading) {
       return;
     }
 
-    getOnboardingState(Boolean(user)).then(setOnboarding);
-  }, [user, isLoading]);
+    let cancelled = false;
 
-  useEffect(() => {
-    if (isLoading || onboarding === null) {
-      return;
-    }
+    void (async () => {
+      const onboarding = await getOnboardingState(Boolean(user));
 
-    const root = segments[0];
-    const onWelcome = root === "welcome";
-    const onAuthFlow =
-      root === "login" ||
-      root === "auth" ||
-      root === "verify-email" ||
-      root === "forgot-password" ||
-      root === "reset-password";
-    const needsWelcome = onboarding === "pending";
+      if (cancelled) {
+        return;
+      }
 
-    if (needsWelcome && !onWelcome && !onAuthFlow) {
-      router.replace("/welcome");
-      return;
-    }
+      const root = segments[0];
+      const onWelcome = root === "welcome";
+      const onAuthFlow = AUTH_FLOW_ROUTES.has(root ?? "");
+      const needsWelcome = onboarding === "pending";
 
-    if (!needsWelcome && onWelcome) {
-      router.replace("/(tabs)");
-    }
-  }, [isLoading, onboarding, router, segments, user]);
+      if (needsWelcome && !onWelcome && !onAuthFlow) {
+        router.replace("/welcome");
+        return;
+      }
+
+      if (!needsWelcome && onWelcome) {
+        router.replace("/(tabs)");
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isLoading, router, segmentKey, segments, user]);
 
   return null;
 }

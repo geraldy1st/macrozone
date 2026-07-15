@@ -104,6 +104,15 @@
     "authRequiredTitle": "Connexion requise",
     "authRequiredMessage": "Connectez-vous pour scanner vos repas avec l'IA. Vous pouvez toujours saisir les repas manuellement."
   },
+  "signup": {
+    "title": "Créer un compte",
+    "subtitle": "Rejoignez nutriFlow pour débloquer le scan IA et synchroniser vos repas.",
+    "confirmPassword": "Confirmer le mot de passe",
+    "missingFields": "Veuillez remplir tous les champs.",
+    "passwordTooShort": "Le mot de passe doit contenir au moins 6 caractères.",
+    "passwordMismatch": "Les mots de passe ne correspondent pas.",
+    "welcomeMessage": "Bienvenue sur nutriFlow !"
+  },
   "auth": {
     "title": "Connexion",
     "subtitle": "Connectez-vous pour débloquer le scan IA et synchroniser vos données.",
@@ -255,7 +264,14 @@
     "account": {
       "title": "Compte",
       "guestDescription": "Connectez-vous pour utiliser le scan IA et retrouver vos repas sur tous vos appareils.",
-      "signOut": "Se déconnecter"
+      "signOut": "Se déconnecter",
+      "deleteDescription": "Supprimez définitivement votre compte et toutes les données associées.",
+      "deleteAccount": "Supprimer le compte",
+      "deleteTitle": "Supprimer le compte ?",
+      "deleteMessage": "Cette action est irréversible. Votre compte et vos données seront supprimés.",
+      "deleteConfirm": "Supprimer",
+      "deleteSuccess": "Votre compte a été supprimé.",
+      "deleteError": "Impossible de supprimer votre compte. Réessayez."
     },
     "language": "Langue",
     "languageDescription": "Choisissez votre langue préférée",

@@ -2,6 +2,7 @@ import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 import { setStorageScope } from "@/storage/scopedKey";
 import { getAuthRedirectUri } from "@/utils/authRedirect";
 import { createSessionFromUrl } from "@/utils/authSession";
+import { deleteUserAccount } from "@/utils/deleteAccount";
 import type { Session, User } from "@supabase/supabase-js";
 import * as WebBrowser from "expo-web-browser";
 import {
@@ -20,7 +21,7 @@ type OAuthProvider = "google" | "facebook";
 
 export type SignUpResult = {
   email: string;
-  needsEmailConfirmation: boolean;
+  sessionCreated: boolean;
 };
 
 type AuthContextValue = {
@@ -34,6 +35,7 @@ type AuthContextValue = {
   resendConfirmationEmail: (email: string) => Promise<void>;
   resetPasswordForEmail: (email: string) => Promise<void>;
   updatePassword: (password: string) => Promise<void>;
+  deleteAccount: () => Promise<void>;
   signOut: () => Promise<void>;
 };
 
@@ -108,7 +110,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return {
       email,
-      needsEmailConfirmation: !data.session && Boolean(data.user),
+      sessionCreated: Boolean(data.session),
     };
   }, []);
 
@@ -194,6 +196,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const deleteAccount = useCallback(async () => {
+    if (!supabase || !session?.access_token) {
+      throw new Error("AUTH_NOT_CONFIGURED");
+    }
+
+    await deleteUserAccount(session.access_token);
+    await supabase.auth.signOut();
+  }, [session?.access_token]);
+
   const signOut = useCallback(async () => {
     if (!supabase) {
       return;
@@ -217,6 +228,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       resendConfirmationEmail,
       resetPasswordForEmail,
       updatePassword,
+      deleteAccount,
       signOut,
     }),
     [
@@ -229,6 +241,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       resendConfirmationEmail,
       resetPasswordForEmail,
       updatePassword,
+      deleteAccount,
       signOut,
     ],
   );

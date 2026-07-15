@@ -9,8 +9,11 @@ import {
   type AppLanguage,
   supportedLanguages,
 } from "@/storage/settings";
+import { useAlert } from "@/contexts/AlertContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useToast } from "@/contexts/ToastContext";
+import { resetOnboarding } from "@/storage/onboarding";
 import { useBottomContentPadding } from "@/hooks/useBottomContentPadding";
 import { useThemedStyles } from "@/hooks/useThemedStyles";
 import { scopedKey } from "@/storage/scopedKey";
@@ -25,6 +28,7 @@ import { router, useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
+  ActivityIndicator,
   ScrollView,
   StyleSheet,
   Text,
@@ -53,9 +57,12 @@ export default function SettingsScreen() {
   const { t, i18n } = useTranslation();
   const { colors, mode, setMode } = useTheme();
   const { showToast } = useToast();
+  const { showAlert } = useAlert();
+  const { user, deleteAccount } = useAuth();
   const styles = useThemedStyles(createStyles);
   const bottomPadding = useBottomContentPadding(20, false);
   const currentLanguage = i18n.language as AppLanguage;
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const [goals, setGoals] = useState<Record<keyof MacroGoals, string>>({
     calories: String(defaultMacroGoals.calories),
     protein: String(defaultMacroGoals.protein),
@@ -100,6 +107,37 @@ export default function SettingsScreen() {
       t(`settings.theme.${nextMode}Enabled`),
       "info",
     );
+  };
+
+  const handleDeleteAccount = () => {
+    showAlert({
+      title: t("settings.account.deleteTitle"),
+      message: t("settings.account.deleteMessage"),
+      buttons: [
+        { text: t("mealItem.cancel"), style: "cancel" },
+        {
+          text: t("settings.account.deleteConfirm"),
+          style: "destructive",
+          onPress: async () => {
+            setIsDeletingAccount(true);
+
+            try {
+              await deleteAccount();
+              await resetOnboarding();
+              showToast(t("settings.account.deleteSuccess"), "success");
+              router.replace("/welcome");
+            } catch {
+              showAlert({
+                title: t("auth.errorTitle"),
+                message: t("settings.account.deleteError"),
+              });
+            } finally {
+              setIsDeletingAccount(false);
+            }
+          },
+        },
+      ],
+    });
   };
 
   const handleSaveGoals = async () => {
@@ -249,6 +287,36 @@ export default function SettingsScreen() {
           </Text>
         </TouchableOpacity>
       </View>
+
+      {user ? (
+        <>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>
+            {t("settings.account.title")}
+          </Text>
+          <Text style={[styles.description, { color: colors.textSecondary }]}>
+            {t("settings.account.deleteDescription")}
+          </Text>
+
+          <TouchableOpacity
+            style={[
+              styles.deleteButton,
+              { borderColor: colors.error ?? "#ef4444" },
+              isDeletingAccount && styles.deleteButtonDisabled,
+            ]}
+            onPress={handleDeleteAccount}
+            disabled={isDeletingAccount}
+            testID="delete-account-btn"
+          >
+            {isDeletingAccount ? (
+              <ActivityIndicator color={colors.error ?? "#ef4444"} />
+            ) : (
+              <Text style={[styles.deleteButtonText, { color: colors.error ?? "#ef4444" }]}>
+                {t("settings.account.deleteAccount")}
+              </Text>
+            )}
+          </TouchableOpacity>
+        </>
+      ) : null}
     </ScrollView>
   );
 }
@@ -330,6 +398,22 @@ function createStyles(colors: ThemeColors) {
       marginTop: 4,
     },
     saveButtonText: {
+      fontSize: 16,
+      fontWeight: "700",
+    },
+    deleteButton: {
+      borderRadius: 12,
+      padding: 18,
+      borderWidth: 2,
+      alignItems: "center",
+      minHeight: 52,
+      justifyContent: "center",
+      marginBottom: 20,
+    },
+    deleteButtonDisabled: {
+      opacity: 0.7,
+    },
+    deleteButtonText: {
       fontSize: 16,
       fontWeight: "700",
     },
