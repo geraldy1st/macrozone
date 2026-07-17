@@ -7,26 +7,38 @@ import ReminderToggle from "@/components/ReminderToggle";
 import ShareButton from "@/components/ShareButton";
 import { getRandomQuote } from "@/data/motivationalQuotes";
 import { useAuth } from "@/contexts/AuthContext";
-import { getMeals, Meal } from "@/storage/meals";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useToast } from "@/contexts/ToastContext";
+import { getMeals, Meal } from "@/storage/meals";
+import { getUserProfile } from "@/storage/profile";
 import { useBottomContentPadding } from "@/hooks/useBottomContentPadding";
 import { useThemedStyles } from "@/hooks/useThemedStyles";
 import { globalStyles } from "@/styles/global";
 import type { ThemeColors } from "@/styles/themes";
 import { filterMealsForToday } from "@/utils/groupMealsByDay";
+import { Ionicons } from "@expo/vector-icons";
+import * as Clipboard from "expo-clipboard";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 export default function HomeScreen() {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
   const { colors } = useTheme();
+  const { showToast } = useToast();
   const styles = useThemedStyles(createStyles);
   const bottomPadding = useBottomContentPadding();
   const [meals, setMeals] = useState<Meal[]>([]);
-  const [quote, setQuote] = useState(() => getRandomQuote());
+  const [userName, setUserName] = useState("");
+  const [quote, setQuote] = useState("");
 
   const loadMeals = async () => {
     const data = await getMeals();
@@ -35,12 +47,29 @@ export default function HomeScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      loadMeals();
-      setQuote((currentQuote) => getRandomQuote(currentQuote));
+      void loadMeals();
+      void getUserProfile().then((profile) => {
+        const name = profile.name.trim();
+        setUserName(name);
+        setQuote((current) => getRandomQuote(current, name));
+      });
     }, [i18n.language, user?.id]),
   );
 
   const todayMeals = useMemo(() => filterMealsForToday(meals), [meals]);
+
+  const handleCopyQuote = async () => {
+    if (!quote.trim()) {
+      return;
+    }
+
+    await Clipboard.setStringAsync(quote);
+    showToast(t("home.quoteCopied"), "success");
+  };
+
+  const handleRefreshQuote = () => {
+    setQuote((current) => getRandomQuote(current, userName));
+  };
 
   return (
     <ScrollView
@@ -67,9 +96,25 @@ export default function HomeScreen() {
 
         <View style={styles.quoteCard}>
           <View style={styles.quoteAccent} />
-          <Text style={styles.quote} numberOfLines={4}>
-            {quote}
-          </Text>
+          <TouchableOpacity
+            style={styles.quotePressable}
+            onLongPress={handleCopyQuote}
+            delayLongPress={350}
+            activeOpacity={0.85}
+            testID="home-quote-text"
+          >
+            <Text style={styles.quote} numberOfLines={4}>
+              {quote}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.quoteRefreshButton}
+            onPress={handleRefreshQuote}
+            accessibilityLabel={t("home.newQuote")}
+            testID="home-quote-refresh-btn"
+          >
+            <Ionicons name="refresh" size={18} color={colors.accent} />
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -108,6 +153,7 @@ function createStyles(colors: ThemeColors) {
     },
     quoteCard: {
       flexDirection: "row",
+      alignItems: "center",
       backgroundColor: colors.surface,
       borderRadius: 14,
       marginTop: 20,
@@ -117,16 +163,27 @@ function createStyles(colors: ThemeColors) {
     },
     quoteAccent: {
       width: 4,
+      alignSelf: "stretch",
       backgroundColor: colors.accent,
     },
-    quote: {
+    quotePressable: {
       flex: 1,
+      minWidth: 0,
+    },
+    quote: {
       fontSize: 13,
       fontStyle: "italic",
       fontWeight: "500",
       color: colors.primary,
-      padding: 14,
+      paddingVertical: 14,
+      paddingHorizontal: 12,
       lineHeight: 19,
+    },
+    quoteRefreshButton: {
+      paddingHorizontal: 14,
+      paddingVertical: 14,
+      justifyContent: "center",
+      alignItems: "center",
     },
     actionsCard: {
       backgroundColor: colors.card,

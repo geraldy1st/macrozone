@@ -39,6 +39,9 @@
       "prefer_not_to_say": "Ne pas préciser"
     },
     "age": "Âge",
+    "ageYears": "{{count}} ans",
+    "birthDate": "Date de naissance",
+    "selectBirthDate": "Sélectionner une date",
     "height": "Taille (cm)",
     "weight": "Poids (kg)",
     "save": "Enregistrer le profil",
@@ -50,7 +53,10 @@
     "recentMeals": "Repas récents",
     "noMeals": "Aucun repas enregistré.",
     "copySummary": "Copier le résumé",
-    "dailyProgress": "Progression du jour"
+    "dailyProgress": "Progression du jour",
+    "quoteCopied": "Citation copiée !",
+    "newQuote": "Nouvelle citation",
+    "quoteNameFallback": "ami"
   },
   "macros": {
     "calories": "Calories",
@@ -277,6 +283,7 @@
     "languageDescription": "Choisissez votre langue préférée",
     "english": "Anglais",
     "french": "Français",
+    "spanish": "Espagnol",
     "goals": {
       "title": "Objectifs quotidiens",
       "description": "Définissez vos objectifs macros pour suivre votre progression",
@@ -290,20 +297,20 @@
     }
   },
   "quotes": [
-    "Chaque repas est une opportunité de nourrir vos objectifs.",
-    "La discipline au quotidien construit les résultats de demain.",
-    "Votre corps mérite le meilleur carburant.",
-    "Petits choix, grandes victoires.",
-    "La constance bat l'intensité.",
-    "Mangez avec intention, progressez avec confiance.",
-    "Aujourd'hui, un pas de plus vers vos objectifs.",
-    "Vos macros, votre progression.",
-    "Nourrir son corps, c'est investir en soi.",
-    "La motivation vous fait démarrer, l'habitude vous fait continuer.",
-    "Équilibre et détermination font la différence.",
-    "Chaque jour compte, chaque repas aussi.",
-    "Prenez soin de vous, un repas à la fois.",
-    "Vos efforts d'aujourd'hui forgent votre réussite de demain.",
-    "Restez focalisé, restez constant."
+    "{{name}}, chaque repas est une opportunité de nourrir tes objectifs.",
+    "{{name}}, la discipline au quotidien construit les résultats de demain.",
+    "{{name}}, ton corps mérite le meilleur carburant.",
+    "Petits choix, grandes victoires — continue, {{name}}.",
+    "{{name}}, la constance bat l'intensité.",
+    "Mange avec intention, {{name}}, et progresse avec confiance.",
+    "Aujourd'hui, {{name}}, un pas de plus vers tes objectifs.",
+    "{{name}}, tes macros sont ta progression.",
+    "{{name}}, nourrir ton corps, c'est investir en toi.",
+    "La motivation te fait démarrer, {{name}} — l'habitude te fait continuer.",
+    "{{name}}, équilibre et détermination font la différence.",
+    "Chaque jour compte, {{name}}, et chaque repas aussi.",
+    "Prends soin de toi, {{name}}, un repas à la fois.",
+    "{{name}}, tes efforts d'aujourd'hui forgent ta réussite de demain.",
+    "Reste focalisé et constant, {{name}}."
   ]
 }

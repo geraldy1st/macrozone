@@ -9,14 +9,18 @@ function getLanguageKey() {
   return scopedKey(LANGUAGE_KEY);
 }
 
-export const supportedLanguages = ["en", "fr"] as const;
+export const supportedLanguages = ["en", "fr", "es"] as const;
 export type AppLanguage = (typeof supportedLanguages)[number];
 
 export const defaultLanguage: AppLanguage = "en";
 
+function isAppLanguage(value: string | null): value is AppLanguage {
+  return value === "en" || value === "fr" || value === "es";
+}
+
 export const getStoredLanguage = async (): Promise<AppLanguage | null> => {
   const value = await AsyncStorage.getItem(getLanguageKey());
-  if (value === "en" || value === "fr") {
+  if (isAppLanguage(value)) {
     return value;
   }
   return null;

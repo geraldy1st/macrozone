@@ -44,6 +44,7 @@ function getRemindersKey() {
 const languageLabels: Record<AppLanguage, string> = {
   en: "settings.english",
   fr: "settings.french",
+  es: "settings.spanish",
 };
 
 const goalFields: { key: keyof MacroGoals; labelKey: string }[] = [
@@ -61,7 +62,9 @@ export default function SettingsScreen() {
   const { user, deleteAccount } = useAuth();
   const styles = useThemedStyles(createStyles);
   const bottomPadding = useBottomContentPadding(20, false);
-  const currentLanguage = i18n.language as AppLanguage;
+  const currentLanguage =
+    (supportedLanguages.find((language) => i18n.language.startsWith(language)) ??
+      "en") as AppLanguage;
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const [goals, setGoals] = useState<Record<keyof MacroGoals, string>>({
     calories: String(defaultMacroGoals.calories),

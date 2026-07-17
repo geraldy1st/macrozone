@@ -1,13 +1,12 @@
 import AppLogo from "@/components/AppLogo";
+import PasswordInput from "@/components/PasswordInput";
 import { useAlert } from "@/contexts/AlertContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
-
 import { setAuthenticatedOnboarding, setGuestOnboarding } from "@/storage/onboarding";
 import { getAuthErrorCode } from "@/utils/authErrors";
-import { Ionicons } from "@expo/vector-icons";
-import { router, useLocalSearchParams } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
+import { router } from "expo-router";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
@@ -25,30 +24,15 @@ export default function LoginScreen() {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const { showAlert } = useAlert();
-  const { mode } = useLocalSearchParams<{ mode?: string }>();
-  const { isConfigured, signInWithEmail, signUpWithEmail, signInWithOAuth } =
-    useAuth();
+  const { isConfigured, signInWithEmail } = useAuth();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isSignUp, setIsSignUp] = useState(mode === "signup");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [oauthProvider, setOauthProvider] = useState<string | null>(null);
-
-  useEffect(() => {
-    setIsSignUp(mode === "signup");
-  }, [mode]);
 
   const completeAuth = async () => {
     await setAuthenticatedOnboarding();
     router.replace("/(tabs)");
-  };
-
-  const goToVerifyEmail = (targetEmail: string) => {
-    router.replace({
-      pathname: "/verify-email",
-      params: { email: targetEmail },
-    });
   };
 
   const handleEmailAuth = async () => {
@@ -65,67 +49,25 @@ export default function LoginScreen() {
     setIsSubmitting(true);
 
     try {
-      if (isSignUp) {
-        const result = await signUpWithEmail(trimmedEmail, password);
-
-        if (result.needsEmailConfirmation) {
-          goToVerifyEmail(trimmedEmail);
-          return;
-        }
-      } else {
-        await signInWithEmail(trimmedEmail, password);
-      }
-
+      await signInWithEmail(trimmedEmail, password);
       await completeAuth();
     } catch (error) {
       const errorCode = getAuthErrorCode(error);
 
       if (errorCode === "EMAIL_NOT_CONFIRMED") {
-        goToVerifyEmail(trimmedEmail);
-        return;
-      }
-
-      if (error instanceof Error && error.message === "EMAIL_ALREADY_REGISTERED") {
-        showAlert({
-          title: t("auth.errorTitle"),
-          message: t("auth.emailAlreadyRegistered"),
+        router.replace({
+          pathname: "/verify-email",
+          params: { email: trimmedEmail },
         });
         return;
       }
 
       showAlert({
         title: t("auth.errorTitle"),
-        message: isSignUp
-          ? t("auth.signUpErrorMessage")
-          : t("auth.signInErrorMessage"),
+        message: t("auth.signInErrorMessage"),
       });
     } finally {
       setIsSubmitting(false);
-    }
-  };
-
-  const handleOAuth = async (provider: "google" | "facebook") => {
-    setOauthProvider(provider);
-
-    try {
-      await signInWithOAuth(provider);
-      await completeAuth();
-    } catch (error) {
-      const errorCode = getAuthErrorCode(error);
-
-      if (errorCode === "OAUTH_CANCELLED") {
-        return;
-      }
-
-      showAlert({
-        title: t("auth.errorTitle"),
-        message:
-          errorCode === "OAUTH_SESSION_MISSING"
-            ? t("auth.oauthSessionErrorMessage")
-            : t("auth.oauthErrorMessage"),
-      });
-    } finally {
-      setOauthProvider(null);
     }
   };
 
@@ -170,28 +112,21 @@ export default function LoginScreen() {
             textContentType="emailAddress"
             testID="auth-email-input"
           />
-          <TextInput
-            style={styles.input}
+          <PasswordInput
             placeholder={t("auth.password")}
-            placeholderTextColor={colors.textSecondary}
             value={password}
             onChangeText={setPassword}
-            secureTextEntry
-            textContentType={isSignUp ? "newPassword" : "password"}
+            textContentType="password"
             testID="auth-password-input"
           />
 
-          {!isSignUp && (
-            <TouchableOpacity
-              style={styles.forgotPasswordButton}
-              onPress={() => router.push("/forgot-password")}
-              testID="auth-forgot-password-btn"
-            >
-              <Text style={styles.forgotPasswordText}>
-                {t("auth.forgotPassword")}
-              </Text>
-            </TouchableOpacity>
-          )}
+          <TouchableOpacity
+            style={styles.forgotPasswordButton}
+            onPress={() => router.push("/forgot-password")}
+            testID="auth-forgot-password-btn"
+          >
+            <Text style={styles.forgotPasswordText}>{t("auth.forgotPassword")}</Text>
+          </TouchableOpacity>
 
           <TouchableOpacity
             style={[styles.primaryButton, isSubmitting && styles.buttonDisabled]}
@@ -202,59 +137,16 @@ export default function LoginScreen() {
             {isSubmitting ? (
               <ActivityIndicator color={colors.background} />
             ) : (
-              <Text style={styles.primaryButtonText}>
-                {isSignUp ? t("auth.createAccount") : t("auth.signIn")}
-              </Text>
+              <Text style={styles.primaryButtonText}>{t("auth.signIn")}</Text>
             )}
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.switchModeButton}
-            onPress={() => setIsSignUp((current) => !current)}
+            onPress={() => router.replace("/signup")}
+            testID="auth-go-signup-btn"
           >
-            <Text style={styles.switchModeText}>
-              {isSignUp ? t("auth.haveAccount") : t("auth.needAccount")}
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.dividerRow}>
-          <View style={styles.dividerLine} />
-          <Text style={styles.dividerText}>{t("auth.orContinueWith")}</Text>
-          <View style={styles.dividerLine} />
-        </View>
-
-        <View style={styles.socialButtons}>
-          <TouchableOpacity
-            style={styles.socialButton}
-            onPress={() => handleOAuth("google")}
-            disabled={oauthProvider !== null}
-            testID="auth-google-btn"
-          >
-            {oauthProvider === "google" ? (
-              <ActivityIndicator color={colors.text} />
-            ) : (
-              <>
-                <Ionicons name="logo-google" size={20} color={colors.text} />
-                <Text style={styles.socialButtonText}>{t("auth.google")}</Text>
-              </>
-            )}
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.socialButton}
-            onPress={() => handleOAuth("facebook")}
-            disabled={oauthProvider !== null}
-            testID="auth-facebook-btn"
-          >
-            {oauthProvider === "facebook" ? (
-              <ActivityIndicator color={colors.text} />
-            ) : (
-              <>
-                <Ionicons name="logo-facebook" size={20} color={colors.text} />
-                <Text style={styles.socialButtonText}>{t("auth.facebook")}</Text>
-              </>
-            )}
+            <Text style={styles.switchModeText}>{t("auth.needAccount")}</Text>
           </TouchableOpacity>
         </View>
 
@@ -358,42 +250,6 @@ function createStyles(colors: ReturnType<typeof useTheme>["colors"]) {
     forgotPasswordText: {
       color: colors.primary,
       fontSize: 14,
-      fontWeight: "600",
-    },
-    dividerRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 12,
-      marginVertical: 24,
-    },
-    dividerLine: {
-      flex: 1,
-      height: 1,
-      backgroundColor: colors.cardBorder,
-    },
-    dividerText: {
-      color: colors.textSecondary,
-      fontSize: 13,
-      fontWeight: "600",
-    },
-    socialButtons: {
-      gap: 12,
-    },
-    socialButton: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "center",
-      gap: 10,
-      backgroundColor: colors.card,
-      borderRadius: 12,
-      padding: 16,
-      borderWidth: 1,
-      borderColor: colors.cardBorder,
-      minHeight: 52,
-    },
-    socialButtonText: {
-      color: colors.text,
-      fontSize: 15,
       fontWeight: "600",
     },
     guestButton: {

@@ -1,4 +1,5 @@
 import en from "@/locales/en.json";
+import es from "@/locales/es.json";
 import fr from "@/locales/fr.json";
 import {
   defaultLanguage,
@@ -12,6 +13,7 @@ import { initReactI18next } from "react-i18next";
 const resources = {
   en: { translation: en },
   fr: { translation: fr },
+  es: { translation: es },
 };
 
 let initialized = false;

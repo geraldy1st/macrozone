@@ -6,7 +6,8 @@ export type GenderOption = "male" | "female" | "other" | "prefer_not_to_say" | "
 
 export type UserProfile = {
   name: string;
-  age: string;
+  /** ISO date YYYY-MM-DD */
+  birthDate: string;
   height: string;
   weight: string;
   photoUri?: string;
@@ -18,7 +19,7 @@ export type UserProfile = {
 
 export const defaultProfile: UserProfile = {
   name: "",
-  age: "",
+  birthDate: "",
   height: "",
   weight: "",
   countryCode: defaultCountryCode,
@@ -40,7 +41,13 @@ export async function getUserProfile(): Promise<UserProfile> {
     return defaultProfile;
   }
 
-  return { ...defaultProfile, ...JSON.parse(data) };
+  const parsed = JSON.parse(data) as Partial<UserProfile> & { age?: string };
+
+  return {
+    ...defaultProfile,
+    ...parsed,
+    birthDate: parsed.birthDate ?? "",
+  };
 }
 
 export async function setUserProfile(profile: UserProfile): Promise<void> {

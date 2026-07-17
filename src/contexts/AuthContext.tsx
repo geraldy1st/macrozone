@@ -1,7 +1,6 @@
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 import { setStorageScope } from "@/storage/scopedKey";
 import { getAuthRedirectUri } from "@/utils/authRedirect";
-import { createSessionFromUrl } from "@/utils/authSession";
 import { deleteUserAccount } from "@/utils/deleteAccount";
 import type { Session, User } from "@supabase/supabase-js";
 import * as WebBrowser from "expo-web-browser";
@@ -17,8 +16,6 @@ import {
 
 WebBrowser.maybeCompleteAuthSession();
 
-type OAuthProvider = "google" | "facebook";
-
 export type SignUpResult = {
   email: string;
   sessionCreated: boolean;
@@ -31,7 +28,6 @@ type AuthContextValue = {
   isConfigured: boolean;
   signInWithEmail: (email: string, password: string) => Promise<void>;
   signUpWithEmail: (email: string, password: string) => Promise<SignUpResult>;
-  signInWithOAuth: (provider: OAuthProvider) => Promise<void>;
   resendConfirmationEmail: (email: string) => Promise<void>;
   resetPasswordForEmail: (email: string) => Promise<void>;
   updatePassword: (password: string) => Promise<void>;
@@ -158,44 +154,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const signInWithOAuth = useCallback(async (provider: OAuthProvider) => {
-    if (!supabase) {
-      throw new Error("AUTH_NOT_CONFIGURED");
-    }
-
-    const redirectTo = getAuthRedirectUri();
-
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider,
-      options: {
-        redirectTo,
-        skipBrowserRedirect: true,
-      },
-    });
-
-    if (error) {
-      throw error;
-    }
-
-    if (!data.url) {
-      throw new Error("OAUTH_URL_MISSING");
-    }
-
-    const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo, {
-      showInRecents: true,
-    });
-
-    if (result.type !== "success") {
-      throw new Error("OAUTH_CANCELLED");
-    }
-
-    const nextSession = await createSessionFromUrl(result.url);
-
-    if (!nextSession) {
-      throw new Error("OAUTH_SESSION_MISSING");
-    }
-  }, []);
-
   const deleteAccount = useCallback(async () => {
     if (!supabase || !session?.access_token) {
       throw new Error("AUTH_NOT_CONFIGURED");
@@ -224,7 +182,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isConfigured: isSupabaseConfigured,
       signInWithEmail,
       signUpWithEmail,
-      signInWithOAuth,
       resendConfirmationEmail,
       resetPasswordForEmail,
       updatePassword,
@@ -237,7 +194,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isLoading,
       signInWithEmail,
       signUpWithEmail,
-      signInWithOAuth,
       resendConfirmationEmail,
       resetPasswordForEmail,
       updatePassword,

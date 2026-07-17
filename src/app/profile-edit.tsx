@@ -11,7 +11,11 @@ import {
   type UserProfile,
 } from "@/storage/profile";
 import type { ThemeColors } from "@/styles/themes";
+import { formatBirthDateDisplay, parseIsoDate, toIsoDate } from "@/utils/age";
 import { Ionicons } from "@expo/vector-icons";
+import DateTimePicker, {
+  type DateTimePickerEvent,
+} from "@react-native-community/datetimepicker";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { router, useFocusEffect } from "expo-router";
@@ -19,6 +23,7 @@ import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -35,15 +40,19 @@ const genderOptions: GenderOption[] = [
   "prefer_not_to_say",
 ];
 
+const DEFAULT_BIRTH_DATE = new Date(1995, 0, 1);
+
 export default function ProfileEditScreen() {
-  const { t } = useTranslation();
-  const { colors } = useTheme();
+  const { t, i18n } = useTranslation();
+  const { colors, isDark } = useTheme();
   const { showToast } = useToast();
   const styles = useThemedStyles(createStyles);
   const bottomPadding = useBottomContentPadding(20, false);
   const [profile, setProfile] = useState<UserProfile>(defaultProfile);
   const [isSaving, setIsSaving] = useState(false);
   const [countryPickerVisible, setCountryPickerVisible] = useState(false);
+  const [birthDatePickerVisible, setBirthDatePickerVisible] = useState(false);
+  const [iosDraftDate, setIosDraftDate] = useState(DEFAULT_BIRTH_DATE);
 
   useFocusEffect(
     useCallback(() => {
@@ -52,6 +61,36 @@ export default function ProfileEditScreen() {
   );
 
   const selectedCountry = getCountryByCode(profile.countryCode);
+  const birthDateLabel = profile.birthDate
+    ? formatBirthDateDisplay(profile.birthDate, i18n.language)
+    : t("profile.selectBirthDate");
+
+  const openBirthDatePicker = () => {
+    const current = parseIsoDate(profile.birthDate) ?? DEFAULT_BIRTH_DATE;
+    setIosDraftDate(current);
+    setBirthDatePickerVisible(true);
+  };
+
+  const applyBirthDate = (date: Date) => {
+    setProfile((current) => ({
+      ...current,
+      birthDate: toIsoDate(date),
+    }));
+  };
+
+  const handleBirthDateChange = (event: DateTimePickerEvent, date?: Date) => {
+    if (Platform.OS === "android") {
+      setBirthDatePickerVisible(false);
+      if (event.type === "set" && date) {
+        applyBirthDate(date);
+      }
+      return;
+    }
+
+    if (date) {
+      setIosDraftDate(date);
+    }
+  };
 
   const handlePickPhoto = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -240,14 +279,36 @@ export default function ProfileEditScreen() {
             {t("profile.health")}
           </Text>
 
-          <ProfileField
-            label={t("profile.age")}
-            value={profile.age}
-            onChangeText={(age) => setProfile((current) => ({ ...current, age }))}
-            colors={colors}
-            keyboardType="numeric"
-            testID="profile-age-input"
-          />
+          <View style={fieldStyles.field}>
+            <Text style={[fieldStyles.label, { color: colors.textSecondary }]}>
+              {t("profile.birthDate")}
+            </Text>
+            <TouchableOpacity
+              style={[
+                fieldStyles.input,
+                styles.pickerButton,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.cardBorder,
+                },
+              ]}
+              onPress={openBirthDatePicker}
+              testID="profile-birthdate-picker"
+            >
+              <Text
+                style={[
+                  styles.pickerText,
+                  {
+                    color: profile.birthDate ? colors.text : colors.textSecondary,
+                  },
+                ]}
+              >
+                {birthDateLabel}
+              </Text>
+              <Ionicons name="calendar-outline" size={18} color={colors.textSecondary} />
+            </TouchableOpacity>
+          </View>
+
           <ProfileField
             label={t("profile.height")}
             value={profile.height}
@@ -277,6 +338,66 @@ export default function ProfileEditScreen() {
           </Text>
         </TouchableOpacity>
       </ScrollView>
+
+      {birthDatePickerVisible && Platform.OS === "android" ? (
+        <DateTimePicker
+          value={parseIsoDate(profile.birthDate) ?? DEFAULT_BIRTH_DATE}
+          mode="date"
+          display="calendar"
+          maximumDate={new Date()}
+          minimumDate={new Date(1920, 0, 1)}
+          onChange={handleBirthDateChange}
+        />
+      ) : null}
+
+      <Modal
+        visible={birthDatePickerVisible && Platform.OS === "ios"}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setBirthDatePickerVisible(false)}
+      >
+        <Pressable
+          style={styles.modalOverlay}
+          onPress={() => setBirthDatePickerVisible(false)}
+        >
+          <Pressable
+            style={[styles.modalSheet, { backgroundColor: colors.card }]}
+            onPress={(event) => event.stopPropagation()}
+          >
+            <View style={styles.datePickerHeader}>
+              <TouchableOpacity onPress={() => setBirthDatePickerVisible(false)}>
+                <Text style={[styles.datePickerAction, { color: colors.textSecondary }]}>
+                  {t("mealItem.cancel")}
+                </Text>
+              </TouchableOpacity>
+              <Text style={[styles.modalTitle, { color: colors.text, marginBottom: 0 }]}>
+                {t("profile.birthDate")}
+              </Text>
+              <TouchableOpacity
+                onPress={() => {
+                  applyBirthDate(iosDraftDate);
+                  setBirthDatePickerVisible(false);
+                }}
+                testID="profile-birthdate-confirm"
+              >
+                <Text style={[styles.datePickerAction, { color: colors.accent }]}>
+                  {t("common.ok")}
+                </Text>
+              </TouchableOpacity>
+            </View>
+            <DateTimePicker
+              value={iosDraftDate}
+              mode="date"
+              display="spinner"
+              maximumDate={new Date()}
+              minimumDate={new Date(1920, 0, 1)}
+              onChange={handleBirthDateChange}
+              themeVariant={isDark ? "dark" : "light"}
+              style={styles.iosDatePicker}
+            />
+          </Pressable>
+        </Pressable>
+      </Modal>
 
       <Modal
         visible={countryPickerVisible}
@@ -496,6 +617,20 @@ function createStyles(colors: ThemeColors) {
     countryRowText: {
       fontSize: 16,
       fontWeight: "500",
+    },
+    datePickerHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginBottom: 8,
+    },
+    datePickerAction: {
+      fontSize: 16,
+      fontWeight: "600",
+      minWidth: 64,
+    },
+    iosDatePicker: {
+      alignSelf: "center",
     },
   });
 }

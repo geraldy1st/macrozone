@@ -11,6 +11,7 @@ import {
 } from "@/storage/profile";
 import { resetOnboarding } from "@/storage/onboarding";
 import type { ThemeColors } from "@/styles/themes";
+import { calculateAge } from "@/utils/age";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { router, useFocusEffect, type Href } from "expo-router";
@@ -63,6 +64,10 @@ export default function ProfileScreen() {
   const countryDisplay = selectedCountry
     ? `${selectedCountry.flag} ${selectedCountry.name}`
     : notSet;
+
+  const ageValue = calculateAge(profile.birthDate);
+  const ageDisplay =
+    ageValue !== null ? t("profile.ageYears", { count: ageValue }) : notSet;
 
   return (
     <ScrollView
@@ -145,7 +150,7 @@ export default function ProfileScreen() {
 
         <ProfileInfoRow
           label={t("profile.age")}
-          value={profile.age.trim() || notSet}
+          value={ageDisplay}
           colors={colors}
         />
         <ProfileInfoRow
