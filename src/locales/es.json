@@ -28,6 +28,9 @@
     "personalInfo": "Información personal",
     "health": "Salud",
     "name": "Nombre",
+    "displayNameFallback": "Usuario",
+    "bio": "Biografía",
+    "bioPlaceholder": "Cuéntale a los demás un poco sobre ti…",
     "country": "País",
     "selectCountry": "Seleccionar un país",
     "gender": "Género",
@@ -47,7 +50,25 @@
     "save": "Guardar perfil",
     "savedMessage": "Perfil actualizado correctamente",
     "saveErrorMessage": "No se pudo guardar el perfil",
-    "signOut": "Cerrar sesión"
+    "signOut": "Cerrar sesión",
+    "social": {
+      "title": "Enlaces sociales",
+      "description": "Añade hasta {{count}} enlaces personales. Aparecen en tu perfil con iconos.",
+      "choosePlatform": "Elegir una plataforma",
+      "urlPlaceholder": "https://…",
+      "add": "Añadir enlace",
+      "invalidUrl": "Introduce una URL válida (https://…)",
+      "maxReached": "Puedes añadir hasta {{count}} enlaces.",
+      "openError": "No se pudo abrir este enlace.",
+      "instagram": "Instagram",
+      "snapchat": "Snapchat",
+      "youtube": "YouTube",
+      "github": "GitHub",
+      "linkedin": "LinkedIn",
+      "tiktok": "TikTok",
+      "x": "X (Twitter)",
+      "website": "Sitio web"
+    }
   },
   "home": {
     "recentMeals": "Comidas recientes",
@@ -267,6 +288,17 @@
       "darkEnabled": "Modo oscuro activado",
       "lightEnabled": "Modo claro activado"
     },
+    "password": {
+      "title": "Contraseña",
+      "description": "Cambia la contraseña de tu cuenta. Seguirás conectado.",
+      "current": "Contraseña actual",
+      "next": "Nueva contraseña",
+      "confirm": "Confirmar nueva contraseña",
+      "submit": "Actualizar contraseña",
+      "missingFields": "Completa todos los campos de contraseña.",
+      "success": "Contraseña actualizada correctamente.",
+      "error": "No se pudo actualizar la contraseña. Comprueba la contraseña actual e inténtalo de nuevo."
+    },
     "account": {
       "title": "Cuenta",
       "guestDescription": "Inicia sesión para usar el escaneo IA y acceder a tus comidas en todos tus dispositivos.",
@@ -277,7 +309,9 @@
       "deleteMessage": "Esta acción es irreversible. Tu cuenta y tus datos se eliminarán.",
       "deleteConfirm": "Eliminar",
       "deleteSuccess": "Tu cuenta ha sido eliminada.",
-      "deleteError": "No se pudo eliminar tu cuenta. Inténtalo de nuevo."
+      "deleteError": "No se pudo eliminar tu cuenta. Inténtalo de nuevo.",
+      "deleteNotConfigured": "La eliminación de cuenta no está configurada en el servidor (falta URL API o clave admin).",
+      "deleteUnauthorized": "Tu sesión ha caducado. Inicia sesión de nuevo e intenta eliminar la cuenta."
     },
     "language": "Idioma",
     "languageDescription": "Elige tu idioma preferido",

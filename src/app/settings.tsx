@@ -9,6 +9,7 @@ import {
   type AppLanguage,
   supportedLanguages,
 } from "@/storage/settings";
+import PasswordInput from "@/components/PasswordInput";
 import { useAlert } from "@/contexts/AlertContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -18,6 +19,7 @@ import { useBottomContentPadding } from "@/hooks/useBottomContentPadding";
 import { useThemedStyles } from "@/hooks/useThemedStyles";
 import { scopedKey } from "@/storage/scopedKey";
 import type { ThemeColors, ThemeMode } from "@/styles/themes";
+import { DeleteAccountError } from "@/utils/deleteAccount";
 import {
   cancelMealReminders,
   scheduleMealReminders,
@@ -59,13 +61,17 @@ export default function SettingsScreen() {
   const { colors, mode, setMode } = useTheme();
   const { showToast } = useToast();
   const { showAlert } = useAlert();
-  const { user, deleteAccount } = useAuth();
+  const { user, deleteAccount, changePassword } = useAuth();
   const styles = useThemedStyles(createStyles);
   const bottomPadding = useBottomContentPadding(20, false);
   const currentLanguage =
     (supportedLanguages.find((language) => i18n.language.startsWith(language)) ??
       "en") as AppLanguage;
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [goals, setGoals] = useState<Record<keyof MacroGoals, string>>({
     calories: String(defaultMacroGoals.calories),
     protein: String(defaultMacroGoals.protein),
@@ -112,6 +118,49 @@ export default function SettingsScreen() {
     );
   };
 
+  const handleChangePassword = async () => {
+    if (!currentPassword.trim() || !newPassword.trim() || !confirmPassword.trim()) {
+      showAlert({
+        title: t("auth.errorTitle"),
+        message: t("settings.password.missingFields"),
+      });
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      showAlert({
+        title: t("auth.errorTitle"),
+        message: t("resetPassword.passwordTooShort"),
+      });
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      showAlert({
+        title: t("auth.errorTitle"),
+        message: t("resetPassword.passwordMismatch"),
+      });
+      return;
+    }
+
+    setIsChangingPassword(true);
+
+    try {
+      await changePassword(currentPassword, newPassword);
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      showToast(t("settings.password.success"), "success");
+    } catch {
+      showAlert({
+        title: t("auth.errorTitle"),
+        message: t("settings.password.error"),
+      });
+    } finally {
+      setIsChangingPassword(false);
+    }
+  };
+
   const handleDeleteAccount = () => {
     showAlert({
       title: t("settings.account.deleteTitle"),
@@ -129,10 +178,17 @@ export default function SettingsScreen() {
               await resetOnboarding();
               showToast(t("settings.account.deleteSuccess"), "success");
               router.replace("/welcome");
-            } catch {
+            } catch (error) {
+              const message =
+                error instanceof DeleteAccountError && error.code === "NOT_CONFIGURED"
+                  ? t("settings.account.deleteNotConfigured")
+                  : error instanceof DeleteAccountError && error.code === "UNAUTHORIZED"
+                    ? t("settings.account.deleteUnauthorized")
+                    : t("settings.account.deleteError");
+
               showAlert({
                 title: t("auth.errorTitle"),
-                message: t("settings.account.deleteError"),
+                message,
               });
             } finally {
               setIsDeletingAccount(false);
@@ -294,6 +350,60 @@ export default function SettingsScreen() {
       {user ? (
         <>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>
+            {t("settings.password.title")}
+          </Text>
+          <Text style={[styles.description, { color: colors.textSecondary }]}>
+            {t("settings.password.description")}
+          </Text>
+
+          <View
+            style={[
+              styles.passwordCard,
+              { backgroundColor: colors.card, borderColor: colors.cardBorder },
+            ]}
+          >
+            <PasswordInput
+              placeholder={t("settings.password.current")}
+              value={currentPassword}
+              onChangeText={setCurrentPassword}
+              textContentType="password"
+              testID="settings-current-password"
+            />
+            <PasswordInput
+              placeholder={t("settings.password.next")}
+              value={newPassword}
+              onChangeText={setNewPassword}
+              textContentType="newPassword"
+              testID="settings-new-password"
+            />
+            <PasswordInput
+              placeholder={t("settings.password.confirm")}
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              textContentType="newPassword"
+              testID="settings-confirm-password"
+            />
+            <TouchableOpacity
+              style={[
+                styles.saveButton,
+                { backgroundColor: colors.accent },
+                isChangingPassword && styles.deleteButtonDisabled,
+              ]}
+              onPress={handleChangePassword}
+              disabled={isChangingPassword}
+              testID="settings-change-password-btn"
+            >
+              {isChangingPassword ? (
+                <ActivityIndicator color={colors.background} />
+              ) : (
+                <Text style={[styles.saveButtonText, { color: colors.background }]}>
+                  {t("settings.password.submit")}
+                </Text>
+              )}
+            </TouchableOpacity>
+          </View>
+
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>
             {t("settings.account.title")}
           </Text>
           <Text style={[styles.description, { color: colors.textSecondary }]}>
@@ -303,7 +413,7 @@ export default function SettingsScreen() {
           <TouchableOpacity
             style={[
               styles.deleteButton,
-              { borderColor: colors.error ?? "#ef4444" },
+              { borderColor: "#ef4444" },
               isDeletingAccount && styles.deleteButtonDisabled,
             ]}
             onPress={handleDeleteAccount}
@@ -311,9 +421,9 @@ export default function SettingsScreen() {
             testID="delete-account-btn"
           >
             {isDeletingAccount ? (
-              <ActivityIndicator color={colors.error ?? "#ef4444"} />
+              <ActivityIndicator color="#ef4444" />
             ) : (
-              <Text style={[styles.deleteButtonText, { color: colors.error ?? "#ef4444" }]}>
+              <Text style={[styles.deleteButtonText, { color: "#ef4444" }]}>
                 {t("settings.account.deleteAccount")}
               </Text>
             )}
@@ -399,10 +509,19 @@ function createStyles(colors: ThemeColors) {
       borderRadius: 12,
       alignItems: "center",
       marginTop: 4,
+      minHeight: 52,
+      justifyContent: "center",
     },
     saveButtonText: {
       fontSize: 16,
       fontWeight: "700",
+    },
+    passwordCard: {
+      borderRadius: 16,
+      padding: 18,
+      borderWidth: 1,
+      gap: 12,
+      marginBottom: 8,
     },
     deleteButton: {
       borderRadius: 12,

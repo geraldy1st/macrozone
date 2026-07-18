@@ -28,6 +28,9 @@
     "personalInfo": "Informations personnelles",
     "health": "Santé",
     "name": "Nom",
+    "displayNameFallback": "Utilisateur",
+    "bio": "Biographie",
+    "bioPlaceholder": "Parlez un peu de vous…",
     "country": "Pays",
     "selectCountry": "Sélectionner un pays",
     "gender": "Genre",
@@ -47,7 +50,25 @@
     "save": "Enregistrer le profil",
     "savedMessage": "Profil mis à jour avec succès",
     "saveErrorMessage": "Impossible d'enregistrer le profil",
-    "signOut": "Se déconnecter"
+    "signOut": "Se déconnecter",
+    "social": {
+      "title": "Liens sociaux",
+      "description": "Ajoutez jusqu'à {{count}} liens personnels. Ils apparaissent sur votre profil avec des icônes.",
+      "choosePlatform": "Choisir une plateforme",
+      "urlPlaceholder": "https://…",
+      "add": "Ajouter le lien",
+      "invalidUrl": "Saisissez une URL valide (https://…)",
+      "maxReached": "Vous pouvez ajouter jusqu'à {{count}} liens.",
+      "openError": "Impossible d'ouvrir ce lien.",
+      "instagram": "Instagram",
+      "snapchat": "Snapchat",
+      "youtube": "YouTube",
+      "github": "GitHub",
+      "linkedin": "LinkedIn",
+      "tiktok": "TikTok",
+      "x": "X (Twitter)",
+      "website": "Site web"
+    }
   },
   "home": {
     "recentMeals": "Repas récents",
@@ -267,6 +288,17 @@
       "darkEnabled": "Mode sombre activé",
       "lightEnabled": "Mode clair activé"
     },
+    "password": {
+      "title": "Mot de passe",
+      "description": "Modifiez le mot de passe de votre compte. Vous resterez connecté.",
+      "current": "Mot de passe actuel",
+      "next": "Nouveau mot de passe",
+      "confirm": "Confirmer le nouveau mot de passe",
+      "submit": "Mettre à jour le mot de passe",
+      "missingFields": "Veuillez remplir tous les champs du mot de passe.",
+      "success": "Mot de passe mis à jour avec succès.",
+      "error": "Impossible de mettre à jour le mot de passe. Vérifiez le mot de passe actuel et réessayez."
+    },
     "account": {
       "title": "Compte",
       "guestDescription": "Connectez-vous pour utiliser le scan IA et retrouver vos repas sur tous vos appareils.",
@@ -277,7 +309,9 @@
       "deleteMessage": "Cette action est irréversible. Votre compte et vos données seront supprimés.",
       "deleteConfirm": "Supprimer",
       "deleteSuccess": "Votre compte a été supprimé.",
-      "deleteError": "Impossible de supprimer votre compte. Réessayez."
+      "deleteError": "Impossible de supprimer votre compte. Réessayez.",
+      "deleteNotConfigured": "La suppression de compte n'est pas configurée sur le serveur (URL API ou clé admin manquante).",
+      "deleteUnauthorized": "Votre session a expiré. Reconnectez-vous puis réessayez de supprimer le compte."
     },
     "language": "Langue",
     "languageDescription": "Choisissez votre langue préférée",

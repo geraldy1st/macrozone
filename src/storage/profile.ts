@@ -1,4 +1,5 @@
 import { defaultCountryCode } from "@/data/countries";
+import type { SocialLink } from "@/data/socialLinks";
 import { scopedKey } from "@/storage/scopedKey";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -6,6 +7,7 @@ export type GenderOption = "male" | "female" | "other" | "prefer_not_to_say" | "
 
 export type UserProfile = {
   name: string;
+  bio: string;
   /** ISO date YYYY-MM-DD */
   birthDate: string;
   height: string;
@@ -15,10 +17,12 @@ export type UserProfile = {
   gender: GenderOption;
   phoneDialCode: string;
   phoneNumber: string;
+  socialLinks: SocialLink[];
 };
 
 export const defaultProfile: UserProfile = {
   name: "",
+  bio: "",
   birthDate: "",
   height: "",
   weight: "",
@@ -26,6 +30,7 @@ export const defaultProfile: UserProfile = {
   gender: "",
   phoneDialCode: "+33",
   phoneNumber: "",
+  socialLinks: [],
 };
 
 const PROFILE_KEY = "userProfile";
@@ -46,7 +51,9 @@ export async function getUserProfile(): Promise<UserProfile> {
   return {
     ...defaultProfile,
     ...parsed,
+    bio: parsed.bio ?? "",
     birthDate: parsed.birthDate ?? "",
+    socialLinks: Array.isArray(parsed.socialLinks) ? parsed.socialLinks : [],
   };
 }
 

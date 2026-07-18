@@ -2,6 +2,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useToast } from "@/contexts/ToastContext";
 import { getCountryByCode } from "@/data/countries";
+import {
+  formatSocialUrlLabel,
+  getSocialPlatform,
+} from "@/data/socialLinks";
 import { useBottomContentPadding } from "@/hooks/useBottomContentPadding";
 import { useThemedStyles } from "@/hooks/useThemedStyles";
 import {
@@ -18,6 +22,7 @@ import { router, useFocusEffect, type Href } from "expo-router";
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
+  Linking,
   ScrollView,
   StyleSheet,
   Text,
@@ -42,6 +47,8 @@ export default function ProfileScreen() {
 
   const selectedCountry = getCountryByCode(profile.countryCode);
   const notSet = t("profile.notSet");
+  const displayName =
+    profile.name.trim() || t("profile.displayNameFallback");
 
   const handleSignOut = async () => {
     try {
@@ -53,14 +60,6 @@ export default function ProfileScreen() {
     }
   };
 
-  const phoneDisplay = profile.phoneNumber.trim()
-    ? `${profile.phoneDialCode} ${profile.phoneNumber}`
-    : notSet;
-
-  const genderDisplay = profile.gender
-    ? t(`profile.genderOptions.${profile.gender}`)
-    : notSet;
-
   const countryDisplay = selectedCountry
     ? `${selectedCountry.flag} ${selectedCountry.name}`
     : notSet;
@@ -68,6 +67,8 @@ export default function ProfileScreen() {
   const ageValue = calculateAge(profile.birthDate);
   const ageDisplay =
     ageValue !== null ? t("profile.ageYears", { count: ageValue }) : notSet;
+
+  const activeLinks = profile.socialLinks.filter((link) => link.url.trim());
 
   return (
     <ScrollView
@@ -81,7 +82,10 @@ export default function ProfileScreen() {
         </Text>
         <View style={styles.headerActions}>
           <TouchableOpacity
-            style={[styles.headerButton, { borderColor: colors.cardBorder, backgroundColor: colors.card }]}
+            style={[
+              styles.headerButton,
+              { borderColor: colors.cardBorder, backgroundColor: colors.card },
+            ]}
             onPress={() => router.push("/profile-edit" as Href)}
             testID="open-profile-edit-btn"
           >
@@ -91,7 +95,10 @@ export default function ProfileScreen() {
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.headerButton, { borderColor: colors.cardBorder, backgroundColor: colors.card }]}
+            style={[
+              styles.headerButton,
+              { borderColor: colors.cardBorder, backgroundColor: colors.card },
+            ]}
             onPress={() => router.push("/settings")}
             testID="open-settings-btn"
           >
@@ -103,24 +110,84 @@ export default function ProfileScreen() {
         </View>
       </View>
 
-      <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
-        <Text style={[styles.sectionLabel, { color: colors.primary }]}>
-          {t("profile.personalInfo")}
-        </Text>
-
+      <View
+        style={[
+          styles.card,
+          { backgroundColor: colors.card, borderColor: colors.cardBorder },
+        ]}
+      >
         <View style={styles.avatarContainer}>
           {profile.photoUri ? (
-            <Image source={{ uri: profile.photoUri }} style={styles.avatar} contentFit="cover" />
+            <Image
+              source={{ uri: profile.photoUri }}
+              style={styles.avatar}
+              contentFit="cover"
+            />
           ) : (
-            <View style={[styles.avatarPlaceholder, { backgroundColor: colors.surface }]}>
+            <View
+              style={[styles.avatarPlaceholder, { backgroundColor: colors.surface }]}
+            >
               <Ionicons name="person" size={42} color={colors.textSecondary} />
             </View>
           )}
         </View>
 
-        {user?.email && (
-          <Text style={[styles.email, { color: colors.textSecondary }]}>{user.email}</Text>
-        )}
+        <Text style={[styles.displayName, { color: colors.text }]} numberOfLines={1}>
+          {displayName}
+        </Text>
+
+        {profile.bio.trim() ? (
+          <Text style={[styles.bio, { color: colors.textSecondary }]}>
+            {profile.bio.trim()}
+          </Text>
+        ) : null}
+
+        {activeLinks.length > 0 ? (
+          <View style={styles.socialList}>
+            {activeLinks.map((link) => {
+              const platform = getSocialPlatform(link.platform);
+              if (!platform) {
+                return null;
+              }
+
+              return (
+                <TouchableOpacity
+                  key={`${link.platform}-${link.url}`}
+                  style={[
+                    styles.socialRow,
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: colors.cardBorder,
+                    },
+                  ]}
+                  onPress={() => {
+                    void Linking.openURL(link.url).catch(() => {
+                      showToast(t("profile.social.openError"), "error");
+                    });
+                  }}
+                  testID={`profile-social-${link.platform}`}
+                >
+                  <Ionicons
+                    name={platform.icon}
+                    size={20}
+                    color={colors.accent}
+                  />
+                  <Text
+                    style={[styles.socialUrl, { color: colors.primary }]}
+                    numberOfLines={1}
+                  >
+                    {formatSocialUrlLabel(link.url)}
+                  </Text>
+                  <Ionicons
+                    name="open-outline"
+                    size={16}
+                    color={colors.textSecondary}
+                  />
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        ) : null}
 
         {!user && isConfigured && (
           <TouchableOpacity
@@ -134,25 +201,23 @@ export default function ProfileScreen() {
         )}
 
         <ProfileInfoRow
-          label={t("profile.name")}
-          value={profile.name.trim() || notSet}
+          label={t("profile.country")}
+          value={countryDisplay}
           colors={colors}
         />
-        <ProfileInfoRow label={t("profile.country")} value={countryDisplay} colors={colors} />
-        <ProfileInfoRow label={t("profile.gender")} value={genderDisplay} colors={colors} />
-        <ProfileInfoRow label={t("profile.phone")} value={phoneDisplay} colors={colors} />
       </View>
 
-      <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
+      <View
+        style={[
+          styles.card,
+          { backgroundColor: colors.card, borderColor: colors.cardBorder },
+        ]}
+      >
         <Text style={[styles.sectionLabel, { color: colors.primary }]}>
           {t("profile.health")}
         </Text>
 
-        <ProfileInfoRow
-          label={t("profile.age")}
-          value={ageDisplay}
-          colors={colors}
-        />
+        <ProfileInfoRow label={t("profile.age")} value={ageDisplay} colors={colors} />
         <ProfileInfoRow
           label={t("profile.height")}
           value={profile.height.trim() || notSet}
@@ -187,7 +252,9 @@ function ProfileInfoRow({
 }) {
   return (
     <View style={infoRowStyles.row}>
-      <Text style={[infoRowStyles.label, { color: colors.textSecondary }]}>{label}</Text>
+      <Text style={[infoRowStyles.label, { color: colors.textSecondary }]}>
+        {label}
+      </Text>
       <Text style={[infoRowStyles.value, { color: colors.text }]}>{value}</Text>
     </View>
   );
@@ -260,10 +327,35 @@ function createStyles(colors: ThemeColors) {
       alignItems: "center",
       justifyContent: "center",
     },
-    email: {
+    displayName: {
+      textAlign: "center",
+      fontSize: 22,
+      fontWeight: "800",
+      letterSpacing: -0.3,
+    },
+    bio: {
       textAlign: "center",
       fontSize: 14,
+      lineHeight: 20,
       fontWeight: "500",
+    },
+    socialList: {
+      gap: 8,
+      marginTop: 4,
+    },
+    socialRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 10,
+      borderWidth: 1,
+      borderRadius: 12,
+      paddingHorizontal: 12,
+      paddingVertical: 12,
+    },
+    socialUrl: {
+      flex: 1,
+      fontSize: 14,
+      fontWeight: "600",
     },
     signInChip: {
       alignSelf: "center",

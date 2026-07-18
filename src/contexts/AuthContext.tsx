@@ -31,6 +31,7 @@ type AuthContextValue = {
   resendConfirmationEmail: (email: string) => Promise<void>;
   resetPasswordForEmail: (email: string) => Promise<void>;
   updatePassword: (password: string) => Promise<void>;
+  changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
   deleteAccount: () => Promise<void>;
   signOut: () => Promise<void>;
 };
@@ -154,6 +155,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const reauthenticate = useCallback(async (password: string) => {
+    if (!supabase || !user?.email) {
+      throw new Error("AUTH_NOT_CONFIGURED");
+    }
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email: user.email,
+      password,
+    });
+
+    if (error) {
+      throw error;
+    }
+  }, [user?.email]);
+
+  const changePassword = useCallback(
+    async (currentPassword: string, newPassword: string) => {
+      await reauthenticate(currentPassword);
+      await updatePassword(newPassword);
+    },
+    [reauthenticate, updatePassword],
+  );
+
   const deleteAccount = useCallback(async () => {
     if (!supabase || !session?.access_token) {
       throw new Error("AUTH_NOT_CONFIGURED");
@@ -185,6 +209,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       resendConfirmationEmail,
       resetPasswordForEmail,
       updatePassword,
+      changePassword,
       deleteAccount,
       signOut,
     }),
@@ -197,6 +222,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       resendConfirmationEmail,
       resetPasswordForEmail,
       updatePassword,
+      changePassword,
       deleteAccount,
       signOut,
     ],

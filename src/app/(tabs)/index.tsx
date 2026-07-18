@@ -1,3 +1,4 @@
+import AnimatedPressable from "@/components/AnimatedPressable";
 import AppLogo from "@/components/AppLogo";
 import CopyButton from "@/components/CopyButton";
 import HomeHeader from "@/components/HomeHeader";
@@ -5,14 +6,14 @@ import MacroGrid from "@/components/MacroGrid";
 import RecentMeals from "@/components/RecentMeals";
 import ReminderToggle from "@/components/ReminderToggle";
 import ShareButton from "@/components/ShareButton";
-import { getRandomQuote } from "@/data/motivationalQuotes";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useToast } from "@/contexts/ToastContext";
-import { getMeals, Meal } from "@/storage/meals";
-import { getUserProfile } from "@/storage/profile";
+import { getRandomQuote } from "@/data/motivationalQuotes";
 import { useBottomContentPadding } from "@/hooks/useBottomContentPadding";
 import { useThemedStyles } from "@/hooks/useThemedStyles";
+import { getMeals, Meal } from "@/storage/meals";
+import { getUserProfile } from "@/storage/profile";
 import { globalStyles } from "@/styles/global";
 import type { ThemeColors } from "@/styles/themes";
 import { filterMealsForToday } from "@/utils/groupMealsByDay";
@@ -107,14 +108,14 @@ export default function HomeScreen() {
               {quote}
             </Text>
           </TouchableOpacity>
-          <TouchableOpacity
+          <AnimatedPressable
             style={styles.quoteRefreshButton}
             onPress={handleRefreshQuote}
             accessibilityLabel={t("home.newQuote")}
             testID="home-quote-refresh-btn"
           >
             <Ionicons name="refresh" size={18} color={colors.accent} />
-          </TouchableOpacity>
+          </AnimatedPressable>
         </View>
       </View>
 

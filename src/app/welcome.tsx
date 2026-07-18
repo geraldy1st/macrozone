@@ -1,3 +1,4 @@
+import AnimatedPressable from "@/components/AnimatedPressable";
 import AppLogo from "@/components/AppLogo";
 import { useTheme } from "@/contexts/ThemeContext";
 import { setGuestOnboarding } from "@/storage/onboarding";
@@ -31,23 +32,27 @@ export default function WelcomeScreen() {
       </View>
 
       <View style={styles.actions}>
-        <TouchableOpacity
+        <AnimatedPressable
           style={styles.primaryButton}
           onPress={() => router.push("/login")}
           testID="welcome-sign-in-btn"
         >
-          <Ionicons name="log-in-outline" size={20} color={colors.background} />
-          <Text style={styles.primaryButtonText}>{t("welcome.signIn")}</Text>
-        </TouchableOpacity>
+          <View style={styles.buttonContent}>
+            <Ionicons name="log-in-outline" size={20} color={colors.background} />
+            <Text style={styles.primaryButtonText}>{t("welcome.signIn")}</Text>
+          </View>
+        </AnimatedPressable>
 
-        <TouchableOpacity
+        <AnimatedPressable
           style={styles.secondaryButton}
           onPress={() => router.push("/signup")}
           testID="welcome-sign-up-btn"
         >
-          <Ionicons name="person-add-outline" size={20} color={colors.accent} />
-          <Text style={styles.secondaryButtonText}>{t("welcome.signUp")}</Text>
-        </TouchableOpacity>
+          <View style={styles.buttonContent}>
+            <Ionicons name="person-add-outline" size={20} color={colors.accent} />
+            <Text style={styles.secondaryButtonText}>{t("welcome.signUp")}</Text>
+          </View>
+        </AnimatedPressable>
 
         <TouchableOpacity
           style={styles.guestButton}
@@ -93,13 +98,15 @@ function createStyles(colors: ReturnType<typeof useTheme>["colors"]) {
       gap: 12,
     },
     primaryButton: {
+      backgroundColor: colors.accent,
+      padding: 18,
+      borderRadius: 14,
+    },
+    buttonContent: {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "center",
       gap: 10,
-      backgroundColor: colors.accent,
-      padding: 18,
-      borderRadius: 14,
     },
     primaryButtonText: {
       color: colors.background,
@@ -107,10 +114,6 @@ function createStyles(colors: ReturnType<typeof useTheme>["colors"]) {
       fontWeight: "700",
     },
     secondaryButton: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "center",
-      gap: 10,
       backgroundColor: colors.card,
       padding: 18,
       borderRadius: 14,

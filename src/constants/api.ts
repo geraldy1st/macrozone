@@ -18,6 +18,11 @@ export const ANALYZE_RECIPE_API_URL =
   Constants.expoConfig?.extra?.analyzeRecipeApiUrl ??
   (ANALYZE_API_URL ? deriveSiblingEndpoint(ANALYZE_API_URL, "analyze-recipe") : "");
 
+export const DELETE_ACCOUNT_API_URL =
+  process.env.EXPO_PUBLIC_DELETE_ACCOUNT_API_URL ??
+  Constants.expoConfig?.extra?.deleteAccountApiUrl ??
+  (ANALYZE_API_URL ? deriveSiblingEndpoint(ANALYZE_API_URL, "delete-account") : "");
+
 export const MACROZONE_API_KEY =
   process.env.EXPO_PUBLIC_MACROZONE_API_KEY ??
   Constants.expoConfig?.extra?.macrozoneApiKey ??

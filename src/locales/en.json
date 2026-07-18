@@ -28,6 +28,9 @@
     "personalInfo": "Personal information",
     "health": "Health",
     "name": "Name",
+    "displayNameFallback": "User",
+    "bio": "Bio",
+    "bioPlaceholder": "Tell others a bit about you…",
     "country": "Country",
     "selectCountry": "Select a country",
     "gender": "Gender",
@@ -47,7 +50,25 @@
     "save": "Save profile",
     "savedMessage": "Profile updated successfully",
     "saveErrorMessage": "Unable to save profile",
-    "signOut": "Sign out"
+    "signOut": "Sign out",
+    "social": {
+      "title": "Social links",
+      "description": "Add up to {{count}} personal links. They appear on your profile with icons.",
+      "choosePlatform": "Choose a platform",
+      "urlPlaceholder": "https://…",
+      "add": "Add link",
+      "invalidUrl": "Enter a valid URL (https://…)",
+      "maxReached": "You can add up to {{count}} links.",
+      "openError": "Unable to open this link.",
+      "instagram": "Instagram",
+      "snapchat": "Snapchat",
+      "youtube": "YouTube",
+      "github": "GitHub",
+      "linkedin": "LinkedIn",
+      "tiktok": "TikTok",
+      "x": "X (Twitter)",
+      "website": "Website"
+    }
   },
   "home": {
     "recentMeals": "Recent Meals",
@@ -267,6 +288,17 @@
       "darkEnabled": "Dark mode enabled",
       "lightEnabled": "Light mode enabled"
     },
+    "password": {
+      "title": "Password",
+      "description": "Change your account password. You will stay signed in.",
+      "current": "Current password",
+      "next": "New password",
+      "confirm": "Confirm new password",
+      "submit": "Update password",
+      "missingFields": "Please fill in all password fields.",
+      "success": "Password updated successfully.",
+      "error": "Unable to update password. Check your current password and try again."
+    },
     "account": {
       "title": "Account",
       "guestDescription": "Sign in to use AI scanning and access your meals across devices.",
@@ -277,7 +309,9 @@
       "deleteMessage": "This action is permanent. Your account and data will be removed and cannot be recovered.",
       "deleteConfirm": "Delete",
       "deleteSuccess": "Your account has been deleted.",
-      "deleteError": "Unable to delete your account. Please try again."
+      "deleteError": "Unable to delete your account. Please try again.",
+      "deleteNotConfigured": "Account deletion is not configured on the server (missing API URL or admin key).",
+      "deleteUnauthorized": "Your session expired. Sign in again, then retry deleting your account."
     },
     "language": "Language",
     "languageDescription": "Choose your preferred language",

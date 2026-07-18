@@ -1,29 +1,46 @@
-import { ANALYZE_API_URL } from "@/constants/api";
+import { DELETE_ACCOUNT_API_URL } from "@/constants/api";
 
-function getDeleteAccountUrl() {
-  if (!ANALYZE_API_URL) {
-    return "";
+export class DeleteAccountError extends Error {
+  code: "NOT_CONFIGURED" | "UNAUTHORIZED" | "FAILED";
+
+  constructor(code: DeleteAccountError["code"], message?: string) {
+    super(message ?? code);
+    this.name = "DeleteAccountError";
+    this.code = code;
   }
-
-  const base = ANALYZE_API_URL.replace(/\/analyze-meal\/?$/, "");
-  return `${base}/delete-account`;
 }
 
 export async function deleteUserAccount(accessToken: string) {
-  const url = getDeleteAccountUrl();
-
-  if (!url) {
-    throw new Error("DELETE_ACCOUNT_NOT_CONFIGURED");
+  if (!DELETE_ACCOUNT_API_URL) {
+    throw new DeleteAccountError(
+      "NOT_CONFIGURED",
+      "DELETE_ACCOUNT_NOT_CONFIGURED",
+    );
   }
 
-  const response = await fetch(url, {
-    method: "DELETE",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-  });
+  if (!accessToken) {
+    throw new DeleteAccountError("UNAUTHORIZED", "DELETE_ACCOUNT_UNAUTHORIZED");
+  }
+
+  let response: Response;
+
+  try {
+    response = await fetch(DELETE_ACCOUNT_API_URL, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        Accept: "application/json",
+      },
+    });
+  } catch {
+    throw new DeleteAccountError("FAILED", "DELETE_ACCOUNT_NETWORK");
+  }
+
+  if (response.status === 401) {
+    throw new DeleteAccountError("UNAUTHORIZED", "DELETE_ACCOUNT_UNAUTHORIZED");
+  }
 
   if (!response.ok) {
-    throw new Error("DELETE_ACCOUNT_FAILED");
+    throw new DeleteAccountError("FAILED", "DELETE_ACCOUNT_FAILED");
   }
 }
