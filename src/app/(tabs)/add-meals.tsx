@@ -1,6 +1,9 @@
 import { ANALYZE_API_URL } from "@/constants/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { addMeal } from "@/storage/meals";
+import ShareToCommunityModal, {
+  type ShareMealPayload,
+} from "@/components/community/ShareToCommunityModal";
 import RecipeAttribution from "@/components/RecipeAttribution";
 import { getUserProfile } from "@/storage/profile";
 import { analyzeMealPhoto } from "@/utils/analyzeMeal";
@@ -59,6 +62,8 @@ export default function AddMealScreen() {
   const [isAnalyzingRecipe, setIsAnalyzingRecipe] = useState(false);
   const [hasAiResult, setHasAiResult] = useState(false);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const [shareVisible, setShareVisible] = useState(false);
+  const [sharePayload, setSharePayload] = useState<ShareMealPayload | null>(null);
   const scrollRef = useRef<ScrollView>(null);
   const recipeInputRef = useRef<TextInput>(null);
 
@@ -250,6 +255,52 @@ export default function AddMealScreen() {
     }
   };
 
+  const buildSharePayload = (): ShareMealPayload | null => {
+    if (!name.trim() || calories.trim() === "") {
+      return null;
+    }
+
+    return {
+      mealName: name.trim(),
+      calories: Number(calories) || 0,
+      protein: Number(protein) || 0,
+      carbs: Number(carbs) || 0,
+      fat: Number(fat) || 0,
+      description: description.trim() || undefined,
+      recipe: recipe.trim() || undefined,
+      localImageUri: photoUri,
+    };
+  };
+
+  const openShareModal = () => {
+    if (!user) {
+      showAlert({
+        title: t("community.authRequiredTitle"),
+        message: t("community.authRequiredShare"),
+        buttons: [
+          { text: t("mealItem.cancel"), style: "cancel" },
+          {
+            text: t("auth.signIn"),
+            onPress: () => router.push("/login"),
+          },
+        ],
+      });
+      return;
+    }
+
+    const payload = buildSharePayload();
+    if (!payload) {
+      showAlert({
+        title: t("addMeal.errorTitle"),
+        message: t("addMeal.errorMessage"),
+      });
+      return;
+    }
+
+    setSharePayload(payload);
+    setShareVisible(true);
+  };
+
   const handleAddMeal = async () => {
     if (!name.trim() || calories.trim() === "") {
       showAlert({
@@ -262,28 +313,60 @@ export default function AddMealScreen() {
     setIsSaving(true);
 
     try {
-      await addMeal(
-        {
-          name: name.trim(),
-          calories: Number(calories),
-          protein: Number(protein) || 0,
-          carbs: Number(carbs) || 0,
-          fat: Number(fat) || 0,
-          description: description.trim() || undefined,
-          recipe: recipe.trim() || undefined,
-          recipeSource: recipe.trim() ? recipeSource : undefined,
-          recipeAuthorName:
-            recipe.trim() && recipeSource === "user"
-              ? recipeAuthorName
-              : undefined,
-        },
-        photoUri ?? undefined,
-      );
+      const mealInput = {
+        name: name.trim(),
+        calories: Number(calories),
+        protein: Number(protein) || 0,
+        carbs: Number(carbs) || 0,
+        fat: Number(fat) || 0,
+        description: description.trim() || undefined,
+        recipe: recipe.trim() || undefined,
+        recipeSource: recipe.trim() ? recipeSource : undefined,
+        recipeAuthorName:
+          recipe.trim() && recipeSource === "user"
+            ? recipeAuthorName
+            : undefined,
+      };
 
-      resetForm();
-      showToast(t("addMeal.successMessage"), "success");
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      router.push("/");
+      await addMeal(mealInput, photoUri ?? undefined);
+
+      const canShare =
+        Boolean(user) && (hasAiResult || Boolean(photoUri) || Boolean(name.trim()));
+
+      if (canShare && user) {
+        const payload = buildSharePayload();
+        showToast(t("addMeal.successMessage"), "success");
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        showAlert({
+          title: t("community.sharePromptTitle"),
+          message: t("community.sharePromptMessage"),
+          buttons: [
+            {
+              text: t("community.shareLater"),
+              style: "cancel",
+              onPress: () => {
+                resetForm();
+                router.push("/");
+              },
+            },
+            {
+              text: t("community.shareNow"),
+              onPress: () => {
+                if (payload) {
+                  setSharePayload(payload);
+                  setShareVisible(true);
+                }
+                resetForm();
+              },
+            },
+          ],
+        });
+      } else {
+        resetForm();
+        showToast(t("addMeal.successMessage"), "success");
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        router.push("/");
+      }
     } catch {
       showAlert({
         title: t("addMeal.saveErrorTitle"),
@@ -377,6 +460,19 @@ export default function AddMealScreen() {
           <Text style={styles.disclaimerText}>{t("addMeal.aiDisclaimer")}</Text>
         </View>
       )}
+
+      {canUseAiScan && hasAiResult && !isAnalyzing ? (
+        <TouchableOpacity
+          style={[styles.shareCommunityButton, { borderColor: colors.cardBorder, backgroundColor: colors.card }]}
+          onPress={openShareModal}
+          testID="share-to-community-btn"
+        >
+          <Ionicons name="people-outline" size={18} color={colors.accent} />
+          <Text style={[styles.shareCommunityText, { color: colors.text }]}>
+            {t("community.shareToCommunity")}
+          </Text>
+        </TouchableOpacity>
+      ) : null}
 
       <TextInput
         style={styles.input}
@@ -494,6 +590,20 @@ export default function AddMealScreen() {
           )}
         </TouchableOpacity>
       </View>
+
+      <ShareToCommunityModal
+        visible={shareVisible}
+        meal={sharePayload}
+        onClose={() => {
+          setShareVisible(false);
+          setSharePayload(null);
+        }}
+        onShared={() => {
+          setShareVisible(false);
+          setSharePayload(null);
+          router.push("/community");
+        }}
+      />
     </KeyboardAvoidingView>
   );
 }
@@ -672,6 +782,21 @@ function createScreenStyles(colors: ReturnType<typeof useTheme>["colors"]) {
     minHeight: 48,
   },
   recipeAiButtonText: {
+    fontSize: 15,
+    fontWeight: "600",
+  },
+  shareCommunityButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    marginTop: 14,
+    padding: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    minHeight: 48,
+  },
+  shareCommunityText: {
     fontSize: 15,
     fontWeight: "600",
   },
