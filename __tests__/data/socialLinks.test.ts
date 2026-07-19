@@ -1,30 +1,42 @@
-import { formatSocialUrlLabel, normalizeSocialUrl } from "@/data/socialLinks";
+import {
+  buildSocialUrl,
+  formatSocialUrlLabel,
+  normalizeSocialUsername,
+} from "@/data/socialLinks";
 
-describe("normalizeSocialUrl", () => {
-  it("accepts https URLs", () => {
-    expect(normalizeSocialUrl("https://github.com/user")).toBe(
-      "https://github.com/user",
-    );
+describe("normalizeSocialUsername", () => {
+  it("keeps a plain username", () => {
+    expect(normalizeSocialUsername("github", "geraldy")).toBe("geraldy");
+    expect(normalizeSocialUsername("instagram", "@geraldy")).toBe("geraldy");
   });
 
-  it("adds https when protocol is missing", () => {
-    expect(normalizeSocialUrl("instagram.com/me")).toBe(
-      "https://instagram.com/me",
+  it("extracts username from a full URL", () => {
+    expect(normalizeSocialUsername("github", "https://github.com/geraldy")).toBe(
+      "geraldy",
     );
-  });
-
-  it("upgrades http to https", () => {
-    expect(normalizeSocialUrl("http://example.com")).toBe("https://example.com/");
+    expect(
+      normalizeSocialUsername("instagram", "https://instagram.com/geraldy"),
+    ).toBe("geraldy");
   });
 
   it("rejects empty or invalid values", () => {
-    expect(normalizeSocialUrl("")).toBeNull();
-    expect(normalizeSocialUrl("not a url")).toBeNull();
+    expect(normalizeSocialUsername("github", "")).toBeNull();
+    expect(normalizeSocialUsername("github", "not a name")).toBeNull();
+  });
+});
+
+describe("buildSocialUrl", () => {
+  it("builds platform URLs from usernames", () => {
+    expect(buildSocialUrl("github", "geraldy")).toBe("https://github.com/geraldy");
+    expect(buildSocialUrl("youtube", "channel")).toBe("https://youtube.com/@channel");
+    expect(buildSocialUrl("website", "example.com")).toBe("https://example.com");
   });
 });
 
 describe("formatSocialUrlLabel", () => {
-  it("shows host and path without protocol", () => {
-    expect(formatSocialUrlLabel("https://github.com/user")).toBe("github.com/user");
+  it("shows username only without protocol", () => {
+    expect(formatSocialUrlLabel("geraldy")).toBe("geraldy");
+    expect(formatSocialUrlLabel("https://github.com/geraldy")).toBe("geraldy");
+    expect(formatSocialUrlLabel("@geraldy")).toBe("geraldy");
   });
 });

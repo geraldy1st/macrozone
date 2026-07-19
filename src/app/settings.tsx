@@ -177,7 +177,8 @@ export default function SettingsScreen() {
               await deleteAccount();
               await resetOnboarding();
               showToast(t("settings.account.deleteSuccess"), "success");
-              router.replace("/welcome");
+              // Sign-in screen (with continue as guest), not Welcome.
+              router.replace("/login");
             } catch (error) {
               const message =
                 error instanceof DeleteAccountError && error.code === "NOT_CONFIGURED"

@@ -7,7 +7,8 @@ import {
   MAX_BIO_LENGTH,
   MAX_NAME_LENGTH,
   MAX_SOCIAL_LINKS,
-  normalizeSocialUrl,
+  formatSocialUrlLabel,
+  normalizeSocialUsername,
   socialPlatforms,
   type SocialLink,
   type SocialPlatform,
@@ -28,9 +29,11 @@ import DateTimePicker, {
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { router, useFocusEffect } from "expo-router";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
+  Keyboard,
+  KeyboardAvoidingView,
   Modal,
   Platform,
   Pressable,
@@ -41,6 +44,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const genderOptions: GenderOption[] = [
   "male",
@@ -56,7 +60,9 @@ export default function ProfileEditScreen() {
   const { colors, isDark } = useTheme();
   const { showToast } = useToast();
   const styles = useThemedStyles(createStyles);
-  const bottomPadding = useBottomContentPadding(20, false);
+  const insets = useSafeAreaInsets();
+  const bottomPadding = useBottomContentPadding(100, false);
+  const scrollRef = useRef<ScrollView>(null);
   const [profile, setProfile] = useState<UserProfile>(defaultProfile);
   const [isSaving, setIsSaving] = useState(false);
   const [countryPickerVisible, setCountryPickerVisible] = useState(false);
@@ -67,12 +73,36 @@ export default function ProfileEditScreen() {
   const [draftLinkPlatform, setDraftLinkPlatform] = useState<SocialPlatform | null>(
     null,
   );
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
 
   useFocusEffect(
     useCallback(() => {
       getUserProfile().then(setProfile);
     }, []),
   );
+
+  useEffect(() => {
+    const showEvent = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+    const hideEvent = Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
+
+    const showSub = Keyboard.addListener(showEvent, (event) => {
+      setKeyboardHeight(event.endCoordinates.height);
+    });
+    const hideSub = Keyboard.addListener(hideEvent, () => {
+      setKeyboardHeight(0);
+    });
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
+
+  const scrollToSocialInput = () => {
+    setTimeout(() => {
+      scrollRef.current?.scrollToEnd({ animated: true });
+    }, 150);
+  };
 
   const selectedCountry = getCountryByCode(profile.countryCode);
   const birthDateLabel = profile.birthDate
@@ -141,9 +171,9 @@ export default function ProfileEditScreen() {
       return;
     }
 
-    const normalized = normalizeSocialUrl(draftLinkUrl);
-    if (!normalized) {
-      showToast(t("profile.social.invalidUrl"), "error");
+    const username = normalizeSocialUsername(draftLinkPlatform, draftLinkUrl);
+    if (!username) {
+      showToast(t("profile.social.invalidUsername"), "error");
       return;
     }
 
@@ -154,7 +184,7 @@ export default function ProfileEditScreen() {
 
     const nextLink: SocialLink = {
       platform: draftLinkPlatform,
-      url: normalized,
+      url: username,
     };
 
     setProfile((current) => ({
@@ -193,11 +223,21 @@ export default function ProfileEditScreen() {
   };
 
   return (
-    <>
+    <KeyboardAvoidingView
+      style={[styles.screen, { backgroundColor: colors.background }]}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? insets.top : 0}
+    >
       <ScrollView
-        style={[styles.container, { backgroundColor: colors.background }]}
-        contentContainerStyle={{ paddingBottom: bottomPadding }}
+        ref={scrollRef}
+        style={styles.container}
+        contentContainerStyle={{
+          paddingBottom: bottomPadding + keyboardHeight * 0.35,
+        }}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        automaticallyAdjustKeyboardInsets
       >
         <View style={styles.topBar}>
           <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
@@ -394,8 +434,47 @@ export default function ProfileEditScreen() {
         </View>
 
         <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
-          <Text style={[styles.sectionLabel, { color: colors.primary }]}>
-            {t("profile.health")}
+          <View style={styles.sectionHeaderRow}>
+            <Text style={[styles.sectionLabel, { color: colors.primary, marginBottom: 0 }]}>
+              {t("profile.health")}
+            </Text>
+            <TouchableOpacity
+              style={[
+                styles.visibilityChip,
+                {
+                  backgroundColor: profile.showHealth ? colors.accent : colors.surface,
+                  borderColor: profile.showHealth ? colors.accent : colors.cardBorder,
+                },
+              ]}
+              onPress={() =>
+                setProfile((current) => ({
+                  ...current,
+                  showHealth: !current.showHealth,
+                }))
+              }
+              testID="profile-health-visibility-toggle"
+            >
+              <Ionicons
+                name={profile.showHealth ? "eye-outline" : "eye-off-outline"}
+                size={16}
+                color={profile.showHealth ? colors.background : colors.textSecondary}
+              />
+              <Text
+                style={[
+                  styles.visibilityChipText,
+                  {
+                    color: profile.showHealth ? colors.background : colors.textSecondary,
+                  },
+                ]}
+              >
+                {profile.showHealth
+                  ? t("profile.healthVisible")
+                  : t("profile.healthHidden")}
+              </Text>
+            </TouchableOpacity>
+          </View>
+          <Text style={[styles.sectionHint, { color: colors.textSecondary }]}>
+            {t("profile.healthVisibilityHint")}
           </Text>
 
           <View style={fieldStyles.field}>
@@ -485,7 +564,7 @@ export default function ProfileEditScreen() {
                     style={[styles.socialEditUrl, { color: colors.textSecondary }]}
                     numberOfLines={1}
                   >
-                    {link.url}
+                    {formatSocialUrlLabel(link.url)}
                   </Text>
                 </View>
                 <TouchableOpacity
@@ -534,13 +613,14 @@ export default function ProfileEditScreen() {
                 ]}
                 value={draftLinkUrl}
                 onChangeText={setDraftLinkUrl}
+                onFocus={scrollToSocialInput}
                 autoCapitalize="none"
                 autoCorrect={false}
-                keyboardType="url"
+                keyboardType="default"
                 placeholder={
                   draftLinkPlatform
                     ? socialPlatforms.find((p) => p.id === draftLinkPlatform)?.placeholder
-                    : t("profile.social.urlPlaceholder")
+                    : t("profile.social.usernamePlaceholder")
                 }
                 placeholderTextColor={colors.textSecondary}
                 testID="profile-social-url-input"
@@ -563,7 +643,18 @@ export default function ProfileEditScreen() {
             </View>
           ) : null}
         </View>
+      </ScrollView>
 
+      <View
+        style={[
+          styles.footer,
+          {
+            backgroundColor: colors.background,
+            borderTopColor: colors.cardBorder,
+            paddingBottom: Math.max(insets.bottom, 12),
+          },
+        ]}
+      >
         <TouchableOpacity
           style={[styles.saveButton, { backgroundColor: colors.accent }]}
           onPress={handleSave}
@@ -574,7 +665,7 @@ export default function ProfileEditScreen() {
             {t("profile.save")}
           </Text>
         </TouchableOpacity>
-      </ScrollView>
+      </View>
 
       {birthDatePickerVisible && Platform.OS === "android" ? (
         <DateTimePicker
@@ -719,7 +810,7 @@ export default function ProfileEditScreen() {
           </Pressable>
         </Pressable>
       </Modal>
-    </>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -762,10 +853,18 @@ function ProfileField({
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
+    screen: {
+      flex: 1,
+    },
     container: {
       flex: 1,
       paddingTop: 60,
       paddingHorizontal: 20,
+    },
+    footer: {
+      paddingHorizontal: 20,
+      paddingTop: 12,
+      borderTopWidth: 1,
     },
     topBar: {
       flexDirection: "row",
@@ -796,6 +895,25 @@ function createStyles(colors: ThemeColors) {
       fontWeight: "700",
       textTransform: "uppercase",
       letterSpacing: 0.8,
+    },
+    sectionHeaderRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      gap: 12,
+    },
+    visibilityChip: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+      borderWidth: 1,
+      borderRadius: 999,
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+    },
+    visibilityChipText: {
+      fontSize: 12,
+      fontWeight: "700",
     },
     sectionHint: {
       fontSize: 13,
@@ -927,10 +1045,11 @@ function createStyles(colors: ThemeColors) {
       flex: 1,
     },
     saveButton: {
-      marginTop: 4,
       padding: 16,
       borderRadius: 12,
       alignItems: "center",
+      minHeight: 52,
+      justifyContent: "center",
     },
     saveButtonText: {
       fontSize: 16,

@@ -18,6 +18,8 @@ export type UserProfile = {
   phoneDialCode: string;
   phoneNumber: string;
   socialLinks: SocialLink[];
+  /** When false, Health section is hidden on the Profile screen. */
+  showHealth: boolean;
 };
 
 export const defaultProfile: UserProfile = {
@@ -31,6 +33,7 @@ export const defaultProfile: UserProfile = {
   phoneDialCode: "+33",
   phoneNumber: "",
   socialLinks: [],
+  showHealth: true,
 };
 
 const PROFILE_KEY = "userProfile";
@@ -54,6 +57,7 @@ export async function getUserProfile(): Promise<UserProfile> {
     bio: parsed.bio ?? "",
     birthDate: parsed.birthDate ?? "",
     socialLinks: Array.isArray(parsed.socialLinks) ? parsed.socialLinks : [],
+    showHealth: parsed.showHealth !== false,
   };
 }
 

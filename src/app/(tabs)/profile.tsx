@@ -3,6 +3,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { useToast } from "@/contexts/ToastContext";
 import { getCountryByCode } from "@/data/countries";
 import {
+  buildSocialUrl,
   formatSocialUrlLabel,
   getSocialPlatform,
 } from "@/data/socialLinks";
@@ -62,13 +63,14 @@ export default function ProfileScreen() {
 
   const countryDisplay = selectedCountry
     ? `${selectedCountry.flag} ${selectedCountry.name}`
-    : notSet;
+    : null;
 
   const ageValue = calculateAge(profile.birthDate);
   const ageDisplay =
     ageValue !== null ? t("profile.ageYears", { count: ageValue }) : notSet;
 
   const activeLinks = profile.socialLinks.filter((link) => link.url.trim());
+  const showHealth = profile.showHealth !== false;
 
   return (
     <ScrollView
@@ -142,6 +144,12 @@ export default function ProfileScreen() {
           </Text>
         ) : null}
 
+        {countryDisplay ? (
+          <Text style={[styles.countryLine, { color: colors.textSecondary }]}>
+            {countryDisplay}
+          </Text>
+        ) : null}
+
         {activeLinks.length > 0 ? (
           <View style={styles.socialList}>
             {activeLinks.map((link) => {
@@ -149,6 +157,8 @@ export default function ProfileScreen() {
               if (!platform) {
                 return null;
               }
+
+              const openUrl = buildSocialUrl(link.platform, link.url);
 
               return (
                 <TouchableOpacity
@@ -161,7 +171,7 @@ export default function ProfileScreen() {
                     },
                   ]}
                   onPress={() => {
-                    void Linking.openURL(link.url).catch(() => {
+                    void Linking.openURL(openUrl).catch(() => {
                       showToast(t("profile.social.openError"), "error");
                     });
                   }}
@@ -199,36 +209,32 @@ export default function ProfileScreen() {
             </Text>
           </TouchableOpacity>
         )}
-
-        <ProfileInfoRow
-          label={t("profile.country")}
-          value={countryDisplay}
-          colors={colors}
-        />
       </View>
 
-      <View
-        style={[
-          styles.card,
-          { backgroundColor: colors.card, borderColor: colors.cardBorder },
-        ]}
-      >
-        <Text style={[styles.sectionLabel, { color: colors.primary }]}>
-          {t("profile.health")}
-        </Text>
+      {showHealth ? (
+        <View
+          style={[
+            styles.card,
+            { backgroundColor: colors.card, borderColor: colors.cardBorder },
+          ]}
+        >
+          <Text style={[styles.sectionLabel, { color: colors.primary }]}>
+            {t("profile.health")}
+          </Text>
 
-        <ProfileInfoRow label={t("profile.age")} value={ageDisplay} colors={colors} />
-        <ProfileInfoRow
-          label={t("profile.height")}
-          value={profile.height.trim() || notSet}
-          colors={colors}
-        />
-        <ProfileInfoRow
-          label={t("profile.weight")}
-          value={profile.weight.trim() || notSet}
-          colors={colors}
-        />
-      </View>
+          <ProfileInfoRow label={t("profile.age")} value={ageDisplay} colors={colors} />
+          <ProfileInfoRow
+            label={t("profile.height")}
+            value={profile.height.trim() || notSet}
+            colors={colors}
+          />
+          <ProfileInfoRow
+            label={t("profile.weight")}
+            value={profile.weight.trim() || notSet}
+            colors={colors}
+          />
+        </View>
+      ) : null}
 
       {user && (
         <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
@@ -338,6 +344,12 @@ function createStyles(colors: ThemeColors) {
       fontSize: 14,
       lineHeight: 20,
       fontWeight: "500",
+    },
+    countryLine: {
+      textAlign: "center",
+      fontSize: 14,
+      fontWeight: "600",
+      marginTop: -4,
     },
     socialList: {
       gap: 8,
