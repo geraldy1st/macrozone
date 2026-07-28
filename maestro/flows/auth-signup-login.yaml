@@ -1,0 +1,6 @@
+# Auth: signup with Faker-generated EMAIL/PASSWORD/DISPLAY_NAME
+# eval $(node maestro/generate-test-user.cjs) && maestro test -e EMAIL=... -e PASSWORD=... -e DISPLAY_NAME=... this file
+appId: com.geraldy.macrozone
+---
+- runFlow: subflows/signup-and-open-app.yaml
+- assertVisible: "Profil|Profile|Perfil|nutriFlow|Communauté|Community"

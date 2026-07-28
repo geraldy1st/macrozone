@@ -1,0 +1,30 @@
+# Settings Account section smoke (guest: sign-in CTA)
+appId: com.geraldy.macrozone
+---
+- launchApp
+- extendedWaitUntil:
+    visible: "Bienvenue|Welcome|nutriFlow|Bienvenido"
+    timeout: 20000
+- runFlow:
+    when:
+      visible: "Continuer en tant qu'invité|Continue as guest|Continuar como invitado"
+    commands:
+      - tapOn:
+          id: "welcome-guest-btn"
+- extendedWaitUntil:
+    visible: "nutriFlow|Add Meal|Ajouter"
+    timeout: 20000
+- tapOn:
+    id: "profile-tab"
+- tapOn:
+    id: "open-settings-btn"
+- extendedWaitUntil:
+    visible: "Compte|Account|Cuenta"
+    timeout: 12000
+- assertVisible: "Compte|Account|Cuenta"
+- tapOn:
+    id: "account-sign-in-btn"
+- extendedWaitUntil:
+    visible:
+      id: "auth-email-input"
+    timeout: 12000

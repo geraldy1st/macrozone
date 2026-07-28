@@ -13,6 +13,7 @@ import {
   type SocialLink,
   type SocialPlatform,
 } from "@/data/socialLinks";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   defaultProfile,
   getUserProfile,
@@ -20,6 +21,7 @@ import {
   type GenderOption,
   type UserProfile,
 } from "@/storage/profile";
+import { upsertMyProfile } from "@/services/community";
 import type { ThemeColors } from "@/styles/themes";
 import { formatBirthDateDisplay, parseIsoDate, toIsoDate } from "@/utils/age";
 import { Ionicons } from "@expo/vector-icons";
@@ -58,6 +60,7 @@ const DEFAULT_BIRTH_DATE = new Date(1995, 0, 1);
 export default function ProfileEditScreen() {
   const { t, i18n } = useTranslation();
   const { colors, isDark } = useTheme();
+  const { user } = useAuth();
   const { showToast } = useToast();
   const styles = useThemedStyles(createStyles);
   const insets = useSafeAreaInsets();
@@ -213,6 +216,20 @@ export default function ProfileEditScreen() {
         socialLinks: profile.socialLinks.slice(0, MAX_SOCIAL_LINKS),
       };
       await setUserProfile(cleaned);
+
+      // Keep community author name in sync when signed in
+      if (user?.id && cleaned.name.trim()) {
+        try {
+          await upsertMyProfile({
+            userId: user.id,
+            displayName: cleaned.name,
+            avatarUrl: null,
+          });
+        } catch {
+          // Local save already succeeded — don't block UX on remote profile sync
+        }
+      }
+
       showToast(t("profile.savedMessage"), "success");
       router.back();
     } catch {

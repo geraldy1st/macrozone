@@ -1,3 +1,4 @@
+import CommentSheet from "@/components/community/CommentSheet";
 import PostCard from "@/components/community/PostCard";
 import { useAlert } from "@/contexts/AlertContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -10,7 +11,7 @@ import { deleteMyPost, toggleLike } from "@/services/community";
 import type { ThemeColors } from "@/styles/themes";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useFocusEffect } from "expo-router";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
@@ -30,6 +31,7 @@ export default function CommunityScreen() {
   const { showAlert } = useAlert();
   const styles = useThemedStyles(createStyles);
   const bottomPadding = useBottomContentPadding();
+  const [commentPostId, setCommentPostId] = useState<string | null>(null);
   const {
     posts,
     isLoading,
@@ -207,13 +209,15 @@ export default function CommunityScreen() {
               />
             ) : null
           }
-          renderItem={({ item }) => (
+          renderItem={({ item, index }) => (
             <PostCard
               post={item}
+              testIndex={index}
               isOwner={Boolean(user && user.id === item.author_id)}
               onLikePress={() =>
                 void handleLike(item.id, Boolean(item.liked_by_me), item.likes_count)
               }
+              onCommentPress={() => setCommentPostId(item.id)}
               onDeletePress={
                 user && user.id === item.author_id
                   ? () => handleDelete(item.id)
@@ -224,6 +228,24 @@ export default function CommunityScreen() {
           showsVerticalScrollIndicator={false}
         />
       )}
+
+      <CommentSheet
+        visible={Boolean(commentPostId)}
+        postId={commentPostId}
+        onClose={() => setCommentPostId(null)}
+        onCountChange={(delta) => {
+          if (!commentPostId) {
+            return;
+          }
+          const post = posts.find((p) => p.id === commentPostId);
+          if (!post) {
+            return;
+          }
+          patchPostLocally(commentPostId, {
+            comments_count: Math.max(0, post.comments_count + delta),
+          });
+        }}
+      />
     </View>
   );
 }

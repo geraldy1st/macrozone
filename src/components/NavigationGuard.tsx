@@ -11,6 +11,8 @@ const AUTH_FLOW_ROUTES = new Set([
   "forgot-password",
   "reset-password",
   "profile-edit",
+  // Public deep-link profile: macrozone://u/{id}
+  "u",
 ]);
 
 export default function NavigationGuard() {

@@ -8,6 +8,8 @@ import {
   type FeedPage,
   type FeedPost,
 } from "@/types/community";
+import { base64ToUint8Array } from "@/utils/base64";
+import { prepareImageForUpload } from "@/utils/photos";
 
 function createPostId(): string {
   if (typeof globalThis.crypto?.randomUUID === "function") {
@@ -56,8 +58,8 @@ function mapFeedPost(row: Record<string, unknown>): FeedPost {
 }
 
 /**
- * Upload a local image into meal-posts/{userId}/{postId}.jpg
- * Returns storage path (not full URL).
+ * Upload a local image (file:// / content:// / data URL) to meal-posts.
+ * Uses prepareImageForUpload so native Android/iOS work (not fetch().blob()).
  */
 export async function uploadPostImage(
   userId: string,
@@ -68,11 +70,11 @@ export async function uploadPostImage(
     throw new Error("SUPABASE_NOT_CONFIGURED");
   }
 
+  const prepared = await prepareImageForUpload(localUri);
+  const bytes = base64ToUint8Array(prepared.base64);
   const path = `${userId}/${postId}.jpg`;
-  const response = await fetch(localUri);
-  const blob = await response.blob();
 
-  const { error } = await supabase.storage.from(MEAL_POSTS_BUCKET).upload(path, blob, {
+  const { error } = await supabase.storage.from(MEAL_POSTS_BUCKET).upload(path, bytes, {
     contentType: "image/jpeg",
     upsert: true,
   });
@@ -100,7 +102,13 @@ export async function createPost(
   let imagePath: string | null = null;
 
   if (input.localImageUri) {
-    imagePath = await uploadPostImage(authorId, postId, input.localImageUri);
+    try {
+      imagePath = await uploadPostImage(authorId, postId, input.localImageUri);
+    } catch (error) {
+      // On mobile, still allow text-only share if image upload fails hard.
+      console.warn("Community image upload failed, posting without image:", error);
+      imagePath = null;
+    }
   }
 
   const caption = (input.caption ?? "").trim().slice(0, MAX_CAPTION_LENGTH);

@@ -26,7 +26,7 @@ import {
 } from "@/utils/notifications";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
-import { router, useFocusEffect } from "expo-router";
+import { router, useFocusEffect, type Href } from "expo-router";
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -69,6 +69,7 @@ export default function SettingsScreen() {
       "en") as AppLanguage;
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -348,66 +349,107 @@ export default function SettingsScreen() {
         </TouchableOpacity>
       </View>
 
-      {user ? (
-        <>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            {t("settings.password.title")}
-          </Text>
-          <Text style={[styles.description, { color: colors.textSecondary }]}>
-            {t("settings.password.description")}
-          </Text>
+      <Text style={[styles.sectionTitle, { color: colors.text }]}>
+        {t("settings.account.title")}
+      </Text>
+      <Text style={[styles.description, { color: colors.textSecondary }]}>
+        {user
+          ? t("settings.account.sectionDescription")
+          : t("settings.account.guestDescription")}
+      </Text>
 
-          <View
-            style={[
-              styles.passwordCard,
-              { backgroundColor: colors.card, borderColor: colors.cardBorder },
-            ]}
-          >
-            <PasswordInput
-              placeholder={t("settings.password.current")}
-              value={currentPassword}
-              onChangeText={setCurrentPassword}
-              textContentType="password"
-              testID="settings-current-password"
+      {!user ? (
+        <TouchableOpacity
+          style={[styles.signInAccountBtn, { backgroundColor: colors.accent }]}
+          onPress={() => router.push("/login")}
+          testID="account-sign-in-btn"
+        >
+          <Text style={[styles.saveButtonText, { color: colors.background }]}>
+            {t("auth.signIn")}
+          </Text>
+        </TouchableOpacity>
+      ) : (
+        <>
+          <View style={styles.accountMenu}>
+            <AccountRow
+              icon="create-outline"
+              label={t("settings.account.editProfile")}
+              colors={colors}
+              onPress={() => router.push("/profile-edit" as Href)}
+              testID="account-edit-profile-btn"
             />
-            <PasswordInput
-              placeholder={t("settings.password.next")}
-              value={newPassword}
-              onChangeText={setNewPassword}
-              textContentType="newPassword"
-              testID="settings-new-password"
+            <AccountRow
+              icon="key-outline"
+              label={t("settings.password.title")}
+              colors={colors}
+              onPress={() => setShowPasswordForm((current) => !current)}
+              testID="account-change-password-btn"
             />
-            <PasswordInput
-              placeholder={t("settings.password.confirm")}
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              textContentType="newPassword"
-              testID="settings-confirm-password"
+            <AccountRow
+              icon="card-outline"
+              label={t("settings.account.manageSubscription")}
+              colors={colors}
+              onPress={() =>
+                showToast(t("settings.account.subscriptionComingSoon"), "info")
+              }
+              testID="account-subscription-btn"
+              trailing={t("settings.account.comingSoon")}
             />
-            <TouchableOpacity
-              style={[
-                styles.saveButton,
-                { backgroundColor: colors.accent },
-                isChangingPassword && styles.deleteButtonDisabled,
-              ]}
-              onPress={handleChangePassword}
-              disabled={isChangingPassword}
-              testID="settings-change-password-btn"
-            >
-              {isChangingPassword ? (
-                <ActivityIndicator color={colors.background} />
-              ) : (
-                <Text style={[styles.saveButtonText, { color: colors.background }]}>
-                  {t("settings.password.submit")}
-                </Text>
-              )}
-            </TouchableOpacity>
           </View>
 
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            {t("settings.account.title")}
-          </Text>
-          <Text style={[styles.description, { color: colors.textSecondary }]}>
+          {showPasswordForm ? (
+            <View
+              style={[
+                styles.passwordCard,
+                { backgroundColor: colors.card, borderColor: colors.cardBorder },
+              ]}
+            >
+              <Text style={[styles.description, { color: colors.textSecondary, marginBottom: 0 }]}>
+                {t("settings.password.description")}
+              </Text>
+              <PasswordInput
+                placeholder={t("settings.password.current")}
+                value={currentPassword}
+                onChangeText={setCurrentPassword}
+                textContentType="password"
+                testID="settings-current-password"
+              />
+              <PasswordInput
+                placeholder={t("settings.password.next")}
+                value={newPassword}
+                onChangeText={setNewPassword}
+                textContentType="newPassword"
+                testID="settings-new-password"
+              />
+              <PasswordInput
+                placeholder={t("settings.password.confirm")}
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                textContentType="newPassword"
+                testID="settings-confirm-password"
+              />
+              <TouchableOpacity
+                style={[
+                  styles.saveButton,
+                  { backgroundColor: colors.accent },
+                  isChangingPassword && styles.deleteButtonDisabled,
+                ]}
+                onPress={handleChangePassword}
+                disabled={isChangingPassword}
+                testID="settings-change-password-btn"
+              >
+                {isChangingPassword ? (
+                  <ActivityIndicator color={colors.background} />
+                ) : (
+                  <Text style={[styles.saveButtonText, { color: colors.background }]}>
+                    {t("settings.password.submit")}
+                  </Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          ) : null}
+
+          <Text style={[styles.description, { color: colors.textSecondary, marginTop: 20 }]}>
             {t("settings.account.deleteDescription")}
           </Text>
 
@@ -430,10 +472,68 @@ export default function SettingsScreen() {
             )}
           </TouchableOpacity>
         </>
-      ) : null}
+      )}
     </ScrollView>
   );
 }
+
+function AccountRow({
+  icon,
+  label,
+  colors,
+  onPress,
+  testID,
+  trailing,
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
+  colors: ThemeColors;
+  onPress: () => void;
+  testID?: string;
+  trailing?: string;
+}) {
+  return (
+    <TouchableOpacity
+      style={[
+        accountRowStyles.row,
+        { backgroundColor: colors.card, borderColor: colors.cardBorder },
+      ]}
+      onPress={onPress}
+      testID={testID}
+    >
+      <Ionicons name={icon} size={20} color={colors.accent} />
+      <Text style={[accountRowStyles.label, { color: colors.text }]}>{label}</Text>
+      {trailing ? (
+        <Text style={[accountRowStyles.trailing, { color: colors.textSecondary }]}>
+          {trailing}
+        </Text>
+      ) : (
+        <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />
+      )}
+    </TouchableOpacity>
+  );
+}
+
+const accountRowStyles = StyleSheet.create({
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 16,
+  },
+  label: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: "600",
+  },
+  trailing: {
+    fontSize: 12,
+    fontWeight: "600",
+  },
+});
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
@@ -516,6 +616,18 @@ function createStyles(colors: ThemeColors) {
     saveButtonText: {
       fontSize: 16,
       fontWeight: "700",
+    },
+    accountMenu: {
+      gap: 10,
+      marginBottom: 12,
+    },
+    signInAccountBtn: {
+      padding: 16,
+      borderRadius: 12,
+      alignItems: "center",
+      marginBottom: 12,
+      minHeight: 52,
+      justifyContent: "center",
     },
     passwordCard: {
       borderRadius: 16,

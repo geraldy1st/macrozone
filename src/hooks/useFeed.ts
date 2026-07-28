@@ -1,7 +1,7 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { fetchFeed } from "@/services/community";
 import type { FeedPost } from "@/types/community";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 export function useFeed() {
   const { user } = useAuth();
@@ -11,46 +11,60 @@ export function useFeed() {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const load = useCallback(
-    async (mode: "refresh" | "more" = "refresh") => {
-      if (mode === "more") {
-        if (!nextCursor || isLoadingMore) {
-          return;
-        }
-        setIsLoadingMore(true);
-      } else {
-        setIsLoading(true);
-        setError(null);
-      }
+  const nextCursorRef = useRef<string | null>(null);
+  const isLoadingMoreRef = useRef(false);
+  const userIdRef = useRef(user?.id ?? null);
+  userIdRef.current = user?.id ?? null;
 
-      try {
-        const page = await fetchFeed({
-          before: mode === "more" ? nextCursor : null,
-          currentUserId: user?.id ?? null,
-        });
+  const refresh = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
 
-        setPosts((current) =>
-          mode === "more" ? [...current, ...page.posts] : page.posts,
-        );
-        setNextCursor(page.nextCursor);
-      } catch (err) {
-        const message =
-          err instanceof Error ? err.message : "FEED_LOAD_FAILED";
-        setError(message);
-        if (mode === "refresh") {
-          setPosts([]);
-          setNextCursor(null);
-        }
-      } finally {
-        setIsLoading(false);
-        setIsLoadingMore(false);
-      }
-    },
-    [isLoadingMore, nextCursor, user?.id],
-  );
+    try {
+      const page = await fetchFeed({
+        before: null,
+        currentUserId: userIdRef.current,
+      });
 
-  const refresh = useCallback(() => load("refresh"), [load]);
-  const loadMore = useCallback(() => load("more"), [load]);
+      setPosts(page.posts);
+      nextCursorRef.current = page.nextCursor;
+      setNextCursor(page.nextCursor);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "FEED_LOAD_FAILED";
+      setError(message);
+      setPosts([]);
+      nextCursorRef.current = null;
+      setNextCursor(null);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const loadMore = useCallback(async () => {
+    if (!nextCursorRef.current || isLoadingMoreRef.current) {
+      return;
+    }
+
+    isLoadingMoreRef.current = true;
+    setIsLoadingMore(true);
+
+    try {
+      const page = await fetchFeed({
+        before: nextCursorRef.current,
+        currentUserId: userIdRef.current,
+      });
+
+      setPosts((current) => [...current, ...page.posts]);
+      nextCursorRef.current = page.nextCursor;
+      setNextCursor(page.nextCursor);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "FEED_LOAD_FAILED";
+      setError(message);
+    } finally {
+      isLoadingMoreRef.current = false;
+      setIsLoadingMore(false);
+    }
+  }, []);
 
   const removePostLocally = useCallback((postId: string) => {
     setPosts((current) => current.filter((post) => post.id !== postId));

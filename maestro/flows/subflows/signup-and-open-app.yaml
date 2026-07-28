@@ -1,0 +1,44 @@
+# Subflow: create account with EMAIL/PASSWORD and leave profile-edit
+# Requires env: EMAIL, PASSWORD, optional DISPLAY_NAME
+appId: com.geraldy.macrozone
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: "Bienvenue|Welcome|nutriFlow|Bienvenido"
+    timeout: 25000
+- tapOn:
+    id: "welcome-sign-up-btn"
+- extendedWaitUntil:
+    visible:
+      id: "signup-email-input"
+    timeout: 15000
+- tapOn:
+    id: "signup-email-input"
+- eraseText
+- inputText: ${EMAIL}
+- tapOn:
+    id: "signup-password-input"
+- eraseText
+- inputText: ${PASSWORD}
+- tapOn:
+    id: "signup-confirm-password-input"
+- eraseText
+- inputText: ${PASSWORD}
+- hideKeyboard
+- tapOn:
+    id: "signup-submit-btn"
+- extendedWaitUntil:
+    visible:
+      id: "profile-name-input"
+    timeout: 30000
+- tapOn:
+    id: "profile-name-input"
+- eraseText
+- inputText: ${DISPLAY_NAME}
+- hideKeyboard
+- tapOn:
+    id: "profile-save-btn"
+- extendedWaitUntil:
+    visible: "Profil|Profile|Perfil|nutriFlow"
+    timeout: 20000

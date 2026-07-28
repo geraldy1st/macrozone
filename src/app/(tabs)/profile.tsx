@@ -25,6 +25,7 @@ import { useTranslation } from "react-i18next";
 import {
   Linking,
   ScrollView,
+  Share,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -58,6 +59,30 @@ export default function ProfileScreen() {
       router.replace("/welcome");
     } catch {
       showToast(t("auth.signOutErrorMessage"), "error");
+    }
+  };
+
+  const handleShareProfile = async () => {
+    if (!user?.id) {
+      showToast(t("profile.shareNeedsSignIn"), "info");
+      router.push("/login");
+      return;
+    }
+
+    const shareUrl = `macrozone://u/${user.id}`;
+    const message = t("profile.shareMessage", {
+      name: displayName,
+      url: shareUrl,
+    });
+
+    try {
+      await Share.share({
+        message: `${message}\n${shareUrl}`,
+        title: t("profile.shareTitle"),
+        url: shareUrl,
+      });
+    } catch {
+      showToast(t("profile.shareError"), "error");
     }
   };
 
@@ -137,6 +162,20 @@ export default function ProfileScreen() {
         <Text style={[styles.displayName, { color: colors.text }]} numberOfLines={1}>
           {displayName}
         </Text>
+
+        <TouchableOpacity
+          style={[
+            styles.shareProfileBtn,
+            { borderColor: colors.cardBorder, backgroundColor: colors.surface },
+          ]}
+          onPress={() => void handleShareProfile()}
+          testID="share-profile-btn"
+        >
+          <Ionicons name="share-outline" size={16} color={colors.accent} />
+          <Text style={[styles.shareProfileText, { color: colors.accent }]}>
+            {t("profile.shareButton")}
+          </Text>
+        </TouchableOpacity>
 
         {profile.bio.trim() ? (
           <Text style={[styles.bio, { color: colors.textSecondary }]}>
@@ -338,6 +377,20 @@ function createStyles(colors: ThemeColors) {
       fontSize: 22,
       fontWeight: "800",
       letterSpacing: -0.3,
+    },
+    shareProfileBtn: {
+      alignSelf: "center",
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+      borderWidth: 1,
+      borderRadius: 999,
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+    },
+    shareProfileText: {
+      fontSize: 13,
+      fontWeight: "700",
     },
     bio: {
       textAlign: "center",

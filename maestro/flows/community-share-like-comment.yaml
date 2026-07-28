@@ -1,0 +1,79 @@
+# Community: signup → add meal → share → like → comment → delete post
+# Requires EMAIL, PASSWORD, DISPLAY_NAME, MEAL_NAME, COMMENT_TEXT
+# Needs Supabase community tables + network
+appId: com.geraldy.macrozone
+---
+- runFlow: subflows/signup-and-open-app.yaml
+- tapOn:
+    id: "add-meal-tab"
+- extendedWaitUntil:
+    visible:
+      id: "meal-name-input"
+    timeout: 15000
+- tapOn:
+    id: "meal-name-input"
+- eraseText
+- inputText: ${MEAL_NAME}
+- tapOn:
+    id: "meal-calories-input"
+- eraseText
+- inputText: "420"
+- hideKeyboard
+- tapOn:
+    id: "add-meal-submit"
+# Share prompt after save when logged in
+- extendedWaitUntil:
+    visible: "Partager|Share|Compartir|Meal saved|Repas enregistré|Comida guardada"
+    timeout: 12000
+- runFlow:
+    when:
+      visible: "Partager|Share|Compartir"
+    commands:
+      - tapOn: "Partager|Share|Compartir"
+- extendedWaitUntil:
+    visible:
+      id: "community-caption-input"
+    timeout: 15000
+- tapOn:
+    id: "community-caption-input"
+- eraseText
+- inputText: "E2E caption"
+- hideKeyboard
+- tapOn:
+    id: "community-share-submit"
+- extendedWaitUntil:
+    visible: "Communauté|Community|Comunidad"
+    timeout: 25000
+- extendedWaitUntil:
+    visible:
+      id: "community-post-index-0"
+    timeout: 20000
+# Like
+- tapOn:
+    id: "like-post-index-0"
+- waitForAnimationToEnd
+# Comment
+- tapOn:
+    id: "comment-post-index-0"
+- extendedWaitUntil:
+    visible:
+      id: "comment-input"
+    timeout: 10000
+- tapOn:
+    id: "comment-input"
+- eraseText
+- inputText: ${COMMENT_TEXT}
+- hideKeyboard
+- tapOn:
+    id: "comment-send-btn"
+- waitForAnimationToEnd
+- tapOn:
+    id: "comments-close-btn"
+# Delete own post
+- tapOn:
+    id: "delete-post-index-0"
+- extendedWaitUntil:
+    visible: "Supprimer|Delete|Eliminar"
+    timeout: 8000
+- tapOn: "Supprimer|Delete|Eliminar"
+- waitForAnimationToEnd

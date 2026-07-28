@@ -17,16 +17,21 @@ type PostCardProps = {
   post: FeedPost;
   isOwner?: boolean;
   onLikePress?: () => void;
+  onCommentPress?: () => void;
   onDeletePress?: () => void;
   likeDisabled?: boolean;
+  /** Stable index for Maestro e2e (e.g. 0 = first post). */
+  testIndex?: number;
 };
 
 export default function PostCard({
   post,
   isOwner,
   onLikePress,
+  onCommentPress,
   onDeletePress,
   likeDisabled,
+  testIndex,
 }: PostCardProps) {
   const { t, i18n } = useTranslation();
   const { colors } = useTheme();
@@ -34,6 +39,20 @@ export default function PostCard({
   const authorName =
     post.author?.display_name?.trim() || t("community.unknownAuthor");
   const relative = formatRelativeTime(post.created_at, i18n.language);
+  const likeId =
+    testIndex !== undefined ? `like-post-index-${testIndex}` : `like-post-${post.id}`;
+  const commentId =
+    testIndex !== undefined
+      ? `comment-post-index-${testIndex}`
+      : `comment-post-${post.id}`;
+  const deleteId =
+    testIndex !== undefined
+      ? `delete-post-index-${testIndex}`
+      : `delete-post-${post.id}`;
+  const cardId =
+    testIndex !== undefined
+      ? `community-post-index-${testIndex}`
+      : `community-post-${post.id}`;
 
   return (
     <View
@@ -41,7 +60,7 @@ export default function PostCard({
         styles.card,
         { backgroundColor: colors.card, borderColor: colors.cardBorder },
       ]}
-      testID={`community-post-${post.id}`}
+      testID={cardId}
     >
       <View style={styles.header}>
         <View style={[styles.avatar, { backgroundColor: colors.surface }]}>
@@ -67,7 +86,7 @@ export default function PostCard({
           <TouchableOpacity
             onPress={onDeletePress}
             hitSlop={10}
-            testID={`delete-post-${post.id}`}
+            testID={deleteId}
           >
             <Ionicons name="trash-outline" size={18} color={colors.alert} />
           </TouchableOpacity>
@@ -102,7 +121,7 @@ export default function PostCard({
           style={styles.action}
           onPress={onLikePress}
           disabled={likeDisabled || !onLikePress}
-          testID={`like-post-${post.id}`}
+          testID={likeId}
         >
           <Ionicons
             name={post.liked_by_me ? "heart" : "heart-outline"}
@@ -114,7 +133,12 @@ export default function PostCard({
           </Text>
         </TouchableOpacity>
 
-        <View style={styles.action}>
+        <TouchableOpacity
+          style={styles.action}
+          onPress={onCommentPress}
+          disabled={!onCommentPress}
+          testID={commentId}
+        >
           <Ionicons
             name="chatbubble-outline"
             size={18}
@@ -123,7 +147,7 @@ export default function PostCard({
           <Text style={[styles.actionText, { color: colors.textSecondary }]}>
             {post.comments_count}
           </Text>
-        </View>
+        </TouchableOpacity>
       </View>
     </View>
   );

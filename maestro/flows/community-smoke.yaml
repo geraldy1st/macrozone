@@ -1,0 +1,19 @@
+# Community tab smoke (guest can open feed)
+appId: com.geraldy.macrozone
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: "Bienvenue|Welcome|nutriFlow|Bienvenido"
+    timeout: 20000
+- tapOn:
+    id: "welcome-guest-btn"
+- extendedWaitUntil:
+    visible: "nutriFlow|Add Meal|Ajouter"
+    timeout: 20000
+- tapOn:
+    id: "community-tab"
+- extendedWaitUntil:
+    visible: "Communauté|Community|Comunidad"
+    timeout: 15000
+- assertVisible: "Communauté|Community|Comunidad"

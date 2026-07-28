@@ -41,6 +41,11 @@ if ! adb shell pm list packages | grep -q "com.geraldy.macrozone"; then
 fi
 
 FLOW="${1:-maestro/flows}"
+if [[ $# -gt 0 ]]; then
+  shift
+fi
+
 echo ""
-echo "Lancement Maestro sur: $FLOW"
-maestro test "$FLOW"
+echo "Lancement Maestro sur: $FLOW $*"
+# shellcheck disable=SC2068
+maestro test "$FLOW" $@

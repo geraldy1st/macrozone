@@ -1,0 +1,32 @@
+# Auth: sign in with existing EMAIL/PASSWORD (run after signup flow, without clearState)
+appId: com.geraldy.macrozone
+---
+- launchApp
+- extendedWaitUntil:
+    visible: "Bienvenue|Welcome|nutriFlow|Bienvenido|Profil|Profile|Se connecter|Sign in"
+    timeout: 20000
+- runFlow:
+    when:
+      visible: "Se connecter|Sign in|Iniciar sesión"
+    commands:
+      - tapOn:
+          id: "welcome-sign-in-btn"
+- runFlow:
+    when:
+      visible:
+        id: "auth-email-input"
+    commands:
+      - tapOn:
+          id: "auth-email-input"
+      - eraseText
+      - inputText: ${EMAIL}
+      - tapOn:
+          id: "auth-password-input"
+      - eraseText
+      - inputText: ${PASSWORD}
+      - hideKeyboard
+      - tapOn:
+          id: "auth-submit-btn"
+- extendedWaitUntil:
+    visible: "nutriFlow|Profil|Profile|Communauté|Community|Add Meal|Ajouter"
+    timeout: 25000

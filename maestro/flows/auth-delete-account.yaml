@@ -1,0 +1,27 @@
+# Auth: signup then delete account (destructive e2e)
+# Requires EMAIL, PASSWORD, DISPLAY_NAME
+appId: com.geraldy.macrozone
+---
+- runFlow: subflows/signup-and-open-app.yaml
+- tapOn:
+    id: "profile-tab"
+- tapOn:
+    id: "open-settings-btn"
+- extendedWaitUntil:
+    visible:
+      id: "delete-account-btn"
+    timeout: 15000
+- scrollUntilVisible:
+    element:
+      id: "delete-account-btn"
+    direction: DOWN
+- tapOn:
+    id: "delete-account-btn"
+# Confirm destructive dialog — match Delete / Supprimer
+- extendedWaitUntil:
+    visible: "Supprimer|Delete|Eliminar"
+    timeout: 8000
+- tapOn: "Supprimer|Delete|Eliminar"
+- extendedWaitUntil:
+    visible: "Se connecter|Sign in|Iniciar sesión|Bienvenue|Welcome|nutriFlow"
+    timeout: 25000
