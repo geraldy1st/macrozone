@@ -14,7 +14,9 @@ appId: com.geraldy.macrozone
     visible: "nutriFlow|Add Meal|Ajouter un repas"
     timeout: 20000
 - tapOn:
-    id: "add-meal-tab"
+    id: "home-tab"
+- tapOn:
+    id: "home-add-meal-btn"
 - tapOn:
     id: "meal-name-input"
 - eraseText

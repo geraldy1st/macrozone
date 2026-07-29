@@ -51,7 +51,14 @@
     "commentsLoadError": "Could not load comments.",
     "commentsSendError": "Could not send comment.",
     "commentsDeleteSuccess": "Comment deleted",
-    "commentsDeleteError": "Could not delete comment."
+    "commentsDeleteError": "Could not delete comment.",
+    "saveMeal": "Save meal",
+    "saveAdded": "Meal saved from community",
+    "saveRemoved": "Removed from saved meals",
+    "authRequiredSave": "Sign in to save community meals.",
+    "postNotFound": "This meal post is no longer available.",
+    "byAuthor": "by {{name}}",
+    "removeFromSaved": "Remove from saved"
   },
   "welcome": {
     "title": "Welcome to nutriFlow",
@@ -132,7 +139,8 @@
     "dailyProgress": "Daily Progress",
     "quoteCopied": "Quote copied!",
     "newQuote": "New quote",
-    "quoteNameFallback": "friend"
+    "quoteNameFallback": "friend",
+    "addMeal": "Add meal"
   },
   "macros": {
     "calories": "Calories",
@@ -279,7 +287,10 @@
     "yesterday": "Yesterday",
     "favoritesButton": "My favorite meals",
     "favoritesTitle": "Favorite meals",
-    "favoritesEmpty": "No favorite meals yet. Tap the star on a meal in All Meals to add it to your favorites."
+    "favoritesEmpty": "No favorite meals yet. Tap the star on a meal in All Meals to add it to your favorites.",
+    "savedCommunityButton": "Saved from community",
+    "savedCommunityTitle": "Saved from community",
+    "savedCommunityEmpty": "No saved community meals yet. Tap the bookmark icon on a community post to save it here."
   },
   "mealDetail": {
     "description": "Description",

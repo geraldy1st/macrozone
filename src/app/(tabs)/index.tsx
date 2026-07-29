@@ -15,11 +15,11 @@ import { useThemedStyles } from "@/hooks/useThemedStyles";
 import { getMeals, Meal } from "@/storage/meals";
 import { getUserProfile } from "@/storage/profile";
 import { globalStyles } from "@/styles/global";
-import type { ThemeColors } from "@/styles/themes";
+import { macroColors, type ThemeColors } from "@/styles/themes";
 import { filterMealsForToday } from "@/utils/groupMealsByDay";
 import { Ionicons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
-import { useFocusEffect } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -117,6 +117,19 @@ export default function HomeScreen() {
             <Ionicons name="refresh" size={18} color={colors.accent} />
           </AnimatedPressable>
         </View>
+
+        <AnimatedPressable
+          style={[styles.addMealButton, { backgroundColor: macroColors.accent }]}
+          onPress={() => router.push("/(tabs)/add-meals")}
+          testID="home-add-meal-btn"
+        >
+          <View style={styles.addMealButtonContent}>
+            <Ionicons name="add-circle" size={22} color={colors.text} />
+            <Text style={[styles.addMealButtonText, { color: colors.text }]}>
+              {t("home.addMeal")}
+            </Text>
+          </View>
+        </AnimatedPressable>
       </View>
 
       <MacroGrid meals={todayMeals} />
@@ -185,6 +198,22 @@ function createStyles(colors: ThemeColors) {
       paddingVertical: 14,
       justifyContent: "center",
       alignItems: "center",
+    },
+    addMealButton: {
+      marginTop: 14,
+      borderRadius: 14,
+      paddingVertical: 16,
+      paddingHorizontal: 18,
+    },
+    addMealButtonContent: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 10,
+    },
+    addMealButtonText: {
+      fontSize: 16,
+      fontWeight: "700",
     },
     actionsCard: {
       backgroundColor: colors.card,

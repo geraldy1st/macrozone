@@ -161,6 +161,20 @@ export default function AllMealsScreen() {
               {t("allMeals.favoritesButton")}
             </Text>
           </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.favoritesButton,
+              { backgroundColor: colors.card, borderColor: colors.cardBorder },
+            ]}
+            onPress={() => router.push("/saved-community-meals" as Href)}
+            testID="open-saved-community-btn"
+          >
+            <Ionicons name="bookmark" size={18} color={colors.accent} />
+            <Text style={[styles.favoritesButtonText, { color: colors.text }]}>
+              {t("allMeals.savedCommunityButton")}
+            </Text>
+          </TouchableOpacity>
         </View>
       }
       ListEmptyComponent={

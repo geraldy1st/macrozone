@@ -51,7 +51,14 @@
     "commentsLoadError": "No se pudieron cargar los comentarios.",
     "commentsSendError": "No se pudo enviar el comentario.",
     "commentsDeleteSuccess": "Comentario eliminado",
-    "commentsDeleteError": "No se pudo eliminar el comentario."
+    "commentsDeleteError": "No se pudo eliminar el comentario.",
+    "saveMeal": "Guardar comida",
+    "saveAdded": "Comida guardada de la comunidad",
+    "saveRemoved": "Eliminada de guardadas",
+    "authRequiredSave": "Inicia sesión para guardar comidas de la comunidad.",
+    "postNotFound": "Esta publicación ya no está disponible.",
+    "byAuthor": "por {{name}}",
+    "removeFromSaved": "Quitar de guardadas"
   },
   "welcome": {
     "title": "Bienvenido a nutriFlow",
@@ -132,7 +139,8 @@
     "dailyProgress": "Progreso del día",
     "quoteCopied": "¡Cita copiada!",
     "newQuote": "Nueva cita",
-    "quoteNameFallback": "amigo"
+    "quoteNameFallback": "amigo",
+    "addMeal": "Añadir comida"
   },
   "macros": {
     "calories": "Calorías",
@@ -279,7 +287,10 @@
     "yesterday": "Ayer",
     "favoritesButton": "Mis comidas favoritas",
     "favoritesTitle": "Comidas favoritas",
-    "favoritesEmpty": "Aún no hay comidas favoritas. Toca la estrella de una comida en Comidas para añadirla a favoritos."
+    "favoritesEmpty": "Aún no hay comidas favoritas. Toca la estrella de una comida en Comidas para añadirla a favoritos.",
+    "savedCommunityButton": "Guardadas de la comunidad",
+    "savedCommunityTitle": "Guardadas de la comunidad",
+    "savedCommunityEmpty": "Aún no hay comidas guardadas. Toca el marcador en una publicación de la comunidad para añadirla aquí."
   },
   "mealDetail": {
     "description": "Descripción",

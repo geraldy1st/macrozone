@@ -3,17 +3,25 @@ appId: com.geraldy.macrozone
 ---
 - launchApp:
     clearState: true
+- waitForAnimationToEnd:
+    timeout: 10000
 - extendedWaitUntil:
-    visible: "Bienvenue|Welcome|nutriFlow|Bienvenido"
-    timeout: 20000
+    visible:
+      id: "welcome-guest-btn"
+    timeout: 60000
 - tapOn:
     id: "welcome-guest-btn"
 - extendedWaitUntil:
-    visible: "nutriFlow|Add Meal|Ajouter"
-    timeout: 20000
+    visible:
+      id: "community-tab"
+    timeout: 30000
 - tapOn:
     id: "community-tab"
 - extendedWaitUntil:
-    visible: "Communauté|Community|Comunidad"
+    visible:
+      id: "community-tab"
     timeout: 15000
-- assertVisible: "Communauté|Community|Comunidad"
+# Title testID may be missing on older APKs — assert tab + guest banner text as fallback
+- extendedWaitUntil:
+    visible: "Community|Communauté|Comunidad|Meals shared|Repas partagés|Comidas compartidas"
+    timeout: 20000

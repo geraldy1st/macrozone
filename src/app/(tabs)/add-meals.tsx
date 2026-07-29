@@ -394,7 +394,23 @@ export default function AddMealScreen() {
         keyboardShouldPersistTaps="handled"
         automaticallyAdjustKeyboardInsets
       >
-      <Text style={styles.title}>{t("addMeal.title")}</Text>
+      <View style={styles.titleRow}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => {
+            if (router.canGoBack()) {
+              router.back();
+            } else {
+              router.replace("/(tabs)");
+            }
+          }}
+          testID="add-meal-back-btn"
+        >
+          <Ionicons name="arrow-back" size={22} color={colors.text} />
+        </TouchableOpacity>
+        <Text style={styles.title}>{t("addMeal.title")}</Text>
+        <View style={styles.backButton} />
+      </View>
 
       {canUseAiScan ? (
         <TouchableOpacity
@@ -616,11 +632,25 @@ function createScreenStyles(colors: ReturnType<typeof useTheme>["colors"]) {
     paddingTop: 60,
     paddingHorizontal: 20,
   },
+  titleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 4,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   title: {
     fontSize: 28,
     fontWeight: "800",
     color: colors.text,
     letterSpacing: -0.5,
+    flex: 1,
+    textAlign: "center",
   },
   screen: {
     paddingBottom: 0,

@@ -35,14 +35,12 @@ export default function TabLayout() {
           ),
         }}
       />
+      {/* Route kept for navigation from Home; hidden from tab bar for 4-item layout */}
       <Tabs.Screen
         name="add-meals"
         options={{
-          tabBarButtonTestID: "add-meal-tab",
+          href: null,
           title: t("tabs.addMeals"),
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="add-circle" size={size} color={color} />
-          ),
         }}
       />
       <Tabs.Screen

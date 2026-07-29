@@ -16,10 +16,14 @@ import {
 type PostCardProps = {
   post: FeedPost;
   isOwner?: boolean;
+  isSaved?: boolean;
   onLikePress?: () => void;
   onCommentPress?: () => void;
+  onSavePress?: () => void;
+  onImagePress?: () => void;
   onDeletePress?: () => void;
   likeDisabled?: boolean;
+  saveDisabled?: boolean;
   /** Stable index for Maestro e2e (e.g. 0 = first post). */
   testIndex?: number;
 };
@@ -27,10 +31,14 @@ type PostCardProps = {
 export default function PostCard({
   post,
   isOwner,
+  isSaved,
   onLikePress,
   onCommentPress,
+  onSavePress,
+  onImagePress,
   onDeletePress,
   likeDisabled,
+  saveDisabled,
   testIndex,
 }: PostCardProps) {
   const { t, i18n } = useTranslation();
@@ -45,6 +53,10 @@ export default function PostCard({
     testIndex !== undefined
       ? `comment-post-index-${testIndex}`
       : `comment-post-${post.id}`;
+  const saveId =
+    testIndex !== undefined
+      ? `save-post-index-${testIndex}`
+      : `save-post-${post.id}`;
   const deleteId =
     testIndex !== undefined
       ? `delete-post-index-${testIndex}`
@@ -94,14 +106,31 @@ export default function PostCard({
       </View>
 
       {post.image_url ? (
-        <Image
-          source={{ uri: post.image_url }}
-          style={styles.photo}
-          contentFit="cover"
-        />
+        <TouchableOpacity
+          activeOpacity={0.9}
+          onPress={onImagePress}
+          disabled={!onImagePress}
+          testID={
+            testIndex !== undefined
+              ? `community-post-image-index-${testIndex}`
+              : `community-post-image-${post.id}`
+          }
+        >
+          <Image
+            source={{ uri: post.image_url }}
+            style={styles.photo}
+            contentFit="cover"
+          />
+        </TouchableOpacity>
       ) : null}
 
-      <Text style={[styles.mealName, { color: colors.text }]}>{post.meal_name}</Text>
+      <TouchableOpacity
+        activeOpacity={onImagePress ? 0.7 : 1}
+        onPress={onImagePress}
+        disabled={!onImagePress}
+      >
+        <Text style={[styles.mealName, { color: colors.text }]}>{post.meal_name}</Text>
+      </TouchableOpacity>
 
       <View style={styles.macros}>
         <MacroPill label={t("macros.calories")} value={post.calories} color={macroColors.calories} />
@@ -147,6 +176,20 @@ export default function PostCard({
           <Text style={[styles.actionText, { color: colors.textSecondary }]}>
             {post.comments_count}
           </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.action}
+          onPress={onSavePress}
+          disabled={saveDisabled || !onSavePress}
+          testID={saveId}
+          accessibilityLabel={t("community.saveMeal")}
+        >
+          <Ionicons
+            name={isSaved ? "bookmark" : "bookmark-outline"}
+            size={18}
+            color={isSaved ? colors.accent : colors.textSecondary}
+          />
         </TouchableOpacity>
       </View>
     </View>

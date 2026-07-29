@@ -211,6 +211,35 @@ export async function fetchFeed(options?: {
   return { posts, nextCursor };
 }
 
+/** Fetch a single public post by id. */
+export async function fetchPostById(postId: string): Promise<FeedPost | null> {
+  if (!supabase) {
+    throw new Error("SUPABASE_NOT_CONFIGURED");
+  }
+
+  const { data, error } = await supabase
+    .from("posts")
+    .select(
+      `
+      *,
+      author:profiles!author_id ( id, display_name, avatar_url )
+    `,
+    )
+    .eq("id", postId)
+    .is("deleted_at", null)
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  if (!data) {
+    return null;
+  }
+
+  return mapFeedPost(data as Record<string, unknown>);
+}
+
 /** Soft-delete own post. */
 export async function deleteMyPost(postId: string, authorId: string): Promise<void> {
   if (!supabase) {

@@ -5,7 +5,9 @@ appId: com.geraldy.macrozone
 ---
 - runFlow: subflows/signup-and-open-app.yaml
 - tapOn:
-    id: "add-meal-tab"
+    id: "home-tab"
+- tapOn:
+    id: "home-add-meal-btn"
 - extendedWaitUntil:
     visible:
       id: "meal-name-input"

@@ -8,9 +8,15 @@ import { useFeed } from "@/hooks/useFeed";
 import { useBottomContentPadding } from "@/hooks/useBottomContentPadding";
 import { useThemedStyles } from "@/hooks/useThemedStyles";
 import { deleteMyPost, toggleLike } from "@/services/community";
+import {
+  getSavedCommunityMealIds,
+  toggleSavedCommunityMeal,
+} from "@/storage/savedCommunityMeals";
+import type { FeedPost } from "@/types/community";
 import type { ThemeColors } from "@/styles/themes";
 import { Ionicons } from "@expo/vector-icons";
-import { router, useFocusEffect } from "expo-router";
+import * as Haptics from "expo-haptics";
+import { router, useFocusEffect, type Href } from "expo-router";
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -32,6 +38,7 @@ export default function CommunityScreen() {
   const styles = useThemedStyles(createStyles);
   const bottomPadding = useBottomContentPadding();
   const [commentPostId, setCommentPostId] = useState<string | null>(null);
+  const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const {
     posts,
     isLoading,
@@ -44,11 +51,50 @@ export default function CommunityScreen() {
     patchPostLocally,
   } = useFeed();
 
+  const loadSavedIds = useCallback(async () => {
+    const ids = await getSavedCommunityMealIds();
+    setSavedIds(new Set(ids));
+  }, []);
+
   useFocusEffect(
     useCallback(() => {
       void refresh();
-    }, [refresh]),
+      void loadSavedIds();
+    }, [refresh, loadSavedIds]),
   );
+
+  const handleSave = async (post: FeedPost) => {
+    if (!user) {
+      showAlert({
+        title: t("community.authRequiredTitle"),
+        message: t("community.authRequiredSave"),
+        buttons: [
+          { text: t("mealItem.cancel"), style: "cancel" },
+          {
+            text: t("auth.signIn"),
+            onPress: () => router.push("/login"),
+          },
+        ],
+      });
+      return;
+    }
+
+    const next = await toggleSavedCommunityMeal(post);
+    setSavedIds((current) => {
+      const copy = new Set(current);
+      if (next) {
+        copy.add(post.id);
+      } else {
+        copy.delete(post.id);
+      }
+      return copy;
+    });
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    showToast(
+      next ? t("community.saveAdded") : t("community.saveRemoved"),
+      "info",
+    );
+  };
 
   const handleLike = async (postId: string, likedByMe: boolean, likesCount: number) => {
     if (!user) {
@@ -118,7 +164,10 @@ export default function CommunityScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <Text style={[styles.title, { color: colors.text }]}>
+      <Text
+        style={[styles.title, { color: colors.text }]}
+        testID="community-screen-title"
+      >
         {t("community.title")}
       </Text>
       <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
@@ -214,10 +263,15 @@ export default function CommunityScreen() {
               post={item}
               testIndex={index}
               isOwner={Boolean(user && user.id === item.author_id)}
+              isSaved={savedIds.has(item.id)}
               onLikePress={() =>
                 void handleLike(item.id, Boolean(item.liked_by_me), item.likes_count)
               }
               onCommentPress={() => setCommentPostId(item.id)}
+              onSavePress={() => void handleSave(item)}
+              onImagePress={() =>
+                router.push(`/community/post/${item.id}` as Href)
+              }
               onDeletePress={
                 user && user.id === item.author_id
                   ? () => handleDelete(item.id)

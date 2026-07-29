@@ -51,7 +51,14 @@
     "commentsLoadError": "Impossible de charger les commentaires.",
     "commentsSendError": "Impossible d'envoyer le commentaire.",
     "commentsDeleteSuccess": "Commentaire supprimé",
-    "commentsDeleteError": "Impossible de supprimer le commentaire."
+    "commentsDeleteError": "Impossible de supprimer le commentaire.",
+    "saveMeal": "Enregistrer le repas",
+    "saveAdded": "Repas enregistré depuis la communauté",
+    "saveRemoved": "Retiré des repas enregistrés",
+    "authRequiredSave": "Connectez-vous pour enregistrer des repas de la communauté.",
+    "postNotFound": "Ce repas n'est plus disponible.",
+    "byAuthor": "par {{name}}",
+    "removeFromSaved": "Retirer des enregistrés"
   },
   "welcome": {
     "title": "Bienvenue sur nutriFlow",
@@ -132,7 +139,8 @@
     "dailyProgress": "Progression du jour",
     "quoteCopied": "Citation copiée !",
     "newQuote": "Nouvelle citation",
-    "quoteNameFallback": "ami"
+    "quoteNameFallback": "ami",
+    "addMeal": "Ajouter un repas"
   },
   "macros": {
     "calories": "Calories",
@@ -279,7 +287,10 @@
     "yesterday": "Hier",
     "favoritesButton": "Mes repas favoris",
     "favoritesTitle": "Repas favoris",
-    "favoritesEmpty": "Aucun repas favori pour le moment. Appuyez sur l'étoile d'un repas dans la page Repas pour l'ajouter à vos favoris."
+    "favoritesEmpty": "Aucun repas favori pour le moment. Appuyez sur l'étoile d'un repas dans la page Repas pour l'ajouter à vos favoris.",
+    "savedCommunityButton": "Enregistrés de la communauté",
+    "savedCommunityTitle": "Enregistrés de la communauté",
+    "savedCommunityEmpty": "Aucun repas enregistré. Appuyez sur le signet d'un post communauté pour l'ajouter ici."
   },
   "mealDetail": {
     "description": "Description",

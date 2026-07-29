@@ -41,6 +41,8 @@ export default function RootLayout() {
                 <Stack.Screen name="profile-edit" />
                 <Stack.Screen name="u/[id]" />
                 <Stack.Screen name="favorite-meals" />
+                <Stack.Screen name="saved-community-meals" />
+                <Stack.Screen name="community/post/[id]" />
                 <Stack.Screen name="meal" />
                 <Stack.Screen name="login" />
                 <Stack.Screen name="signup" />

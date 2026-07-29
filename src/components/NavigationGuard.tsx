@@ -13,6 +13,8 @@ const AUTH_FLOW_ROUTES = new Set([
   "profile-edit",
   // Public deep-link profile: macrozone://u/{id}
   "u",
+  // Community post detail (readable by guests)
+  "community",
 ]);
 
 export default function NavigationGuard() {
