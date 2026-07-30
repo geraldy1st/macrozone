@@ -10,6 +10,7 @@ import {
 } from "@/types/community";
 import { base64ToUint8Array } from "@/utils/base64";
 import { prepareImageForUpload } from "@/utils/photos";
+import { buildPostSearchOrFilter } from "@/utils/postSearch";
 
 function createPostId(): string {
   if (typeof globalThis.crypto?.randomUUID === "function") {
@@ -148,18 +149,24 @@ export async function createPost(
 
 /**
  * Fetch latest public posts (paginated by created_at cursor).
+ * Optional `query` filters by meal_name / caption (ilike).
  * Readable by guests (anon key) when RLS allows public SELECT.
  */
 export async function fetchFeed(options?: {
   before?: string | null;
   limit?: number;
   currentUserId?: string | null;
+  /** Free-text search on meal name and caption. */
+  query?: string | null;
 }): Promise<FeedPage> {
   if (!supabase) {
     throw new Error("SUPABASE_NOT_CONFIGURED");
   }
 
   const limit = options?.limit ?? COMMUNITY_FEED_PAGE_SIZE;
+  const searchFilter = options?.query
+    ? buildPostSearchOrFilter(options.query)
+    : null;
 
   let query = supabase
     .from("posts")
@@ -172,6 +179,10 @@ export async function fetchFeed(options?: {
     .is("deleted_at", null)
     .order("created_at", { ascending: false })
     .limit(limit);
+
+  if (searchFilter) {
+    query = query.or(searchFilter);
+  }
 
   if (options?.before) {
     query = query.lt("created_at", options.before);

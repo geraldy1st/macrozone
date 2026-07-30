@@ -1,3 +1,4 @@
+import TabProfileIcon from "@/components/TabProfileIcon";
 import { useTheme } from "@/contexts/ThemeContext";
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
@@ -68,8 +69,8 @@ export default function TabLayout() {
         options={{
           tabBarButtonTestID: "profile-tab",
           title: t("tabs.profile"),
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person-circle-outline" size={size} color={color} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <TabProfileIcon color={color} size={size} focused={focused} />
           ),
         }}
       />

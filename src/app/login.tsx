@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { setAuthenticatedOnboarding, setGuestOnboarding } from "@/storage/onboarding";
 import { getAuthErrorCode } from "@/utils/authErrors";
+import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -24,15 +25,41 @@ export default function LoginScreen() {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const { showAlert } = useAlert();
-  const { isConfigured, signInWithEmail } = useAuth();
+  const { isConfigured, signInWithEmail, signInWithOAuth } = useAuth();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
   const completeAuth = async () => {
     await setAuthenticatedOnboarding();
     router.replace("/(tabs)");
+  };
+
+  const handleGoogleAuth = async () => {
+    setIsGoogleLoading(true);
+
+    try {
+      await signInWithOAuth("google");
+      await completeAuth();
+    } catch (error) {
+      const errorCode = getAuthErrorCode(error);
+
+      if (errorCode === "OAUTH_CANCELLED") {
+        return;
+      }
+
+      showAlert({
+        title: t("auth.errorTitle"),
+        message:
+          errorCode === "OAUTH_SESSION_MISSING"
+            ? t("auth.oauthSessionErrorMessage")
+            : t("auth.oauthErrorMessage"),
+      });
+    } finally {
+      setIsGoogleLoading(false);
+    }
   };
 
   const handleEmailAuth = async () => {
@@ -150,6 +177,28 @@ export default function LoginScreen() {
           </TouchableOpacity>
         </View>
 
+        <View style={styles.dividerRow}>
+          <View style={styles.dividerLine} />
+          <Text style={styles.dividerText}>{t("auth.orContinueWith")}</Text>
+          <View style={styles.dividerLine} />
+        </View>
+
+        <TouchableOpacity
+          style={styles.googleButton}
+          onPress={handleGoogleAuth}
+          disabled={isGoogleLoading || isSubmitting}
+          testID="auth-google-btn"
+        >
+          {isGoogleLoading ? (
+            <ActivityIndicator color={colors.text} />
+          ) : (
+            <>
+              <Ionicons name="logo-google" size={20} color={colors.text} />
+              <Text style={styles.googleButtonText}>{t("auth.google")}</Text>
+            </>
+          )}
+        </TouchableOpacity>
+
         <TouchableOpacity
           style={styles.guestButton}
           onPress={async () => {
@@ -250,6 +299,39 @@ function createStyles(colors: ReturnType<typeof useTheme>["colors"]) {
     forgotPasswordText: {
       color: colors.primary,
       fontSize: 14,
+      fontWeight: "600",
+    },
+    dividerRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+      marginVertical: 24,
+    },
+    dividerLine: {
+      flex: 1,
+      height: 1,
+      backgroundColor: colors.cardBorder,
+    },
+    dividerText: {
+      color: colors.textSecondary,
+      fontSize: 13,
+      fontWeight: "600",
+    },
+    googleButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 10,
+      backgroundColor: colors.card,
+      borderRadius: 12,
+      padding: 16,
+      borderWidth: 1,
+      borderColor: colors.cardBorder,
+      minHeight: 52,
+    },
+    googleButtonText: {
+      color: colors.text,
+      fontSize: 15,
       fontWeight: "600",
     },
     guestButton: {

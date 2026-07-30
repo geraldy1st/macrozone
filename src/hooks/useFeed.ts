@@ -1,9 +1,9 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { fetchFeed } from "@/services/community";
 import type { FeedPost } from "@/types/community";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
-export function useFeed() {
+export function useFeed(searchQuery = "") {
   const { user } = useAuth();
   const [posts, setPosts] = useState<FeedPost[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
@@ -14,7 +14,9 @@ export function useFeed() {
   const nextCursorRef = useRef<string | null>(null);
   const isLoadingMoreRef = useRef(false);
   const userIdRef = useRef(user?.id ?? null);
+  const searchQueryRef = useRef(searchQuery);
   userIdRef.current = user?.id ?? null;
+  searchQueryRef.current = searchQuery;
 
   const refresh = useCallback(async () => {
     setIsLoading(true);
@@ -24,6 +26,7 @@ export function useFeed() {
       const page = await fetchFeed({
         before: null,
         currentUserId: userIdRef.current,
+        query: searchQueryRef.current || null,
       });
 
       setPosts(page.posts);
@@ -52,6 +55,7 @@ export function useFeed() {
       const page = await fetchFeed({
         before: nextCursorRef.current,
         currentUserId: userIdRef.current,
+        query: searchQueryRef.current || null,
       });
 
       setPosts((current) => [...current, ...page.posts]);
@@ -80,6 +84,10 @@ export function useFeed() {
     },
     [],
   );
+
+  useEffect(() => {
+    void refresh();
+  }, [searchQuery, refresh]);
 
   return {
     posts,

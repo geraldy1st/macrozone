@@ -58,7 +58,11 @@
     "authRequiredSave": "Sign in to save community meals.",
     "postNotFound": "This meal post is no longer available.",
     "byAuthor": "by {{name}}",
-    "removeFromSaved": "Remove from saved"
+    "removeFromSaved": "Remove from saved",
+    "searchPlaceholder": "Search meals…",
+    "searchClear": "Clear search",
+    "searchEmptyTitle": "No meals found",
+    "searchEmptyMessage": "No community meals match “{{query}}”. Try another name."
   },
   "welcome": {
     "title": "Welcome to nutriFlow",
@@ -381,7 +385,7 @@
       "deleteConfirm": "Delete",
       "deleteSuccess": "Your account has been deleted.",
       "deleteError": "Unable to delete your account. Please try again.",
-      "deleteNotConfigured": "Account deletion is not configured on the server (missing API URL or admin key).",
+      "deleteNotConfigured": "Account deletion needs a server setup: deploy the delete-account API on Vercel with SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY, and set EXPO_PUBLIC_ANALYZE_API_URL (or EXPO_PUBLIC_DELETE_ACCOUNT_API_URL).",
       "deleteUnauthorized": "Your session expired. Sign in again, then retry deleting your account."
     },
     "language": "Language",

@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useToast } from "@/contexts/ToastContext";
 import { setAuthenticatedOnboarding } from "@/storage/onboarding";
+import { getAuthErrorCode } from "@/utils/authErrors";
 import { Ionicons } from "@expo/vector-icons";
 import { router, type Href } from "expo-router";
 import { useMemo, useState } from "react";
@@ -27,13 +28,45 @@ export default function SignUpScreen() {
   const { colors } = useTheme();
   const { showAlert } = useAlert();
   const { showToast } = useToast();
-  const { isConfigured, signUpWithEmail, signInWithEmail } = useAuth();
+  const { isConfigured, signUpWithEmail, signInWithEmail, signInWithOAuth } = useAuth();
   const insets = useSafeAreaInsets();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+
+  const completeAuth = async () => {
+    await setAuthenticatedOnboarding();
+    showToast(t("signup.welcomeMessage"), "success");
+    router.replace("/profile-edit" as Href);
+  };
+
+  const handleGoogleAuth = async () => {
+    setIsGoogleLoading(true);
+
+    try {
+      await signInWithOAuth("google");
+      await completeAuth();
+    } catch (error) {
+      const errorCode = getAuthErrorCode(error);
+
+      if (errorCode === "OAUTH_CANCELLED") {
+        return;
+      }
+
+      showAlert({
+        title: t("auth.errorTitle"),
+        message:
+          errorCode === "OAUTH_SESSION_MISSING"
+            ? t("auth.oauthSessionErrorMessage")
+            : t("auth.oauthErrorMessage"),
+      });
+    } finally {
+      setIsGoogleLoading(false);
+    }
+  };
 
   const handleSignUp = async () => {
     const trimmedEmail = email.trim();
@@ -71,9 +104,7 @@ export default function SignUpScreen() {
         await signInWithEmail(trimmedEmail, password);
       }
 
-      await setAuthenticatedOnboarding();
-      showToast(t("signup.welcomeMessage"), "success");
-      router.replace("/profile-edit" as Href);
+      await completeAuth();
     } catch (error) {
       if (error instanceof Error && error.message === "EMAIL_ALREADY_REGISTERED") {
         showAlert({
@@ -167,6 +198,28 @@ export default function SignUpScreen() {
           </TouchableOpacity>
         </View>
 
+        <View style={styles.dividerRow}>
+          <View style={styles.dividerLine} />
+          <Text style={styles.dividerText}>{t("auth.orContinueWith")}</Text>
+          <View style={styles.dividerLine} />
+        </View>
+
+        <TouchableOpacity
+          style={styles.googleButton}
+          onPress={handleGoogleAuth}
+          disabled={isGoogleLoading || isSubmitting}
+          testID="signup-google-btn"
+        >
+          {isGoogleLoading ? (
+            <ActivityIndicator color={colors.text} />
+          ) : (
+            <>
+              <Ionicons name="logo-google" size={20} color={colors.text} />
+              <Text style={styles.googleButtonText}>{t("auth.google")}</Text>
+            </>
+          )}
+        </TouchableOpacity>
+
         <TouchableOpacity
           style={styles.linkButton}
           onPress={() => router.replace("/login")}
@@ -253,9 +306,42 @@ function createStyles(colors: ReturnType<typeof useTheme>["colors"]) {
     buttonDisabled: {
       opacity: 0.7,
     },
+    dividerRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+      marginVertical: 24,
+    },
+    dividerLine: {
+      flex: 1,
+      height: 1,
+      backgroundColor: colors.cardBorder,
+    },
+    dividerText: {
+      color: colors.textSecondary,
+      fontSize: 13,
+      fontWeight: "600",
+    },
+    googleButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 10,
+      backgroundColor: colors.card,
+      borderRadius: 12,
+      padding: 16,
+      borderWidth: 1,
+      borderColor: colors.cardBorder,
+      minHeight: 52,
+    },
+    googleButtonText: {
+      color: colors.text,
+      fontSize: 15,
+      fontWeight: "600",
+    },
     linkButton: {
       alignItems: "center",
-      marginTop: 24,
+      marginTop: 16,
       padding: 12,
     },
     linkText: {

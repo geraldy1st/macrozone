@@ -58,7 +58,11 @@
     "authRequiredSave": "Inicia sesión para guardar comidas de la comunidad.",
     "postNotFound": "Esta publicación ya no está disponible.",
     "byAuthor": "por {{name}}",
-    "removeFromSaved": "Quitar de guardadas"
+    "removeFromSaved": "Quitar de guardadas",
+    "searchPlaceholder": "Buscar comidas…",
+    "searchClear": "Borrar búsqueda",
+    "searchEmptyTitle": "No se encontraron comidas",
+    "searchEmptyMessage": "Ninguna comida de la comunidad coincide con “{{query}}”. Prueba otro nombre."
   },
   "welcome": {
     "title": "Bienvenido a nutriFlow",
@@ -381,7 +385,7 @@
       "deleteConfirm": "Eliminar",
       "deleteSuccess": "Tu cuenta ha sido eliminada.",
       "deleteError": "No se pudo eliminar tu cuenta. Inténtalo de nuevo.",
-      "deleteNotConfigured": "La eliminación de cuenta no está configurada en el servidor (falta URL API o clave admin).",
+      "deleteNotConfigured": "La eliminación requiere el servidor: despliega la API delete-account en Vercel con SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY, y configura EXPO_PUBLIC_ANALYZE_API_URL (o EXPO_PUBLIC_DELETE_ACCOUNT_API_URL).",
       "deleteUnauthorized": "Tu sesión ha caducado. Inicia sesión de nuevo e intenta eliminar la cuenta."
     },
     "language": "Idioma",

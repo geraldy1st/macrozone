@@ -4,20 +4,20 @@ import { useAlert } from "@/contexts/AlertContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useToast } from "@/contexts/ToastContext";
-import { useFeed } from "@/hooks/useFeed";
 import { useBottomContentPadding } from "@/hooks/useBottomContentPadding";
+import { useFeed } from "@/hooks/useFeed";
 import { useThemedStyles } from "@/hooks/useThemedStyles";
 import { deleteMyPost, toggleLike } from "@/services/community";
 import {
   getSavedCommunityMealIds,
   toggleSavedCommunityMeal,
 } from "@/storage/savedCommunityMeals";
-import type { FeedPost } from "@/types/community";
 import type { ThemeColors } from "@/styles/themes";
+import type { FeedPost } from "@/types/community";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { router, useFocusEffect, type Href } from "expo-router";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
@@ -25,9 +25,12 @@ import {
   RefreshControl,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
+
+const SEARCH_DEBOUNCE_MS = 300;
 
 export default function CommunityScreen() {
   const { t } = useTranslation();
@@ -39,6 +42,16 @@ export default function CommunityScreen() {
   const bottomPadding = useBottomContentPadding();
   const [commentPostId, setCommentPostId] = useState<string | null>(null);
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
+  const [searchInput, setSearchInput] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchInput.trim());
+    }, SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
   const {
     posts,
     isLoading,
@@ -49,7 +62,7 @@ export default function CommunityScreen() {
     loadMore,
     removePostLocally,
     patchPostLocally,
-  } = useFeed();
+  } = useFeed(debouncedSearch);
 
   const loadSavedIds = useCallback(async () => {
     const ids = await getSavedCommunityMealIds();
@@ -62,6 +75,8 @@ export default function CommunityScreen() {
       void loadSavedIds();
     }, [refresh, loadSavedIds]),
   );
+
+  const isSearching = debouncedSearch.length > 0;
 
   const handleSave = async (post: FeedPost) => {
     if (!user) {
@@ -174,6 +189,37 @@ export default function CommunityScreen() {
         {t("community.subtitle")}
       </Text>
 
+      <View
+        style={[
+          styles.searchRow,
+          { backgroundColor: colors.card, borderColor: colors.cardBorder },
+        ]}
+      >
+        <Ionicons name="search" size={18} color={colors.textSecondary} />
+        <TextInput
+          style={[styles.searchInput, { color: colors.text }]}
+          placeholder={t("community.searchPlaceholder")}
+          placeholderTextColor={colors.textSecondary}
+          value={searchInput}
+          onChangeText={setSearchInput}
+          autoCapitalize="none"
+          autoCorrect={false}
+          returnKeyType="search"
+          clearButtonMode="while-editing"
+          testID="community-search-input"
+        />
+        {searchInput.length > 0 ? (
+          <TouchableOpacity
+            onPress={() => setSearchInput("")}
+            hitSlop={10}
+            testID="community-search-clear"
+            accessibilityLabel={t("community.searchClear")}
+          >
+            <Ionicons name="close-circle" size={18} color={colors.textSecondary} />
+          </TouchableOpacity>
+        ) : null}
+      </View>
+
       {!user && isConfigured ? (
         <View
           style={[
@@ -225,6 +271,7 @@ export default function CommunityScreen() {
         <FlatList
           data={posts}
           keyExtractor={(item) => item.id}
+          keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ paddingBottom: bottomPadding, flexGrow: 1 }}
           refreshControl={
             <RefreshControl
@@ -241,12 +288,20 @@ export default function CommunityScreen() {
           onEndReachedThreshold={0.4}
           ListEmptyComponent={
             <View style={styles.centered}>
-              <Ionicons name="people-outline" size={40} color={colors.textSecondary} />
+              <Ionicons
+                name={isSearching ? "search-outline" : "people-outline"}
+                size={40}
+                color={colors.textSecondary}
+              />
               <Text style={[styles.emptyTitle, { color: colors.text }]}>
-                {t("community.emptyTitle")}
+                {isSearching
+                  ? t("community.searchEmptyTitle")
+                  : t("community.emptyTitle")}
               </Text>
               <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-                {t("community.emptyMessage")}
+                {isSearching
+                  ? t("community.searchEmptyMessage", { query: debouncedSearch })
+                  : t("community.emptyMessage")}
               </Text>
             </View>
           }
@@ -319,8 +374,25 @@ function createStyles(colors: ThemeColors) {
     subtitle: {
       fontSize: 14,
       marginTop: 6,
-      marginBottom: 14,
+      marginBottom: 12,
       fontWeight: "500",
+    },
+    searchRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 10,
+      borderWidth: 1,
+      borderRadius: 12,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+      marginBottom: 14,
+      minHeight: 44,
+    },
+    searchInput: {
+      flex: 1,
+      fontSize: 15,
+      fontWeight: "500",
+      padding: 0,
     },
     banner: {
       borderWidth: 1,
