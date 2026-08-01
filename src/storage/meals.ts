@@ -1,4 +1,6 @@
 import { scopedKey } from "@/storage/scopedKey";
+import type { RecipeData } from "@/types/recipe";
+import { normalizeRecipeData } from "@/types/recipe";
 import { deleteMealPhoto, saveMealPhoto, clearAllMealPhotos } from "@/utils/photos";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -12,11 +14,23 @@ export type Meal = {
   createdAt: string;
   photoUri?: string;
   description?: string;
+  /** Legacy free-text recipe (kept for older meals / AI notes). */
   recipe?: string;
+  /** Structured recipe (A008-3). */
+  recipeData?: RecipeData;
   recipeSource?: "ai" | "user";
   recipeAuthorName?: string;
   templateId?: string;
 };
+
+function normalizeMeal(raw: Meal): Meal {
+  return {
+    ...raw,
+    recipeData: raw.recipeData
+      ? normalizeRecipeData(raw.recipeData)
+      : undefined,
+  };
+}
 
 const MEALS_KEY = "meals";
 
@@ -26,7 +40,11 @@ function getMealsKey() {
 
 export const getMeals = async (): Promise<Meal[]> => {
   const data = await AsyncStorage.getItem(getMealsKey());
-  return data ? JSON.parse(data) : [];
+  if (!data) {
+    return [];
+  }
+  const parsed = JSON.parse(data) as Meal[];
+  return Array.isArray(parsed) ? parsed.map(normalizeMeal) : [];
 };
 
 export const getMealById = async (id: string): Promise<Meal | null> => {

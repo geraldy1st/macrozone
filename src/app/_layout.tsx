@@ -38,8 +38,11 @@ export default function RootLayout() {
                 <Stack.Screen name="welcome" />
                 <Stack.Screen name="(tabs)" />
                 <Stack.Screen name="settings" />
+                <Stack.Screen name="legal/[page]" />
                 <Stack.Screen name="profile-edit" />
                 <Stack.Screen name="u/[id]" />
+                <Stack.Screen name="users/search" />
+                <Stack.Screen name="users/blocked" />
                 <Stack.Screen name="favorite-meals" />
                 <Stack.Screen name="saved-community-meals" />
                 <Stack.Screen name="community/post/[id]" />

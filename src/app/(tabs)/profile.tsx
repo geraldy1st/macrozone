@@ -163,19 +163,42 @@ export default function ProfileScreen() {
           {displayName}
         </Text>
 
-        <TouchableOpacity
-          style={[
-            styles.shareProfileBtn,
-            { borderColor: colors.cardBorder, backgroundColor: colors.surface },
-          ]}
-          onPress={() => void handleShareProfile()}
-          testID="share-profile-btn"
-        >
-          <Ionicons name="share-outline" size={16} color={colors.accent} />
-          <Text style={[styles.shareProfileText, { color: colors.accent }]}>
-            {t("profile.shareButton")}
-          </Text>
-        </TouchableOpacity>
+        <View style={styles.profileActionsRow}>
+          <TouchableOpacity
+            style={[
+              styles.shareProfileBtn,
+              { borderColor: colors.cardBorder, backgroundColor: colors.surface },
+            ]}
+            onPress={() => void handleShareProfile()}
+            testID="share-profile-btn"
+          >
+            <Ionicons name="share-outline" size={16} color={colors.accent} />
+            <Text style={[styles.shareProfileText, { color: colors.accent }]}>
+              {t("profile.shareButton")}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.shareProfileBtn,
+              { borderColor: colors.cardBorder, backgroundColor: colors.surface },
+            ]}
+            onPress={() => {
+              if (!user) {
+                showToast(t("social.authRequiredFindPeople"), "info");
+                router.push("/login");
+                return;
+              }
+              router.push("/users/search" as Href);
+            }}
+            testID="find-people-btn"
+          >
+            <Ionicons name="person-add-outline" size={16} color={colors.accent} />
+            <Text style={[styles.shareProfileText, { color: colors.accent }]}>
+              {t("social.findPeople")}
+            </Text>
+          </TouchableOpacity>
+        </View>
 
         {profile.bio.trim() ? (
           <Text style={[styles.bio, { color: colors.textSecondary }]}>
@@ -378,8 +401,13 @@ function createStyles(colors: ThemeColors) {
       fontWeight: "800",
       letterSpacing: -0.3,
     },
+    profileActionsRow: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      justifyContent: "center",
+      gap: 8,
+    },
     shareProfileBtn: {
-      alignSelf: "center",
       flexDirection: "row",
       alignItems: "center",
       gap: 6,

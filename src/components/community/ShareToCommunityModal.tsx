@@ -70,13 +70,20 @@ export default function ShareToCommunityModal({
 
     try {
       const localProfile = await getUserProfile();
+      const remoteAvatar =
+        typeof user.user_metadata?.avatar_url === "string"
+          ? user.user_metadata.avatar_url
+          : typeof user.user_metadata?.picture === "string"
+            ? user.user_metadata.picture
+            : undefined;
+
       await upsertMyProfile({
         userId: user.id,
         displayName:
           localProfile.name.trim() ||
           user.email?.split("@")[0] ||
           "User",
-        avatarUrl: null,
+        ...(remoteAvatar !== undefined ? { avatarUrl: remoteAvatar } : {}),
       });
 
       await createPost(user.id, {

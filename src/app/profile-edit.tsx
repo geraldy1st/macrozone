@@ -217,13 +217,22 @@ export default function ProfileEditScreen() {
       };
       await setUserProfile(cleaned);
 
-      // Keep community author name in sync when signed in
+      // Keep community author name / remote avatar in sync when signed in
       if (user?.id && cleaned.name.trim()) {
         try {
+          const remoteAvatar =
+            cleaned.photoUri?.startsWith("http")
+              ? cleaned.photoUri
+              : typeof user.user_metadata?.avatar_url === "string"
+                ? user.user_metadata.avatar_url
+                : typeof user.user_metadata?.picture === "string"
+                  ? user.user_metadata.picture
+                  : undefined;
+
           await upsertMyProfile({
             userId: user.id,
             displayName: cleaned.name,
-            avatarUrl: null,
+            ...(remoteAvatar !== undefined ? { avatarUrl: remoteAvatar } : {}),
           });
         } catch {
           // Local save already succeeded — don't block UX on remote profile sync

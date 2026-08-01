@@ -200,9 +200,19 @@ export default function CommunityPostDetailScreen() {
       )}
 
       <Text style={[styles.mealName, { color: colors.text }]}>{post.meal_name}</Text>
-      <Text style={[styles.author, { color: colors.textSecondary }]}>
-        {t("community.byAuthor", { name: authorName })}
-      </Text>
+      <TouchableOpacity
+        disabled={!post.author_id}
+        onPress={() => {
+          if (post.author_id) {
+            router.push(`/u/${post.author_id}`);
+          }
+        }}
+        testID="community-post-author-link"
+      >
+        <Text style={[styles.author, { color: colors.primary }]}>
+          {t("community.byAuthor", { name: authorName })}
+        </Text>
+      </TouchableOpacity>
 
       <View style={styles.macroRow}>
         <MacroBox

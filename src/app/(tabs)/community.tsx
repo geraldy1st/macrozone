@@ -327,6 +327,11 @@ export default function CommunityScreen() {
               onImagePress={() =>
                 router.push(`/community/post/${item.id}` as Href)
               }
+              onAuthorPress={
+                item.author_id
+                  ? () => router.push(`/u/${item.author_id}` as Href)
+                  : undefined
+              }
               onDeletePress={
                 user && user.id === item.author_id
                   ? () => handleDelete(item.id)

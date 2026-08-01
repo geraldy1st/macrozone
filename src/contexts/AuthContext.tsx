@@ -1,8 +1,14 @@
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
+import { touchLastSeen } from "@/services/community";
 import { setStorageScope } from "@/storage/scopedKey";
 import { getAuthRedirectUri } from "@/utils/authRedirect";
 import { createSessionFromUrl } from "@/utils/authSession";
 import { deleteUserAccount } from "@/utils/deleteAccount";
+import {
+  isValidEmail,
+  normalizeEmail,
+  userHasEmailPasswordAuth,
+} from "@/utils/email";
 import type { Session, User } from "@supabase/supabase-js";
 import * as WebBrowser from "expo-web-browser";
 import {
@@ -14,6 +20,9 @@ import {
   useState,
   type ReactNode,
 } from "react";
+
+/** How often to refresh last_seen_at while the app is open. */
+const LAST_SEEN_INTERVAL_MS = 2 * 60 * 1000;
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -36,6 +45,9 @@ type AuthContextValue = {
   resetPasswordForEmail: (email: string) => Promise<void>;
   updatePassword: (password: string) => Promise<void>;
   changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
+  /** Secure email update (re-auth with password). Google-only accounts cannot use this. */
+  changeEmail: (newEmail: string, currentPassword: string) => Promise<void>;
+  canChangeEmailWithPassword: boolean;
   deleteAccount: () => Promise<void>;
   signOut: () => Promise<void>;
 };
@@ -76,6 +88,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       authListener.subscription.unsubscribe();
     };
   }, []);
+
+  // Pseudo-online presence via last_seen_at (not Realtime)
+  useEffect(() => {
+    if (!user?.id || !isSupabaseConfigured) {
+      return;
+    }
+
+    void touchLastSeen(user.id);
+    const interval = setInterval(() => {
+      void touchLastSeen(user.id);
+    }, LAST_SEEN_INTERVAL_MS);
+
+    return () => clearInterval(interval);
+  }, [user?.id]);
 
   const signInWithEmail = useCallback(async (email: string, password: string) => {
     if (!supabase) {
@@ -182,6 +208,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [reauthenticate, updatePassword],
   );
 
+  const changeEmail = useCallback(
+    async (newEmail: string, currentPassword: string) => {
+      if (!supabase || !user?.email) {
+        throw new Error("AUTH_NOT_CONFIGURED");
+      }
+
+      if (!userHasEmailPasswordAuth(user)) {
+        throw new Error("EMAIL_CHANGE_OAUTH_ONLY");
+      }
+
+      const normalized = normalizeEmail(newEmail);
+      if (!isValidEmail(normalized)) {
+        throw new Error("EMAIL_INVALID");
+      }
+
+      if (normalized === normalizeEmail(user.email)) {
+        throw new Error("EMAIL_UNCHANGED");
+      }
+
+      if (!currentPassword.trim()) {
+        throw new Error("EMAIL_PASSWORD_REQUIRED");
+      }
+
+      await reauthenticate(currentPassword);
+
+      const { error } = await supabase.auth.updateUser(
+        { email: normalized },
+        { emailRedirectTo: getAuthRedirectUri() },
+      );
+
+      if (error) {
+        throw error;
+      }
+    },
+    [reauthenticate, user],
+  );
+
   const signInWithOAuth = useCallback(async (provider: OAuthProvider) => {
     if (!supabase) {
       throw new Error("AUTH_NOT_CONFIGURED");
@@ -240,6 +303,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const canChangeEmailWithPassword = userHasEmailPasswordAuth(user);
+
   const value = useMemo(
     () => ({
       user,
@@ -253,6 +318,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       resetPasswordForEmail,
       updatePassword,
       changePassword,
+      changeEmail,
+      canChangeEmailWithPassword,
       deleteAccount,
       signOut,
     }),
@@ -267,6 +334,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       resetPasswordForEmail,
       updatePassword,
       changePassword,
+      changeEmail,
+      canChangeEmailWithPassword,
       deleteAccount,
       signOut,
     ],

@@ -1,4 +1,5 @@
 import RecipeAttribution from "@/components/RecipeAttribution";
+import StructuredRecipeForm from "@/components/StructuredRecipeForm";
 import { useAlert } from "@/contexts/AlertContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -6,6 +7,13 @@ import { useToast } from "@/contexts/ToastContext";
 import { useBottomContentPadding } from "@/hooks/useBottomContentPadding";
 import { getUserProfile } from "@/storage/profile";
 import { getMealById, updateMeal, type Meal } from "@/storage/meals";
+import {
+  emptyRecipeData,
+  formatRecipeDataAsText,
+  hasRecipeContent,
+  recipeDataFromLegacy,
+  type RecipeData,
+} from "@/types/recipe";
 import { analyzeRecipeText } from "@/utils/analyzeRecipe";
 import { getMealAiErrorMessage } from "@/utils/mealAiErrors";
 import { saveMealPhoto } from "@/utils/photos";
@@ -47,7 +55,7 @@ export default function EditMealScreen() {
   const [carbs, setCarbs] = useState("");
   const [fat, setFat] = useState("");
   const [description, setDescription] = useState("");
-  const [recipe, setRecipe] = useState("");
+  const [recipeData, setRecipeData] = useState<RecipeData>(emptyRecipeData());
   const [recipeSource, setRecipeSource] = useState<Meal["recipeSource"]>();
   const [recipeAuthorName, setRecipeAuthorName] = useState<string>();
   const [photoUri, setPhotoUri] = useState<string | null>(null);
@@ -79,7 +87,9 @@ export default function EditMealScreen() {
     setCarbs(String(meal.carbs));
     setFat(String(meal.fat));
     setDescription(meal.description ?? "");
-    setRecipe(meal.recipe ?? "");
+    setRecipeData(
+      meal.recipeData ?? recipeDataFromLegacy(meal.recipe),
+    );
     setRecipeSource(meal.recipeSource);
     setRecipeAuthorName(meal.recipeAuthorName);
     setPhotoUri(meal.photoUri ?? null);
@@ -91,8 +101,7 @@ export default function EditMealScreen() {
     }, [loadMeal]),
   );
 
-  const handleRecipeChange = (nextRecipe: string) => {
-    setRecipe(nextRecipe);
+  const markRecipeAsUserEdited = () => {
     setRecipeSource("user");
     void getUserProfile().then((profile) => {
       setRecipeAuthorName(
@@ -101,8 +110,15 @@ export default function EditMealScreen() {
     });
   };
 
+  const handleRecipeDataChange = (next: RecipeData) => {
+    setRecipeData(next);
+    markRecipeAsUserEdited();
+  };
+
+  const recipeTextForAi = formatRecipeDataAsText(recipeData);
+
   const handleAnalyzeRecipe = async () => {
-    if (!recipe.trim() || !session?.access_token) {
+    if (!recipeTextForAi.trim() || !session?.access_token) {
       return;
     }
 
@@ -111,13 +127,16 @@ export default function EditMealScreen() {
     try {
       const language = i18n.language === "fr" ? "fr" : "en";
       const analysis = await analyzeRecipeText(
-        recipe.trim(),
+        recipeTextForAi.trim(),
         language,
         session.access_token,
         name.trim() || undefined,
       );
 
-      setRecipe(analysis.recipe);
+      setRecipeData((current) => ({
+        ...current,
+        notes: analysis.recipe,
+      }));
       setCalories(String(analysis.calories));
       setProtein(String(analysis.protein));
       setCarbs(String(analysis.carbs));
@@ -170,6 +189,11 @@ export default function EditMealScreen() {
         savedPhotoUri = null;
       }
 
+      const hasRecipe = hasRecipeContent(recipeData);
+      const recipeFlat = hasRecipe
+        ? formatRecipeDataAsText(recipeData) || undefined
+        : undefined;
+
       await updateMeal(id, {
         name: name.trim(),
         calories: Number(calories),
@@ -177,10 +201,11 @@ export default function EditMealScreen() {
         carbs: Number(carbs) || 0,
         fat: Number(fat) || 0,
         description: description.trim() || undefined,
-        recipe: recipe.trim() || undefined,
-        recipeSource: recipe.trim() ? recipeSource : undefined,
+        recipe: recipeFlat,
+        recipeData: hasRecipe ? recipeData : undefined,
+        recipeSource: hasRecipe ? recipeSource : undefined,
         recipeAuthorName:
-          recipe.trim() && recipeSource === "user" ? recipeAuthorName : undefined,
+          hasRecipe && recipeSource === "user" ? recipeAuthorName : undefined,
         photoUri: savedPhotoUri,
       });
 
@@ -296,6 +321,9 @@ export default function EditMealScreen() {
           />
         </View>
 
+        <Text style={[styles.fieldHint, { color: colors.textSecondary }]}>
+          {t("addMeal.descriptionHint")}
+        </Text>
         <TextInput
           style={[styles.input, styles.multiline, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.cardBorder }]}
           placeholder={t("addMeal.description")}
@@ -303,26 +331,25 @@ export default function EditMealScreen() {
           value={description}
           onChangeText={setDescription}
           multiline
+          testID="edit-meal-description"
         />
 
-        <TextInput
-          style={[styles.input, styles.multiline, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.cardBorder }]}
-          placeholder={t("addMeal.recipe")}
-          placeholderTextColor={colors.textSecondary}
-          value={recipe}
-          onChangeText={handleRecipeChange}
-          multiline
-          editable={!isAnalyzingRecipe}
+        <StructuredRecipeForm
+          value={recipeData}
+          onChange={handleRecipeDataChange}
+          colors={colors}
+          disabled={isAnalyzingRecipe}
+          testIDPrefix="edit-recipe"
         />
 
-        {recipe.trim() ? (
+        {hasRecipeContent(recipeData) ? (
           <RecipeAttribution
             recipeSource={recipeSource}
             recipeAuthorName={recipeAuthorName}
           />
         ) : null}
 
-        {canUseAi && recipe.trim().length >= 10 && (
+        {canUseAi && recipeTextForAi.trim().length >= 10 && (
           <TouchableOpacity
             style={[styles.recipeAiButton, { borderColor: colors.cardBorder, backgroundColor: colors.card }]}
             onPress={handleAnalyzeRecipe}
@@ -434,6 +461,12 @@ function createScreenStyles(colors: ReturnType<typeof useTheme>["colors"]) {
     },
     mutedText: {
       fontSize: 13,
+    },
+    fieldHint: {
+      fontSize: 12,
+      fontWeight: "500",
+      marginTop: 12,
+      marginBottom: -8,
     },
     input: {
       padding: 16,

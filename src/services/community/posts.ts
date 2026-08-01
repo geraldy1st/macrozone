@@ -222,6 +222,50 @@ export async function fetchFeed(options?: {
   return { posts, nextCursor };
 }
 
+/** Fetch public posts by author (newest first), for profile grid. */
+export async function fetchPostsByAuthor(
+  authorId: string,
+  options?: { limit?: number; before?: string | null },
+): Promise<FeedPage> {
+  if (!supabase) {
+    throw new Error("SUPABASE_NOT_CONFIGURED");
+  }
+
+  const limit = options?.limit ?? COMMUNITY_FEED_PAGE_SIZE;
+
+  let query = supabase
+    .from("posts")
+    .select(
+      `
+      *,
+      author:profiles!author_id ( id, display_name, avatar_url )
+    `,
+    )
+    .eq("author_id", authorId)
+    .is("deleted_at", null)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (options?.before) {
+    query = query.lt("created_at", options.before);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    throw error;
+  }
+
+  const posts = ((data ?? []) as Record<string, unknown>[]).map((row) =>
+    mapFeedPost(row),
+  );
+
+  const nextCursor =
+    posts.length === limit ? posts[posts.length - 1]?.created_at ?? null : null;
+
+  return { posts, nextCursor };
+}
+
 /** Fetch a single public post by id. */
 export async function fetchPostById(postId: string): Promise<FeedPost | null> {
   if (!supabase) {

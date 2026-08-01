@@ -1,6 +1,8 @@
 import FavoriteStar from "@/components/FavoriteStar";
-import RecipeAttribution from "@/components/RecipeAttribution";
+import LinkifiedText from "@/components/LinkifiedText";
 import MealShareCard from "@/components/MealShareCard";
+import RecipeAttribution from "@/components/RecipeAttribution";
+import RecipeDisplay from "@/components/RecipeDisplay";
 import { useAlert } from "@/contexts/AlertContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useToast } from "@/contexts/ToastContext";
@@ -9,6 +11,7 @@ import { useThemedStyles } from "@/hooks/useThemedStyles";
 import { isFavorite, toggleFavorite } from "@/storage/favorites";
 import { getMealById, type Meal } from "@/storage/meals";
 import type { ThemeColors } from "@/styles/themes";
+import { hasRecipeContent } from "@/types/recipe";
 import {
   addFavoriteMealForToday,
   checkFavoriteDuplicateToday,
@@ -189,19 +192,32 @@ export default function MealDetailScreen() {
           <Text style={[styles.sectionTitle, { color: colors.text }]}>
             {t("mealDetail.description")}
           </Text>
-          <Text style={[styles.sectionBody, { color: colors.textSecondary }]}>
-            {meal.description?.trim() || t("mealDetail.noDescription")}
-          </Text>
+          {meal.description?.trim() ? (
+            <LinkifiedText
+              text={meal.description.trim()}
+              style={[styles.sectionBody, { color: colors.textSecondary }]}
+              linkStyle={{ color: colors.primary }}
+              testID="meal-detail-description"
+            />
+          ) : (
+            <Text style={[styles.sectionBody, { color: colors.textSecondary }]}>
+              {t("mealDetail.noDescription")}
+            </Text>
+          )}
         </View>
 
         <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>
             {t("mealDetail.recipe")}
           </Text>
-          <Text style={[styles.sectionBody, { color: colors.textSecondary }]}>
-            {meal.recipe?.trim() || t("mealDetail.noRecipe")}
-          </Text>
-          {meal.recipe?.trim() ? (
+          <RecipeDisplay
+            recipeData={meal.recipeData}
+            legacyRecipe={meal.recipe}
+            mealCalories={meal.calories}
+            colors={colors}
+            emptyLabel={t("mealDetail.noRecipe")}
+          />
+          {hasRecipeContent(meal.recipeData, meal.recipe) ? (
             <RecipeAttribution
               recipeSource={meal.recipeSource}
               recipeAuthorName={meal.recipeAuthorName}

@@ -1,11 +1,19 @@
 import { ANALYZE_API_URL } from "@/constants/api";
 import { useAuth } from "@/contexts/AuthContext";
+import { setPendingCelebration } from "@/storage/celebration";
 import { addMeal } from "@/storage/meals";
 import ShareToCommunityModal, {
   type ShareMealPayload,
 } from "@/components/community/ShareToCommunityModal";
 import RecipeAttribution from "@/components/RecipeAttribution";
+import StructuredRecipeForm from "@/components/StructuredRecipeForm";
 import { getUserProfile } from "@/storage/profile";
+import {
+  emptyRecipeData,
+  formatRecipeDataAsText,
+  hasRecipeContent,
+  type RecipeData,
+} from "@/types/recipe";
 import { analyzeMealPhoto } from "@/utils/analyzeMeal";
 import { analyzeRecipeText } from "@/utils/analyzeRecipe";
 import { getMealAiErrorMessage } from "@/utils/mealAiErrors";
@@ -56,7 +64,7 @@ export default function AddMealScreen() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [description, setDescription] = useState("");
-  const [recipe, setRecipe] = useState("");
+  const [recipeData, setRecipeData] = useState<RecipeData>(emptyRecipeData());
   const [recipeSource, setRecipeSource] = useState<Meal["recipeSource"]>();
   const [recipeAuthorName, setRecipeAuthorName] = useState<string>();
   const [isAnalyzingRecipe, setIsAnalyzingRecipe] = useState(false);
@@ -65,7 +73,7 @@ export default function AddMealScreen() {
   const [shareVisible, setShareVisible] = useState(false);
   const [sharePayload, setSharePayload] = useState<ShareMealPayload | null>(null);
   const scrollRef = useRef<ScrollView>(null);
-  const recipeInputRef = useRef<TextInput>(null);
+  const recipeNotesRef = useRef<TextInput>(null);
 
   useEffect(() => {
     const showEvent = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
@@ -98,14 +106,13 @@ export default function AddMealScreen() {
     setFat("");
     setPhotoUri(null);
     setDescription("");
-    setRecipe("");
+    setRecipeData(emptyRecipeData());
     setRecipeSource(undefined);
     setRecipeAuthorName(undefined);
     setHasAiResult(false);
   };
 
-  const handleRecipeChange = (nextRecipe: string) => {
-    setRecipe(nextRecipe);
+  const markRecipeAsUserEdited = () => {
     setRecipeSource("user");
     void getUserProfile().then((profile) => {
       setRecipeAuthorName(
@@ -113,6 +120,13 @@ export default function AddMealScreen() {
       );
     });
   };
+
+  const handleRecipeDataChange = (next: RecipeData) => {
+    setRecipeData(next);
+    markRecipeAsUserEdited();
+  };
+
+  const recipeTextForAi = formatRecipeDataAsText(recipeData);
 
   const runAnalysis = async (uri: string) => {
     if (!ANALYZE_API_URL) {
@@ -152,7 +166,10 @@ export default function AddMealScreen() {
         setDescription(analysis.description);
       }
       if (analysis.recipe) {
-        setRecipe(analysis.recipe);
+        setRecipeData((current) => ({
+          ...current,
+          notes: analysis.recipe,
+        }));
         setRecipeSource("ai");
         setRecipeAuthorName(undefined);
       }
@@ -224,7 +241,7 @@ export default function AddMealScreen() {
   };
 
   const handleAnalyzeRecipe = async () => {
-    if (!recipe.trim() || !session?.access_token) {
+    if (!recipeTextForAi.trim() || !session?.access_token) {
       return;
     }
 
@@ -233,13 +250,16 @@ export default function AddMealScreen() {
     try {
       const language = i18n.language === "fr" ? "fr" : "en";
       const analysis = await analyzeRecipeText(
-        recipe.trim(),
+        recipeTextForAi.trim(),
         language,
         session.access_token,
         name.trim() || undefined,
       );
 
-      setRecipe(analysis.recipe);
+      setRecipeData((current) => ({
+        ...current,
+        notes: analysis.recipe,
+      }));
       setCalories(String(analysis.calories));
       setProtein(String(analysis.protein));
       setCarbs(String(analysis.carbs));
@@ -260,6 +280,7 @@ export default function AddMealScreen() {
       return null;
     }
 
+    const hasRecipe = hasRecipeContent(recipeData);
     return {
       mealName: name.trim(),
       calories: Number(calories) || 0,
@@ -267,7 +288,7 @@ export default function AddMealScreen() {
       carbs: Number(carbs) || 0,
       fat: Number(fat) || 0,
       description: description.trim() || undefined,
-      recipe: recipe.trim() || undefined,
+      recipe: hasRecipe ? formatRecipeDataAsText(recipeData) || undefined : undefined,
       localImageUri: photoUri,
     };
   };
@@ -313,6 +334,11 @@ export default function AddMealScreen() {
     setIsSaving(true);
 
     try {
+      const hasRecipe = hasRecipeContent(recipeData);
+      const recipeFlat = hasRecipe
+        ? formatRecipeDataAsText(recipeData) || undefined
+        : undefined;
+
       const mealInput = {
         name: name.trim(),
         calories: Number(calories),
@@ -320,15 +346,17 @@ export default function AddMealScreen() {
         carbs: Number(carbs) || 0,
         fat: Number(fat) || 0,
         description: description.trim() || undefined,
-        recipe: recipe.trim() || undefined,
-        recipeSource: recipe.trim() ? recipeSource : undefined,
+        recipe: recipeFlat,
+        recipeData: hasRecipe ? recipeData : undefined,
+        recipeSource: hasRecipe ? recipeSource : undefined,
         recipeAuthorName:
-          recipe.trim() && recipeSource === "user"
+          hasRecipe && recipeSource === "user"
             ? recipeAuthorName
             : undefined,
       };
 
       await addMeal(mealInput, photoUri ?? undefined);
+      await setPendingCelebration();
 
       const canShare =
         Boolean(user) && (hasAiResult || Boolean(photoUri) || Boolean(name.trim()));
@@ -536,6 +564,9 @@ export default function AddMealScreen() {
         />
       </View>
 
+      <Text style={[styles.fieldHint, { color: colors.textSecondary }]}>
+        {t("addMeal.descriptionHint")}
+      </Text>
       <TextInput
         style={[styles.input, styles.multiline]}
         placeholder={t("addMeal.description")}
@@ -543,33 +574,32 @@ export default function AddMealScreen() {
         value={description}
         onChangeText={setDescription}
         multiline
+        testID="meal-description-input"
       />
 
-      <TextInput
-        ref={recipeInputRef}
-        style={[styles.input, styles.multiline]}
-        placeholder={t("addMeal.recipe")}
-        placeholderTextColor={colors.textSecondary}
-        value={recipe}
-        onChangeText={handleRecipeChange}
-        onFocus={scrollRecipeIntoView}
-        multiline
-        editable={!isAnalyzingRecipe}
-        testID="meal-recipe-input"
+      <StructuredRecipeForm
+        value={recipeData}
+        onChange={handleRecipeDataChange}
+        colors={colors}
+        disabled={isAnalyzingRecipe}
+        notesInputRef={recipeNotesRef}
+        onNotesFocus={scrollRecipeIntoView}
+        testIDPrefix="meal-recipe"
       />
 
-      {recipe.trim() ? (
+      {hasRecipeContent(recipeData) ? (
         <RecipeAttribution
           recipeSource={recipeSource}
           recipeAuthorName={recipeAuthorName}
         />
       ) : null}
 
-      {canUseAiScan && recipe.trim().length >= 10 && (
+      {canUseAiScan && recipeTextForAi.trim().length >= 10 && (
         <TouchableOpacity
           style={[styles.recipeAiButton, { borderColor: colors.cardBorder, backgroundColor: colors.card }]}
           onPress={handleAnalyzeRecipe}
           disabled={isAnalyzingRecipe || isAnalyzing}
+          testID="meal-analyze-recipe-btn"
         >
           {isAnalyzingRecipe ? (
             <ActivityIndicator color={colors.accent} />
@@ -799,6 +829,12 @@ function createScreenStyles(colors: ReturnType<typeof useTheme>["colors"]) {
   multiline: {
     minHeight: 100,
     textAlignVertical: "top",
+  },
+  fieldHint: {
+    fontSize: 12,
+    fontWeight: "500",
+    marginTop: 12,
+    marginBottom: -4,
   },
   recipeAiButton: {
     flexDirection: "row",

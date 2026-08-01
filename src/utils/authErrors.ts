@@ -5,25 +5,29 @@ export type AuthFlowErrorCode =
   | "OAUTH_CANCELLED"
   | "OAUTH_SESSION_MISSING"
   | "AUTH_NOT_CONFIGURED"
-  | "OAUTH_URL_MISSING";
+  | "OAUTH_URL_MISSING"
+  | "EMAIL_CHANGE_OAUTH_ONLY"
+  | "EMAIL_INVALID"
+  | "EMAIL_UNCHANGED"
+  | "EMAIL_PASSWORD_REQUIRED"
+  | "EMAIL_ALREADY_REGISTERED";
+
+const SIMPLE_ERROR_CODES: AuthFlowErrorCode[] = [
+  "OAUTH_CANCELLED",
+  "OAUTH_SESSION_MISSING",
+  "AUTH_NOT_CONFIGURED",
+  "OAUTH_URL_MISSING",
+  "EMAIL_CHANGE_OAUTH_ONLY",
+  "EMAIL_INVALID",
+  "EMAIL_UNCHANGED",
+  "EMAIL_PASSWORD_REQUIRED",
+];
 
 export function getAuthErrorCode(error: unknown): AuthFlowErrorCode | null {
   if (!(error instanceof AuthError)) {
     if (error instanceof Error) {
-      if (error.message === "OAUTH_CANCELLED") {
-        return "OAUTH_CANCELLED";
-      }
-
-      if (error.message === "OAUTH_SESSION_MISSING") {
-        return "OAUTH_SESSION_MISSING";
-      }
-
-      if (error.message === "AUTH_NOT_CONFIGURED") {
-        return "AUTH_NOT_CONFIGURED";
-      }
-
-      if (error.message === "OAUTH_URL_MISSING") {
-        return "OAUTH_URL_MISSING";
+      if (SIMPLE_ERROR_CODES.includes(error.message as AuthFlowErrorCode)) {
+        return error.message as AuthFlowErrorCode;
       }
     }
 
@@ -38,6 +42,15 @@ export function getAuthErrorCode(error: unknown): AuthFlowErrorCode | null {
 
   if (message.includes("email not confirmed")) {
     return "EMAIL_NOT_CONFIRMED";
+  }
+
+  if (
+    error.code === "email_exists" ||
+    message.includes("already been registered") ||
+    message.includes("already registered") ||
+    message.includes("user already registered")
+  ) {
+    return "EMAIL_ALREADY_REGISTERED";
   }
 
   return null;

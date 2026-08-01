@@ -21,6 +21,7 @@ type PostCardProps = {
   onCommentPress?: () => void;
   onSavePress?: () => void;
   onImagePress?: () => void;
+  onAuthorPress?: () => void;
   onDeletePress?: () => void;
   likeDisabled?: boolean;
   saveDisabled?: boolean;
@@ -36,6 +37,7 @@ export default function PostCard({
   onCommentPress,
   onSavePress,
   onImagePress,
+  onAuthorPress,
   onDeletePress,
   likeDisabled,
   saveDisabled,
@@ -75,25 +77,37 @@ export default function PostCard({
       testID={cardId}
     >
       <View style={styles.header}>
-        <View style={[styles.avatar, { backgroundColor: colors.surface }]}>
-          {post.author?.avatar_url ? (
-            <Image
-              source={{ uri: post.author.avatar_url }}
-              style={styles.avatarImage}
-              contentFit="cover"
-            />
-          ) : (
-            <Ionicons name="person" size={18} color={colors.textSecondary} />
-          )}
-        </View>
-        <View style={styles.headerText}>
-          <Text style={[styles.author, { color: colors.text }]} numberOfLines={1}>
-            {authorName}
-          </Text>
-          <Text style={[styles.meta, { color: colors.textSecondary }]}>
-            {relative}
-          </Text>
-        </View>
+        <TouchableOpacity
+          style={styles.authorPressable}
+          onPress={onAuthorPress}
+          disabled={!onAuthorPress}
+          activeOpacity={onAuthorPress ? 0.7 : 1}
+          testID={
+            testIndex !== undefined
+              ? `community-post-author-index-${testIndex}`
+              : `community-post-author-${post.id}`
+          }
+        >
+          <View style={[styles.avatar, { backgroundColor: colors.surface }]}>
+            {post.author?.avatar_url ? (
+              <Image
+                source={{ uri: post.author.avatar_url }}
+                style={styles.avatarImage}
+                contentFit="cover"
+              />
+            ) : (
+              <Ionicons name="person" size={18} color={colors.textSecondary} />
+            )}
+          </View>
+          <View style={styles.headerText}>
+            <Text style={[styles.author, { color: colors.text }]} numberOfLines={1}>
+              {authorName}
+            </Text>
+            <Text style={[styles.meta, { color: colors.textSecondary }]}>
+              {relative}
+            </Text>
+          </View>
+        </TouchableOpacity>
         {isOwner && onDeletePress ? (
           <TouchableOpacity
             onPress={onDeletePress}
@@ -227,6 +241,13 @@ function createStyles(colors: ReturnType<typeof useTheme>["colors"]) {
       flexDirection: "row",
       alignItems: "center",
       gap: 10,
+    },
+    authorPressable: {
+      flex: 1,
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 10,
+      minWidth: 0,
     },
     avatar: {
       width: 36,

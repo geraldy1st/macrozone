@@ -1,4 +1,4 @@
-/** Community feed types (A006) — aligned with supabase/migrations. */
+/** Community feed + social types — aligned with supabase/migrations. */
 
 export type CommunityProfile = {
   id: string;
@@ -6,6 +6,16 @@ export type CommunityProfile = {
   avatar_url: string | null;
   created_at: string;
   updated_at: string;
+  followers_count?: number;
+  following_count?: number;
+  last_seen_at?: string | null;
+};
+
+/** Profile row for search / public cards with optional relation flags. */
+export type ProfileListItem = CommunityProfile & {
+  is_online?: boolean;
+  is_following?: boolean;
+  is_blocked?: boolean;
 };
 
 export type CommunityPost = {
@@ -70,8 +80,18 @@ export type FeedPage = {
   nextCursor: string | null;
 };
 
+export type PublicProfileView = {
+  profile: CommunityProfile;
+  isFollowing: boolean;
+  isBlocked: boolean;
+  isSelf: boolean;
+};
+
 export const COMMUNITY_FEED_PAGE_SIZE = 20;
 export const MEAL_POSTS_BUCKET = "meal-posts";
 export const MAX_CAPTION_LENGTH = 280;
 export const MAX_COMMENT_LENGTH = 500;
 export const MAX_RECIPE_EXCERPT_LENGTH = 500;
+/** Consider a user "online" if last_seen within this window. */
+export const ONLINE_THRESHOLD_MS = 5 * 60 * 1000;
+export const PROFILE_SEARCH_PAGE_SIZE = 20;

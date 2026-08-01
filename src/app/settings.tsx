@@ -19,6 +19,7 @@ import { useBottomContentPadding } from "@/hooks/useBottomContentPadding";
 import { useThemedStyles } from "@/hooks/useThemedStyles";
 import { scopedKey } from "@/storage/scopedKey";
 import type { ThemeColors, ThemeMode } from "@/styles/themes";
+import { getAuthErrorCode } from "@/utils/authErrors";
 import { DeleteAccountError } from "@/utils/deleteAccount";
 import {
   cancelMealReminders,
@@ -61,7 +62,13 @@ export default function SettingsScreen() {
   const { colors, mode, setMode } = useTheme();
   const { showToast } = useToast();
   const { showAlert } = useAlert();
-  const { user, deleteAccount, changePassword } = useAuth();
+  const {
+    user,
+    deleteAccount,
+    changePassword,
+    changeEmail,
+    canChangeEmailWithPassword,
+  } = useAuth();
   const styles = useThemedStyles(createStyles);
   const bottomPadding = useBottomContentPadding(20, false);
   const currentLanguage =
@@ -69,10 +76,14 @@ export default function SettingsScreen() {
       "en") as AppLanguage;
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [isChangingEmail, setIsChangingEmail] = useState(false);
   const [showPasswordForm, setShowPasswordForm] = useState(false);
+  const [showEmailForm, setShowEmailForm] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [newEmail, setNewEmail] = useState("");
+  const [emailPassword, setEmailPassword] = useState("");
   const [goals, setGoals] = useState<Record<keyof MacroGoals, string>>({
     calories: String(defaultMacroGoals.calories),
     protein: String(defaultMacroGoals.protein),
@@ -159,6 +170,59 @@ export default function SettingsScreen() {
       });
     } finally {
       setIsChangingPassword(false);
+    }
+  };
+
+  const handleChangeEmail = async () => {
+    if (!canChangeEmailWithPassword) {
+      showAlert({
+        title: t("auth.errorTitle"),
+        message: t("settings.email.oauthOnly"),
+      });
+      return;
+    }
+
+    if (!newEmail.trim() || !emailPassword.trim()) {
+      showAlert({
+        title: t("auth.errorTitle"),
+        message: t("settings.email.missingFields"),
+      });
+      return;
+    }
+
+    setIsChangingEmail(true);
+
+    try {
+      await changeEmail(newEmail, emailPassword);
+      setNewEmail("");
+      setEmailPassword("");
+      setShowEmailForm(false);
+      showAlert({
+        title: t("settings.email.successTitle"),
+        message: t("settings.email.successMessage"),
+      });
+    } catch (error) {
+      const code = getAuthErrorCode(error);
+      let message = t("settings.email.error");
+
+      if (code === "EMAIL_INVALID") {
+        message = t("settings.email.invalid");
+      } else if (code === "EMAIL_UNCHANGED") {
+        message = t("settings.email.unchanged");
+      } else if (code === "EMAIL_CHANGE_OAUTH_ONLY") {
+        message = t("settings.email.oauthOnly");
+      } else if (code === "EMAIL_ALREADY_REGISTERED") {
+        message = t("settings.email.alreadyUsed");
+      } else if (code === "EMAIL_PASSWORD_REQUIRED") {
+        message = t("settings.email.missingFields");
+      }
+
+      showAlert({
+        title: t("auth.errorTitle"),
+        message,
+      });
+    } finally {
+      setIsChangingEmail(false);
     }
   };
 
@@ -379,10 +443,31 @@ export default function SettingsScreen() {
               testID="account-edit-profile-btn"
             />
             <AccountRow
+              icon="mail-outline"
+              label={t("settings.email.title")}
+              colors={colors}
+              onPress={() => {
+                if (!canChangeEmailWithPassword) {
+                  showAlert({
+                    title: t("settings.email.title"),
+                    message: t("settings.email.oauthOnly"),
+                  });
+                  return;
+                }
+                setShowEmailForm((current) => !current);
+                setShowPasswordForm(false);
+              }}
+              testID="account-change-email-btn"
+              trailing={user.email ?? undefined}
+            />
+            <AccountRow
               icon="key-outline"
               label={t("settings.password.title")}
               colors={colors}
-              onPress={() => setShowPasswordForm((current) => !current)}
+              onPress={() => {
+                setShowPasswordForm((current) => !current);
+                setShowEmailForm(false);
+              }}
               testID="account-change-password-btn"
             />
             <AccountRow
@@ -395,7 +480,74 @@ export default function SettingsScreen() {
               testID="account-subscription-btn"
               trailing={t("settings.account.comingSoon")}
             />
+            <AccountRow
+              icon="ban-outline"
+              label={t("social.blockedUsers")}
+              colors={colors}
+              onPress={() => router.push("/users/blocked" as Href)}
+              testID="account-blocked-users-btn"
+            />
           </View>
+
+          {showEmailForm && canChangeEmailWithPassword ? (
+            <View
+              style={[
+                styles.passwordCard,
+                { backgroundColor: colors.card, borderColor: colors.cardBorder },
+              ]}
+            >
+              <Text style={[styles.description, { color: colors.textSecondary, marginBottom: 0 }]}>
+                {t("settings.email.description")}
+              </Text>
+              <Text style={[styles.currentEmail, { color: colors.text }]}>
+                {t("settings.email.current", { email: user.email })}
+              </Text>
+              <TextInput
+                style={[
+                  styles.emailInput,
+                  {
+                    backgroundColor: colors.surface,
+                    color: colors.text,
+                    borderColor: colors.cardBorder,
+                  },
+                ]}
+                placeholder={t("settings.email.next")}
+                placeholderTextColor={colors.textSecondary}
+                value={newEmail}
+                onChangeText={setNewEmail}
+                autoCapitalize="none"
+                keyboardType="email-address"
+                textContentType="emailAddress"
+                autoCorrect={false}
+                testID="settings-new-email"
+              />
+              <PasswordInput
+                placeholder={t("settings.email.passwordConfirm")}
+                value={emailPassword}
+                onChangeText={setEmailPassword}
+                textContentType="password"
+                testID="settings-email-password"
+              />
+              <TouchableOpacity
+                style={[
+                  styles.saveButton,
+                  { backgroundColor: colors.accent },
+                  isChangingEmail && styles.deleteButtonDisabled,
+                ]}
+                onPress={() => void handleChangeEmail()}
+                disabled={isChangingEmail}
+                testID="settings-change-email-btn"
+              >
+                {isChangingEmail ? (
+                  <ActivityIndicator color={colors.background} />
+                ) : (
+                  <Text style={[styles.saveButtonText, { color: colors.background }]}>
+                    {t("settings.email.submit")}
+                  </Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          ) : null}
 
           {showPasswordForm ? (
             <View
@@ -473,6 +625,35 @@ export default function SettingsScreen() {
           </TouchableOpacity>
         </>
       )}
+
+      <View style={styles.legalLinks}>
+        <TouchableOpacity
+          onPress={() => router.push("/legal/terms" as Href)}
+          testID="legal-terms-link"
+        >
+          <Text style={[styles.legalLinkText, { color: colors.primary }]}>
+            {t("legal.termsLink")}
+          </Text>
+        </TouchableOpacity>
+        <Text style={{ color: colors.textSecondary }}>·</Text>
+        <TouchableOpacity
+          onPress={() => router.push("/legal/privacy" as Href)}
+          testID="legal-privacy-link"
+        >
+          <Text style={[styles.legalLinkText, { color: colors.primary }]}>
+            {t("legal.privacyLink")}
+          </Text>
+        </TouchableOpacity>
+        <Text style={{ color: colors.textSecondary }}>·</Text>
+        <TouchableOpacity
+          onPress={() => router.push("/legal/acknowledgements" as Href)}
+          testID="legal-ack-link"
+        >
+          <Text style={[styles.legalLinkText, { color: colors.primary }]}>
+            {t("legal.acknowledgementsLink")}
+          </Text>
+        </TouchableOpacity>
+      </View>
     </ScrollView>
   );
 }
@@ -636,6 +817,17 @@ function createStyles(colors: ThemeColors) {
       gap: 12,
       marginBottom: 8,
     },
+    currentEmail: {
+      fontSize: 13,
+      fontWeight: "600",
+    },
+    emailInput: {
+      padding: 14,
+      borderRadius: 10,
+      fontSize: 16,
+      fontWeight: "500",
+      borderWidth: 1,
+    },
     deleteButton: {
       borderRadius: 12,
       padding: 18,
@@ -651,6 +843,21 @@ function createStyles(colors: ThemeColors) {
     deleteButtonText: {
       fontSize: 16,
       fontWeight: "700",
+    },
+    legalLinks: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 8,
+      marginTop: 24,
+      marginBottom: 12,
+      paddingHorizontal: 8,
+    },
+    legalLinkText: {
+      fontSize: 13,
+      fontWeight: "600",
+      textDecorationLine: "underline",
     },
   });
 }

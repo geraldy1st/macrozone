@@ -15,6 +15,8 @@ const AUTH_FLOW_ROUTES = new Set([
   "u",
   // Community post detail (readable by guests)
   "community",
+  // Legal pages (terms / privacy)
+  "legal",
 ]);
 
 export default function NavigationGuard() {
