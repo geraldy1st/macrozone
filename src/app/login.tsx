@@ -3,29 +3,33 @@ import PasswordInput from "@/components/PasswordInput";
 import { useAlert } from "@/contexts/AlertContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
-import { setAuthenticatedOnboarding, setGuestOnboarding } from "@/storage/onboarding";
+import {
+    setAuthenticatedOnboarding,
+    setGuestOnboarding,
+} from "@/storage/onboarding";
 import { getAuthErrorCode } from "@/utils/authErrors";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 
 export default function LoginScreen() {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const { showAlert } = useAlert();
-  const { isConfigured, signInWithEmail, signInWithOAuth } = useAuth();
+  // ↓ on récupère maintenant signInWithGoogle
+  const { isConfigured, signInWithEmail, signInWithGoogle } = useAuth();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -41,7 +45,8 @@ export default function LoginScreen() {
     setIsGoogleLoading(true);
 
     try {
-      await signInWithOAuth("google");
+      // ↓ on utilise maintenant la méthode native
+      await signInWithGoogle();
       await completeAuth();
     } catch (error) {
       const errorCode = getAuthErrorCode(error);
@@ -104,7 +109,10 @@ export default function LoginScreen() {
         <AppLogo size={64} />
         <Text style={styles.title}>{t("auth.notConfiguredTitle")}</Text>
         <Text style={styles.subtitle}>{t("auth.notConfiguredMessage")}</Text>
-        <TouchableOpacity style={styles.secondaryButton} onPress={() => router.back()}>
+        <TouchableOpacity
+          style={styles.secondaryButton}
+          onPress={() => router.back()}
+        >
           <Text style={styles.secondaryButtonText}>{t("auth.back")}</Text>
         </TouchableOpacity>
       </View>
@@ -152,11 +160,16 @@ export default function LoginScreen() {
             onPress={() => router.push("/forgot-password")}
             testID="auth-forgot-password-btn"
           >
-            <Text style={styles.forgotPasswordText}>{t("auth.forgotPassword")}</Text>
+            <Text style={styles.forgotPasswordText}>
+              {t("auth.forgotPassword")}
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.primaryButton, isSubmitting && styles.buttonDisabled]}
+            style={[
+              styles.primaryButton,
+              isSubmitting && styles.buttonDisabled,
+            ]}
             onPress={handleEmailAuth}
             disabled={isSubmitting}
             testID="auth-submit-btn"
@@ -207,7 +220,9 @@ export default function LoginScreen() {
           }}
           testID="auth-guest-btn"
         >
-          <Text style={styles.guestButtonText}>{t("auth.continueAsGuest")}</Text>
+          <Text style={styles.guestButtonText}>
+            {t("auth.continueAsGuest")}
+          </Text>
         </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>

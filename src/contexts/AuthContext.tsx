@@ -5,20 +5,21 @@ import { getAuthRedirectUri } from "@/utils/authRedirect";
 import { createSessionFromUrl } from "@/utils/authSession";
 import { deleteUserAccount } from "@/utils/deleteAccount";
 import {
-  isValidEmail,
-  normalizeEmail,
-  userHasEmailPasswordAuth,
+    isValidEmail,
+    normalizeEmail,
+    userHasEmailPasswordAuth,
 } from "@/utils/email";
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import type { Session, User } from "@supabase/supabase-js";
 import * as WebBrowser from "expo-web-browser";
 import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-  type ReactNode,
+    createContext,
+    useCallback,
+    useContext,
+    useEffect,
+    useMemo,
+    useState,
+    type ReactNode,
 } from "react";
 
 /** How often to refresh last_seen_at while the app is open. */
@@ -41,10 +42,14 @@ type AuthContextValue = {
   signInWithEmail: (email: string, password: string) => Promise<void>;
   signUpWithEmail: (email: string, password: string) => Promise<SignUpResult>;
   signInWithOAuth: (provider: OAuthProvider) => Promise<void>;
+  signInWithGoogle: () => Promise<void>; // ← nouvelle méthode native
   resendConfirmationEmail: (email: string) => Promise<void>;
   resetPasswordForEmail: (email: string) => Promise<void>;
   updatePassword: (password: string) => Promise<void>;
-  changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
+  changePassword: (
+    currentPassword: string,
+    newPassword: string,
+  ) => Promise<void>;
   /** Secure email update (re-auth with password). Google-only accounts cannot use this. */
   changeEmail: (newEmail: string, currentPassword: string) => Promise<void>;
   canChangeEmailWithPassword: boolean;
@@ -103,43 +108,52 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => clearInterval(interval);
   }, [user?.id]);
 
-  const signInWithEmail = useCallback(async (email: string, password: string) => {
-    if (!supabase) {
-      throw new Error("AUTH_NOT_CONFIGURED");
-    }
+  const signInWithEmail = useCallback(
+    async (email: string, password: string) => {
+      if (!supabase) {
+        throw new Error("AUTH_NOT_CONFIGURED");
+      }
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) {
-      throw error;
-    }
-  }, []);
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error) {
+        throw error;
+      }
+    },
+    [],
+  );
 
-  const signUpWithEmail = useCallback(async (email: string, password: string) => {
-    if (!supabase) {
-      throw new Error("AUTH_NOT_CONFIGURED");
-    }
+  const signUpWithEmail = useCallback(
+    async (email: string, password: string) => {
+      if (!supabase) {
+        throw new Error("AUTH_NOT_CONFIGURED");
+      }
 
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: getAuthRedirectUri(),
-      },
-    });
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: getAuthRedirectUri(),
+        },
+      });
 
-    if (error) {
-      throw error;
-    }
+      if (error) {
+        throw error;
+      }
 
-    if (data.user && data.user.identities?.length === 0) {
-      throw new Error("EMAIL_ALREADY_REGISTERED");
-    }
+      if (data.user && data.user.identities?.length === 0) {
+        throw new Error("EMAIL_ALREADY_REGISTERED");
+      }
 
-    return {
-      email,
-      sessionCreated: Boolean(data.session),
-    };
-  }, []);
+      return {
+        email,
+        sessionCreated: Boolean(data.session),
+      };
+    },
+    [],
+  );
 
   const resendConfirmationEmail = useCallback(async (email: string) => {
     if (!supabase) {
@@ -185,20 +199,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const reauthenticate = useCallback(async (password: string) => {
-    if (!supabase || !user?.email) {
-      throw new Error("AUTH_NOT_CONFIGURED");
-    }
+  const reauthenticate = useCallback(
+    async (password: string) => {
+      if (!supabase || !user?.email) {
+        throw new Error("AUTH_NOT_CONFIGURED");
+      }
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email: user.email,
-      password,
-    });
+      const { error } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password,
+      });
 
-    if (error) {
-      throw error;
-    }
-  }, [user?.email]);
+      if (error) {
+        throw error;
+      }
+    },
+    [user?.email],
+  );
 
   const changePassword = useCallback(
     async (currentPassword: string, newPassword: string) => {
@@ -283,6 +300,57 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  // ========== NOUVELLE MÉTHODE NATIVE GOOGLE ==========
+  const signInWithGoogle = useCallback(async () => {
+    if (!supabase) {
+      throw new Error("AUTH_NOT_CONFIGURED");
+    }
+
+    try {
+      // ⚠️ REMPLACE par ton vrai Client ID Web de Google Cloud
+      GoogleSignin.configure({
+        webClientId:
+          "751639603428-68o5mugt4nt815eo1hi5j82ftbn3liob.apps.googleusercontent.com",
+      });
+
+      await GoogleSignin.hasPlayServices({
+        showPlayServicesUpdateDialog: true,
+      });
+
+      const result = await GoogleSignin.signIn();
+      const idToken = result?.data?.idToken;
+
+      if (!idToken) {
+        throw new Error("OAUTH_SESSION_MISSING");
+      }
+
+      const { data, error } = await supabase.auth.signInWithIdToken({
+        provider: "google",
+        token: idToken,
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      if (!data.session) {
+        throw new Error("OAUTH_SESSION_MISSING");
+      }
+    } catch (error: any) {
+      // Gestion propre de l'annulation par l'utilisateur
+      if (
+        error?.code === "SIGN_IN_CANCELLED" ||
+        error?.code === "12501" ||
+        error?.message?.toLowerCase?.().includes("cancel") ||
+        error?.message?.toLowerCase?.().includes("cancelled")
+      ) {
+        throw new Error("OAUTH_CANCELLED");
+      }
+
+      throw error;
+    }
+  }, []);
+
   const deleteAccount = useCallback(async () => {
     if (!supabase || !session?.access_token) {
       throw new Error("AUTH_NOT_CONFIGURED");
@@ -314,6 +382,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signInWithEmail,
       signUpWithEmail,
       signInWithOAuth,
+      signInWithGoogle, // ← ajouté
       resendConfirmationEmail,
       resetPasswordForEmail,
       updatePassword,
@@ -330,6 +399,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signInWithEmail,
       signUpWithEmail,
       signInWithOAuth,
+      signInWithGoogle, // ← ajouté
       resendConfirmationEmail,
       resetPasswordForEmail,
       updatePassword,

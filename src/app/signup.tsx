@@ -11,15 +11,15 @@ import { router, type Href } from "expo-router";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -28,7 +28,9 @@ export default function SignUpScreen() {
   const { colors } = useTheme();
   const { showAlert } = useAlert();
   const { showToast } = useToast();
-  const { isConfigured, signUpWithEmail, signInWithEmail, signInWithOAuth } = useAuth();
+  // ↓ on récupère maintenant signInWithGoogle
+  const { isConfigured, signUpWithEmail, signInWithEmail, signInWithGoogle } =
+    useAuth();
   const insets = useSafeAreaInsets();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const [email, setEmail] = useState("");
@@ -47,7 +49,8 @@ export default function SignUpScreen() {
     setIsGoogleLoading(true);
 
     try {
-      await signInWithOAuth("google");
+      // ↓ on utilise maintenant la méthode native
+      await signInWithGoogle();
       await completeAuth();
     } catch (error) {
       const errorCode = getAuthErrorCode(error);
@@ -106,7 +109,10 @@ export default function SignUpScreen() {
 
       await completeAuth();
     } catch (error) {
-      if (error instanceof Error && error.message === "EMAIL_ALREADY_REGISTERED") {
+      if (
+        error instanceof Error &&
+        error.message === "EMAIL_ALREADY_REGISTERED"
+      ) {
         showAlert({
           title: t("auth.errorTitle"),
           message: t("auth.emailAlreadyRegistered"),
@@ -141,11 +147,17 @@ export default function SignUpScreen() {
       keyboardVerticalOffset={Platform.OS === "ios" ? insets.top : 0}
     >
       <ScrollView
-        contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 24 }]}
+        contentContainerStyle={[
+          styles.content,
+          { paddingBottom: insets.bottom + 24 },
+        ]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => router.back()}
+        >
           <Ionicons name="arrow-back" size={22} color={colors.text} />
         </TouchableOpacity>
 
@@ -185,7 +197,10 @@ export default function SignUpScreen() {
           />
 
           <TouchableOpacity
-            style={[styles.primaryButton, isSubmitting && styles.buttonDisabled]}
+            style={[
+              styles.primaryButton,
+              isSubmitting && styles.buttonDisabled,
+            ]}
             onPress={handleSignUp}
             disabled={isSubmitting}
             testID="signup-submit-btn"
@@ -193,7 +208,9 @@ export default function SignUpScreen() {
             {isSubmitting ? (
               <ActivityIndicator color={colors.background} />
             ) : (
-              <Text style={styles.primaryButtonText}>{t("auth.createAccount")}</Text>
+              <Text style={styles.primaryButtonText}>
+                {t("auth.createAccount")}
+              </Text>
             )}
           </TouchableOpacity>
         </View>
