@@ -1,3 +1,4 @@
+import { GOOGLE_WEB_CLIENT_ID } from "@/constants/googleAuth";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 import { touchLastSeen } from "@/services/community";
 import { setStorageScope } from "@/storage/scopedKey";
@@ -5,22 +6,24 @@ import { getAuthRedirectUri } from "@/utils/authRedirect";
 import { createSessionFromUrl } from "@/utils/authSession";
 import { deleteUserAccount } from "@/utils/deleteAccount";
 import {
-    isValidEmail,
-    normalizeEmail,
-    userHasEmailPasswordAuth,
+  isValidEmail,
+  normalizeEmail,
+  userHasEmailPasswordAuth,
 } from "@/utils/email";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import type { Session, User } from "@supabase/supabase-js";
 import * as WebBrowser from "expo-web-browser";
 import {
-    createContext,
-    useCallback,
-    useContext,
-    useEffect,
-    useMemo,
-    useState,
-    type ReactNode,
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
 } from "react";
+import { Platform } from "react-native";
 
 /** How often to refresh last_seen_at while the app is open. */
 const LAST_SEEN_INTERVAL_MS = 2 * 60 * 1000;
@@ -42,7 +45,8 @@ type AuthContextValue = {
   signInWithEmail: (email: string, password: string) => Promise<void>;
   signUpWithEmail: (email: string, password: string) => Promise<SignUpResult>;
   signInWithOAuth: (provider: OAuthProvider) => Promise<void>;
-  signInWithGoogle: () => Promise<void>; // ← nouvelle méthode native
+  /** Native Google Sign-In on iOS/Android; browser OAuth on web. */
+  signInWithGoogle: () => Promise<void>;
   resendConfirmationEmail: (email: string) => Promise<void>;
   resetPasswordForEmail: (email: string) => Promise<void>;
   updatePassword: (password: string) => Promise<void>;
@@ -57,6 +61,45 @@ type AuthContextValue = {
   signOut: () => Promise<void>;
 };
 
+function isGoogleSignInCancelled(error: unknown): boolean {
+  if (!error || typeof error !== "object") {
+    return false;
+  }
+
+  const code =
+    "code" in error && typeof (error as { code: unknown }).code === "string"
+      ? (error as { code: string }).code
+      : "";
+  const message =
+    error instanceof Error
+      ? error.message.toLowerCase()
+      : String(
+          "message" in error ? (error as { message: unknown }).message : "",
+        ).toLowerCase();
+
+  return (
+    code === "SIGN_IN_CANCELLED" ||
+    code === "12501" ||
+    code === "ERR_REQUEST_CANCELED" ||
+    message.includes("cancel") ||
+    message.includes("cancelled")
+  );
+}
+
+async function signOutGoogleSafely() {
+  if (Platform.OS === "web") {
+    return;
+  }
+
+  try {
+    if (GoogleSignin.hasPreviousSignIn()) {
+      await GoogleSignin.signOut();
+    }
+  } catch {
+    // Best-effort; Supabase session is the source of truth for the app.
+  }
+}
+
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 function applyStorageScope(user: User | null) {
@@ -67,6 +110,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(isSupabaseConfigured);
+  const googleConfiguredRef = useRef(false);
 
   useEffect(() => {
     if (!supabase) {
@@ -92,6 +136,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       authListener.subscription.unsubscribe();
     };
+  }, []);
+
+  useEffect(() => {
+    if (Platform.OS === "web" || !GOOGLE_WEB_CLIENT_ID || googleConfiguredRef.current) {
+      return;
+    }
+
+    try {
+      GoogleSignin.configure({
+        webClientId: GOOGLE_WEB_CLIENT_ID,
+        offlineAccess: false,
+      });
+      googleConfiguredRef.current = true;
+    } catch {
+      // Native module missing (e.g. Expo Go) — signInWithGoogle will surface a clear error.
+    }
   }, []);
 
   // Pseudo-online presence via last_seen_at (not Realtime)
@@ -300,25 +360,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // ========== NOUVELLE MÉTHODE NATIVE GOOGLE ==========
   const signInWithGoogle = useCallback(async () => {
     if (!supabase) {
       throw new Error("AUTH_NOT_CONFIGURED");
     }
 
-    try {
-      // ⚠️ REMPLACE par ton vrai Client ID Web de Google Cloud
-      GoogleSignin.configure({
-        webClientId:
-          "751639603428-68o5mugt4nt815eo1hi5j82ftbn3liob.apps.googleusercontent.com",
-      });
+    // Native module is not available on web — reuse browser OAuth.
+    if (Platform.OS === "web") {
+      await signInWithOAuth("google");
+      return;
+    }
 
-      await GoogleSignin.hasPlayServices({
-        showPlayServicesUpdateDialog: true,
-      });
+    if (!GOOGLE_WEB_CLIENT_ID) {
+      throw new Error("GOOGLE_WEB_CLIENT_ID_MISSING");
+    }
+
+    try {
+      if (!googleConfiguredRef.current) {
+        GoogleSignin.configure({
+          webClientId: GOOGLE_WEB_CLIENT_ID,
+          offlineAccess: false,
+        });
+        googleConfiguredRef.current = true;
+      }
+
+      if (Platform.OS === "android") {
+        await GoogleSignin.hasPlayServices({
+          showPlayServicesUpdateDialog: true,
+        });
+      }
 
       const result = await GoogleSignin.signIn();
-      const idToken = result?.data?.idToken;
+
+      if (result.type !== "success") {
+        throw new Error("OAUTH_CANCELLED");
+      }
+
+      let idToken = result.data.idToken;
+
+      // Some Android builds return null idToken on the first payload — getTokens() recovers it.
+      if (!idToken) {
+        const tokens = await GoogleSignin.getTokens();
+        idToken = tokens.idToken;
+      }
 
       if (!idToken) {
         throw new Error("OAUTH_SESSION_MISSING");
@@ -336,20 +420,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!data.session) {
         throw new Error("OAUTH_SESSION_MISSING");
       }
-    } catch (error: any) {
-      // Gestion propre de l'annulation par l'utilisateur
-      if (
-        error?.code === "SIGN_IN_CANCELLED" ||
-        error?.code === "12501" ||
-        error?.message?.toLowerCase?.().includes("cancel") ||
-        error?.message?.toLowerCase?.().includes("cancelled")
-      ) {
+    } catch (error) {
+      if (error instanceof Error && error.message === "OAUTH_CANCELLED") {
+        throw error;
+      }
+
+      if (isGoogleSignInCancelled(error)) {
         throw new Error("OAUTH_CANCELLED");
       }
 
       throw error;
     }
-  }, []);
+  }, [signInWithOAuth]);
 
   const deleteAccount = useCallback(async () => {
     if (!supabase || !session?.access_token) {
@@ -357,6 +439,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     await deleteUserAccount(session.access_token);
+    await signOutGoogleSafely();
     await supabase.auth.signOut();
   }, [session?.access_token]);
 
@@ -365,6 +448,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    await signOutGoogleSafely();
     const { error } = await supabase.auth.signOut();
     if (error) {
       throw error;
@@ -382,7 +466,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signInWithEmail,
       signUpWithEmail,
       signInWithOAuth,
-      signInWithGoogle, // ← ajouté
+      signInWithGoogle,
       resendConfirmationEmail,
       resetPasswordForEmail,
       updatePassword,
@@ -399,7 +483,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signInWithEmail,
       signUpWithEmail,
       signInWithOAuth,
-      signInWithGoogle, // ← ajouté
+      signInWithGoogle,
       resendConfirmationEmail,
       resetPasswordForEmail,
       updatePassword,

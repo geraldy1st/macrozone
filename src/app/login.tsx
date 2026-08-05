@@ -28,7 +28,6 @@ export default function LoginScreen() {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const { showAlert } = useAlert();
-  // ↓ on récupère maintenant signInWithGoogle
   const { isConfigured, signInWithEmail, signInWithGoogle } = useAuth();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const [email, setEmail] = useState("");
@@ -45,7 +44,6 @@ export default function LoginScreen() {
     setIsGoogleLoading(true);
 
     try {
-      // ↓ on utilise maintenant la méthode native
       await signInWithGoogle();
       await completeAuth();
     } catch (error) {

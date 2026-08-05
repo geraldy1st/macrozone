@@ -28,7 +28,6 @@ export default function SignUpScreen() {
   const { colors } = useTheme();
   const { showAlert } = useAlert();
   const { showToast } = useToast();
-  // ↓ on récupère maintenant signInWithGoogle
   const { isConfigured, signUpWithEmail, signInWithEmail, signInWithGoogle } =
     useAuth();
   const insets = useSafeAreaInsets();
@@ -49,7 +48,6 @@ export default function SignUpScreen() {
     setIsGoogleLoading(true);
 
     try {
-      // ↓ on utilise maintenant la méthode native
       await signInWithGoogle();
       await completeAuth();
     } catch (error) {

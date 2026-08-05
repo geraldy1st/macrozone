@@ -10,7 +10,8 @@ export type AuthFlowErrorCode =
   | "EMAIL_INVALID"
   | "EMAIL_UNCHANGED"
   | "EMAIL_PASSWORD_REQUIRED"
-  | "EMAIL_ALREADY_REGISTERED";
+  | "EMAIL_ALREADY_REGISTERED"
+  | "GOOGLE_WEB_CLIENT_ID_MISSING";
 
 const SIMPLE_ERROR_CODES: AuthFlowErrorCode[] = [
   "OAUTH_CANCELLED",
@@ -21,6 +22,7 @@ const SIMPLE_ERROR_CODES: AuthFlowErrorCode[] = [
   "EMAIL_INVALID",
   "EMAIL_UNCHANGED",
   "EMAIL_PASSWORD_REQUIRED",
+  "GOOGLE_WEB_CLIENT_ID_MISSING",
 ];
 
 export function getAuthErrorCode(error: unknown): AuthFlowErrorCode | null {
