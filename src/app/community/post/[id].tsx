@@ -1,3 +1,4 @@
+import ImageZoomViewer from "@/components/ImageZoomViewer";
 import { useAlert } from "@/contexts/AlertContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -15,6 +16,7 @@ import {
 import type { FeedPost } from "@/types/community";
 import type { ThemeColors } from "@/styles/themes";
 import { macroColors } from "@/styles/themes";
+import { isPostEdited } from "@/utils/postEdited";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import * as Haptics from "expo-haptics";
@@ -23,12 +25,15 @@ import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
+  Dimensions,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+
+const DETAIL_PHOTO_SIZE = Math.min(Dimensions.get("window").width - 40, 420);
 
 function savedToDisplay(meal: SavedCommunityMeal): FeedPost {
   return {
@@ -66,6 +71,7 @@ export default function CommunityPostDetailScreen() {
   const [post, setPost] = useState<FeedPost | null>(null);
   const [isSaved, setIsSaved] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [zoomOpen, setZoomOpen] = useState(false);
 
   const load = useCallback(async () => {
     if (!id) {
@@ -158,6 +164,7 @@ export default function CommunityPostDetailScreen() {
     post.author?.display_name?.trim() || t("community.unknownAuthor");
 
   return (
+    <>
     <ScrollView
       style={[styles.container, { backgroundColor: colors.background }]}
       contentContainerStyle={{ paddingBottom: bottomPadding }}
@@ -188,13 +195,31 @@ export default function CommunityPostDetailScreen() {
       </View>
 
       {post.image_url ? (
-        <Image
-          source={{ uri: post.image_url }}
-          style={styles.photo}
-          contentFit="cover"
-        />
+        <TouchableOpacity
+          activeOpacity={0.9}
+          onPress={() => setZoomOpen(true)}
+          testID="community-post-detail-image"
+        >
+          <Image
+            source={{ uri: post.image_url }}
+            style={[
+              styles.photo,
+              { width: DETAIL_PHOTO_SIZE, height: DETAIL_PHOTO_SIZE },
+            ]}
+            contentFit="cover"
+          />
+        </TouchableOpacity>
       ) : (
-        <View style={[styles.photoPlaceholder, { backgroundColor: colors.surface }]}>
+        <View
+          style={[
+            styles.photoPlaceholder,
+            {
+              backgroundColor: colors.surface,
+              width: DETAIL_PHOTO_SIZE,
+              height: DETAIL_PHOTO_SIZE,
+            },
+          ]}
+        >
           <Ionicons name="restaurant-outline" size={40} color={colors.textSecondary} />
         </View>
       )}
@@ -213,6 +238,11 @@ export default function CommunityPostDetailScreen() {
           {t("community.byAuthor", { name: authorName })}
         </Text>
       </TouchableOpacity>
+      {isPostEdited(post.created_at, post.updated_at) ? (
+        <Text style={[styles.edited, { color: colors.textSecondary }]}>
+          {t("community.edited")}
+        </Text>
+      ) : null}
 
       <View style={styles.macroRow}>
         <MacroBox
@@ -274,6 +304,13 @@ export default function CommunityPostDetailScreen() {
         </TouchableOpacity>
       ) : null}
     </ScrollView>
+
+    <ImageZoomViewer
+      visible={zoomOpen}
+      imageUri={post.image_url}
+      onClose={() => setZoomOpen(false)}
+    />
+    </>
   );
 }
 
@@ -345,16 +382,14 @@ function createStyles(colors: ThemeColors) {
       fontWeight: "700",
     },
     photo: {
-      width: "100%",
-      height: 240,
       borderRadius: 16,
       marginBottom: 16,
+      alignSelf: "center",
     },
     photoPlaceholder: {
-      width: "100%",
-      height: 180,
       borderRadius: 16,
       marginBottom: 16,
+      alignSelf: "center",
       alignItems: "center",
       justifyContent: "center",
     },
@@ -367,7 +402,13 @@ function createStyles(colors: ThemeColors) {
       fontSize: 14,
       fontWeight: "500",
       marginTop: 6,
-      marginBottom: 16,
+      marginBottom: 4,
+    },
+    edited: {
+      fontSize: 12,
+      fontStyle: "italic",
+      fontWeight: "500",
+      marginBottom: 12,
     },
     macroRow: {
       flexDirection: "row",

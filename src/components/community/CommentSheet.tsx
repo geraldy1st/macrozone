@@ -109,15 +109,19 @@ export default function CommentSheet({
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <Pressable style={styles.overlay} onPress={onClose}>
         <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
           style={styles.sheetWrap}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 24}
         >
           <Pressable
             style={[
               styles.sheet,
               {
                 backgroundColor: colors.card,
-                paddingBottom: Math.max(insets.bottom, 12),
+                paddingBottom: Math.max(
+                  insets.bottom,
+                  Platform.OS === "android" ? 28 : 12,
+                ),
               },
             ]}
             onPress={(e) => e.stopPropagation()}

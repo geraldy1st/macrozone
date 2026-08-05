@@ -2,9 +2,6 @@ import { ANALYZE_API_URL } from "@/constants/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { setPendingCelebration } from "@/storage/celebration";
 import { addMeal } from "@/storage/meals";
-import ShareToCommunityModal, {
-  type ShareMealPayload,
-} from "@/components/community/ShareToCommunityModal";
 import RecipeAttribution from "@/components/RecipeAttribution";
 import StructuredRecipeForm from "@/components/StructuredRecipeForm";
 import { getUserProfile } from "@/storage/profile";
@@ -70,8 +67,6 @@ export default function AddMealScreen() {
   const [isAnalyzingRecipe, setIsAnalyzingRecipe] = useState(false);
   const [hasAiResult, setHasAiResult] = useState(false);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
-  const [shareVisible, setShareVisible] = useState(false);
-  const [sharePayload, setSharePayload] = useState<ShareMealPayload | null>(null);
   const scrollRef = useRef<ScrollView>(null);
   const recipeNotesRef = useRef<TextInput>(null);
 
@@ -275,53 +270,6 @@ export default function AddMealScreen() {
     }
   };
 
-  const buildSharePayload = (): ShareMealPayload | null => {
-    if (!name.trim() || calories.trim() === "") {
-      return null;
-    }
-
-    const hasRecipe = hasRecipeContent(recipeData);
-    return {
-      mealName: name.trim(),
-      calories: Number(calories) || 0,
-      protein: Number(protein) || 0,
-      carbs: Number(carbs) || 0,
-      fat: Number(fat) || 0,
-      description: description.trim() || undefined,
-      recipe: hasRecipe ? formatRecipeDataAsText(recipeData) || undefined : undefined,
-      localImageUri: photoUri,
-    };
-  };
-
-  const openShareModal = () => {
-    if (!user) {
-      showAlert({
-        title: t("community.authRequiredTitle"),
-        message: t("community.authRequiredShare"),
-        buttons: [
-          { text: t("mealItem.cancel"), style: "cancel" },
-          {
-            text: t("auth.signIn"),
-            onPress: () => router.push("/login"),
-          },
-        ],
-      });
-      return;
-    }
-
-    const payload = buildSharePayload();
-    if (!payload) {
-      showAlert({
-        title: t("addMeal.errorTitle"),
-        message: t("addMeal.errorMessage"),
-      });
-      return;
-    }
-
-    setSharePayload(payload);
-    setShareVisible(true);
-  };
-
   const handleAddMeal = async () => {
     if (!name.trim() || calories.trim() === "") {
       showAlert({
@@ -355,46 +303,14 @@ export default function AddMealScreen() {
             : undefined,
       };
 
-      await addMeal(mealInput, photoUri ?? undefined);
+      const saved = await addMeal(mealInput, photoUri ?? undefined);
       await setPendingCelebration();
 
-      const canShare =
-        Boolean(user) && (hasAiResult || Boolean(photoUri) || Boolean(name.trim()));
-
-      if (canShare && user) {
-        const payload = buildSharePayload();
-        showToast(t("addMeal.successMessage"), "success");
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        showAlert({
-          title: t("community.sharePromptTitle"),
-          message: t("community.sharePromptMessage"),
-          buttons: [
-            {
-              text: t("community.shareLater"),
-              style: "cancel",
-              onPress: () => {
-                resetForm();
-                router.push("/");
-              },
-            },
-            {
-              text: t("community.shareNow"),
-              onPress: () => {
-                if (payload) {
-                  setSharePayload(payload);
-                  setShareVisible(true);
-                }
-                resetForm();
-              },
-            },
-          ],
-        });
-      } else {
-        resetForm();
-        showToast(t("addMeal.successMessage"), "success");
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        router.push("/");
-      }
+      resetForm();
+      showToast(t("addMeal.successMessage"), "success");
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      // Open meal detail so user can share to community from there (A009-1).
+      router.replace(`/meal/${saved.id}`);
     } catch {
       showAlert({
         title: t("addMeal.saveErrorTitle"),
@@ -505,19 +421,6 @@ export default function AddMealScreen() {
         </View>
       )}
 
-      {canUseAiScan && hasAiResult && !isAnalyzing ? (
-        <TouchableOpacity
-          style={[styles.shareCommunityButton, { borderColor: colors.cardBorder, backgroundColor: colors.card }]}
-          onPress={openShareModal}
-          testID="share-to-community-btn"
-        >
-          <Ionicons name="people-outline" size={18} color={colors.accent} />
-          <Text style={[styles.shareCommunityText, { color: colors.text }]}>
-            {t("community.shareToCommunity")}
-          </Text>
-        </TouchableOpacity>
-      ) : null}
-
       <TextInput
         style={styles.input}
         placeholder={t("addMeal.mealName")}
@@ -622,7 +525,12 @@ export default function AddMealScreen() {
 
       </ScrollView>
 
-      <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 12) }]}>
+      <View
+        style={[
+          styles.footer,
+          { paddingBottom: Math.max(insets.bottom, Platform.OS === "android" ? 28 : 12) },
+        ]}
+      >
         <TouchableOpacity
           style={[styles.button, (isSaving || isAnalyzing) && styles.buttonDisabled]}
           onPress={handleAddMeal}
@@ -636,20 +544,6 @@ export default function AddMealScreen() {
           )}
         </TouchableOpacity>
       </View>
-
-      <ShareToCommunityModal
-        visible={shareVisible}
-        meal={sharePayload}
-        onClose={() => {
-          setShareVisible(false);
-          setSharePayload(null);
-        }}
-        onShared={() => {
-          setShareVisible(false);
-          setSharePayload(null);
-          router.push("/community");
-        }}
-      />
     </KeyboardAvoidingView>
   );
 }
@@ -848,21 +742,6 @@ function createScreenStyles(colors: ReturnType<typeof useTheme>["colors"]) {
     minHeight: 48,
   },
   recipeAiButtonText: {
-    fontSize: 15,
-    fontWeight: "600",
-  },
-  shareCommunityButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    marginTop: 14,
-    padding: 14,
-    borderRadius: 12,
-    borderWidth: 1,
-    minHeight: 48,
-  },
-  shareCommunityText: {
     fontSize: 15,
     fontWeight: "600",
   },

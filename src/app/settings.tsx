@@ -70,7 +70,8 @@ export default function SettingsScreen() {
     canChangeEmailWithPassword,
   } = useAuth();
   const styles = useThemedStyles(createStyles);
-  const bottomPadding = useBottomContentPadding(20, false);
+  // Extra room so legal links stay above Android system nav (A009-1).
+  const bottomPadding = useBottomContentPadding(48, false);
   const currentLanguage =
     (supportedLanguages.find((language) => i18n.language.startsWith(language)) ??
       "en") as AppLanguage;
@@ -849,15 +850,18 @@ function createStyles(colors: ThemeColors) {
       flexWrap: "wrap",
       alignItems: "center",
       justifyContent: "center",
-      gap: 8,
-      marginTop: 24,
-      marginBottom: 12,
+      gap: 10,
+      marginTop: 28,
+      marginBottom: 32,
       paddingHorizontal: 8,
+      paddingVertical: 12,
     },
     legalLinkText: {
       fontSize: 13,
       fontWeight: "600",
       textDecorationLine: "underline",
+      paddingVertical: 10,
+      paddingHorizontal: 4,
     },
   });
 }

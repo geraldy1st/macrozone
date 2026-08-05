@@ -1,9 +1,14 @@
 import FavoriteStar from "@/components/FavoriteStar";
+import ImageZoomViewer from "@/components/ImageZoomViewer";
 import LinkifiedText from "@/components/LinkifiedText";
 import MealShareCard from "@/components/MealShareCard";
 import RecipeAttribution from "@/components/RecipeAttribution";
 import RecipeDisplay from "@/components/RecipeDisplay";
+import ShareToCommunityModal, {
+  type ShareMealPayload,
+} from "@/components/community/ShareToCommunityModal";
 import { useAlert } from "@/contexts/AlertContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useToast } from "@/contexts/ToastContext";
 import { useBottomContentPadding } from "@/hooks/useBottomContentPadding";
@@ -16,6 +21,7 @@ import {
   addFavoriteMealForToday,
   checkFavoriteDuplicateToday,
 } from "@/utils/addMealFromFavorite";
+import { mealToSharePayload } from "@/utils/shareMealPayload";
 import { captureAndShareMealImage } from "@/utils/shareMealImage";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
@@ -36,14 +42,18 @@ export default function MealDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { t } = useTranslation();
   const { colors } = useTheme();
+  const { user } = useAuth();
   const { showToast } = useToast();
   const { showAlert } = useAlert();
   const styles = useThemedStyles(createStyles);
-  const bottomPadding = useBottomContentPadding(20, false);
+  const bottomPadding = useBottomContentPadding(32, false);
   const shareRef = useRef<View>(null);
   const [meal, setMeal] = useState<Meal | null>(null);
   const [favorited, setFavorited] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
+  const [shareVisible, setShareVisible] = useState(false);
+  const [sharePayload, setSharePayload] = useState<ShareMealPayload | null>(null);
+  const [zoomOpen, setZoomOpen] = useState(false);
 
   const loadMeal = useCallback(async () => {
     if (!id) {
@@ -126,6 +136,30 @@ export default function MealDetailScreen() {
     }
   };
 
+  const handleShareToCommunity = () => {
+    if (!meal) {
+      return;
+    }
+
+    if (!user) {
+      showAlert({
+        title: t("community.authRequiredTitle"),
+        message: t("community.authRequiredShare"),
+        buttons: [
+          { text: t("mealItem.cancel"), style: "cancel" },
+          {
+            text: t("auth.signIn"),
+            onPress: () => router.push("/login"),
+          },
+        ],
+      });
+      return;
+    }
+
+    setSharePayload(mealToSharePayload(meal));
+    setShareVisible(true);
+  };
+
   if (!meal) {
     return (
       <View style={[styles.loading, { backgroundColor: colors.background }]}>
@@ -169,9 +203,16 @@ export default function MealDetailScreen() {
       <ScrollView
         contentContainerStyle={[styles.content, { paddingBottom: bottomPadding }]}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
         {meal.photoUri ? (
-          <Image source={{ uri: meal.photoUri }} style={styles.photo} contentFit="cover" />
+          <TouchableOpacity
+            activeOpacity={0.9}
+            onPress={() => setZoomOpen(true)}
+            testID="meal-detail-photo"
+          >
+            <Image source={{ uri: meal.photoUri }} style={styles.photo} contentFit="cover" />
+          </TouchableOpacity>
         ) : (
           <View style={[styles.photoPlaceholder, { backgroundColor: colors.surface }]}>
             <Ionicons name="restaurant-outline" size={48} color={colors.textSecondary} />
@@ -228,10 +269,25 @@ export default function MealDetailScreen() {
         <TouchableOpacity
           style={[styles.addTodayButton, { backgroundColor: colors.accent }]}
           onPress={handleAddForToday}
+          testID="meal-add-for-today-btn"
         >
           <Ionicons name="add-circle-outline" size={20} color={colors.background} />
           <Text style={[styles.addTodayText, { color: colors.background }]}>
             {t("allMeals.addForToday")}
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.shareCommunityButton,
+            { borderColor: colors.cardBorder, backgroundColor: colors.card },
+          ]}
+          onPress={handleShareToCommunity}
+          testID="meal-share-to-community-btn"
+        >
+          <Ionicons name="people-outline" size={20} color={colors.accent} />
+          <Text style={[styles.shareCommunityText, { color: colors.text }]}>
+            {t("community.shareToCommunity")}
           </Text>
         </TouchableOpacity>
       </ScrollView>
@@ -239,6 +295,26 @@ export default function MealDetailScreen() {
       <View style={styles.offscreen} pointerEvents="none">
         <MealShareCard ref={shareRef} meal={meal} />
       </View>
+
+      <ShareToCommunityModal
+        visible={shareVisible}
+        meal={sharePayload}
+        onClose={() => {
+          setShareVisible(false);
+          setSharePayload(null);
+        }}
+        onShared={() => {
+          setShareVisible(false);
+          setSharePayload(null);
+          router.push("/community" as Href);
+        }}
+      />
+
+      <ImageZoomViewer
+        visible={zoomOpen}
+        imageUri={meal.photoUri}
+        onClose={() => setZoomOpen(false)}
+      />
     </View>
   );
 }
@@ -321,6 +397,20 @@ function createStyles(colors: ThemeColors) {
       marginTop: 4,
     },
     addTodayText: {
+      fontSize: 16,
+      fontWeight: "700",
+    },
+    shareCommunityButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 8,
+      padding: 16,
+      borderRadius: 14,
+      borderWidth: 1,
+      minHeight: 52,
+    },
+    shareCommunityText: {
       fontSize: 16,
       fontWeight: "700",
     },

@@ -1,6 +1,6 @@
 import { GOOGLE_WEB_CLIENT_ID } from "@/constants/googleAuth";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
-import { touchLastSeen } from "@/services/community";
+import { syncMyCommunityProfile, touchLastSeen } from "@/services/community";
 import { setStorageScope } from "@/storage/scopedKey";
 import { getAuthRedirectUri } from "@/utils/authRedirect";
 import { createSessionFromUrl } from "@/utils/authSession";
@@ -166,6 +166,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }, LAST_SEEN_INTERVAL_MS);
 
     return () => clearInterval(interval);
+  }, [user?.id]);
+
+  // Keep public community profile (name + avatar) in sync for the feed
+  useEffect(() => {
+    if (!user?.id || !isSupabaseConfigured) {
+      return;
+    }
+
+    void syncMyCommunityProfile(user).catch((error) => {
+      console.warn("syncMyCommunityProfile failed:", error);
+    });
   }, [user?.id]);
 
   const signInWithEmail = useCallback(

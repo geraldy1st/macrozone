@@ -1,5 +1,11 @@
+import ImageZoomViewer from "@/components/ImageZoomViewer";
 import CommentSheet from "@/components/community/CommentSheet";
+import EditPostModal from "@/components/community/EditPostModal";
+import PickMealForShareModal from "@/components/community/PickMealForShareModal";
 import PostCard from "@/components/community/PostCard";
+import ShareToCommunityModal, {
+  type ShareMealPayload,
+} from "@/components/community/ShareToCommunityModal";
 import { useAlert } from "@/contexts/AlertContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -7,13 +13,15 @@ import { useToast } from "@/contexts/ToastContext";
 import { useBottomContentPadding } from "@/hooks/useBottomContentPadding";
 import { useFeed } from "@/hooks/useFeed";
 import { useThemedStyles } from "@/hooks/useThemedStyles";
-import { deleteMyPost, toggleLike } from "@/services/community";
+import { deleteMyPost, toggleLike, updateMyPost } from "@/services/community";
+import type { Meal } from "@/storage/meals";
 import {
   getSavedCommunityMealIds,
   toggleSavedCommunityMeal,
 } from "@/storage/savedCommunityMeals";
 import type { ThemeColors } from "@/styles/themes";
 import type { FeedPost } from "@/types/community";
+import { mealToSharePayload } from "@/utils/shareMealPayload";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { router, useFocusEffect, type Href } from "expo-router";
@@ -44,6 +52,12 @@ export default function CommunityScreen() {
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [searchInput, setSearchInput] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [pickMealVisible, setPickMealVisible] = useState(false);
+  const [shareVisible, setShareVisible] = useState(false);
+  const [sharePayload, setSharePayload] = useState<ShareMealPayload | null>(null);
+  const [editingPost, setEditingPost] = useState<FeedPost | null>(null);
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
+  const [zoomUri, setZoomUri] = useState<string | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -171,6 +185,52 @@ export default function CommunityScreen() {
     });
   };
 
+  const openCreatePost = () => {
+    if (!user) {
+      showAlert({
+        title: t("community.authRequiredTitle"),
+        message: t("community.authRequiredShare"),
+        buttons: [
+          { text: t("mealItem.cancel"), style: "cancel" },
+          { text: t("auth.signIn"), onPress: () => router.push("/login") },
+        ],
+      });
+      return;
+    }
+    setPickMealVisible(true);
+  };
+
+  const handlePickMeal = (meal: Meal) => {
+    setPickMealVisible(false);
+    setSharePayload(mealToSharePayload(meal));
+    setShareVisible(true);
+  };
+
+  const handleSaveEdit = async (input: { mealName: string; caption: string }) => {
+    if (!user || !editingPost) {
+      return;
+    }
+
+    setIsSavingEdit(true);
+    try {
+      const updated = await updateMyPost(editingPost.id, user.id, {
+        mealName: input.mealName,
+        caption: input.caption,
+      });
+      patchPostLocally(editingPost.id, {
+        meal_name: updated.meal_name,
+        caption: updated.caption,
+        updated_at: updated.updated_at ?? new Date().toISOString(),
+      });
+      setEditingPost(null);
+      showToast(t("community.editSuccess"), "success");
+    } catch {
+      showToast(t("community.editError"), "error");
+    } finally {
+      setIsSavingEdit(false);
+    }
+  };
+
   const schemaMissing =
     error?.includes("relation") ||
     error?.includes("does not exist") ||
@@ -179,15 +239,30 @@ export default function CommunityScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <Text
-        style={[styles.title, { color: colors.text }]}
-        testID="community-screen-title"
-      >
-        {t("community.title")}
-      </Text>
-      <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-        {t("community.subtitle")}
-      </Text>
+      <View style={styles.titleRow}>
+        <View style={styles.titleBlock}>
+          <Text
+            style={[styles.title, { color: colors.text }]}
+            testID="community-screen-title"
+          >
+            {t("community.title")}
+          </Text>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+            {t("community.subtitle")}
+          </Text>
+        </View>
+        <TouchableOpacity
+          style={[
+            styles.createBtn,
+            { backgroundColor: colors.accent },
+          ]}
+          onPress={openCreatePost}
+          testID="community-create-post-btn"
+          accessibilityLabel={t("community.createPost")}
+        >
+          <Ionicons name="add" size={24} color={colors.background} />
+        </TouchableOpacity>
+      </View>
 
       <View
         style={[
@@ -324,12 +399,22 @@ export default function CommunityScreen() {
               }
               onCommentPress={() => setCommentPostId(item.id)}
               onSavePress={() => void handleSave(item)}
-              onImagePress={() =>
+              onDetailPress={() =>
                 router.push(`/community/post/${item.id}` as Href)
+              }
+              onImageZoomPress={
+                item.image_url
+                  ? () => setZoomUri(item.image_url ?? null)
+                  : () => router.push(`/community/post/${item.id}` as Href)
               }
               onAuthorPress={
                 item.author_id
                   ? () => router.push(`/u/${item.author_id}` as Href)
+                  : undefined
+              }
+              onEditPress={
+                user && user.id === item.author_id
+                  ? () => setEditingPost(item)
                   : undefined
               }
               onDeletePress={
@@ -360,6 +445,40 @@ export default function CommunityScreen() {
           });
         }}
       />
+
+      <PickMealForShareModal
+        visible={pickMealVisible}
+        onClose={() => setPickMealVisible(false)}
+        onSelect={handlePickMeal}
+      />
+
+      <ShareToCommunityModal
+        visible={shareVisible}
+        meal={sharePayload}
+        onClose={() => {
+          setShareVisible(false);
+          setSharePayload(null);
+        }}
+        onShared={() => {
+          setShareVisible(false);
+          setSharePayload(null);
+          void refresh();
+        }}
+      />
+
+      <EditPostModal
+        visible={Boolean(editingPost)}
+        post={editingPost}
+        isSaving={isSavingEdit}
+        onClose={() => setEditingPost(null)}
+        onSave={(input) => void handleSaveEdit(input)}
+      />
+
+      <ImageZoomViewer
+        visible={Boolean(zoomUri)}
+        imageUri={zoomUri}
+        onClose={() => setZoomUri(null)}
+      />
     </View>
   );
 }
@@ -371,6 +490,17 @@ function createStyles(colors: ThemeColors) {
       paddingTop: 60,
       paddingHorizontal: 20,
     },
+    titleRow: {
+      flexDirection: "row",
+      alignItems: "flex-start",
+      justifyContent: "space-between",
+      gap: 12,
+      marginBottom: 12,
+    },
+    titleBlock: {
+      flex: 1,
+      minWidth: 0,
+    },
     title: {
       fontSize: 28,
       fontWeight: "800",
@@ -379,8 +509,15 @@ function createStyles(colors: ThemeColors) {
     subtitle: {
       fontSize: 14,
       marginTop: 6,
-      marginBottom: 12,
       fontWeight: "500",
+    },
+    createBtn: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      alignItems: "center",
+      justifyContent: "center",
+      marginTop: 2,
     },
     searchRow: {
       flexDirection: "row",

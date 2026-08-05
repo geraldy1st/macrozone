@@ -62,7 +62,16 @@
     "searchPlaceholder": "Search meals…",
     "searchClear": "Clear search",
     "searchEmptyTitle": "No meals found",
-    "searchEmptyMessage": "No community meals match “{{query}}”. Try another name."
+    "searchEmptyMessage": "No community meals match “{{query}}”. Try another name.",
+    "createPost": "New post",
+    "pickMealTitle": "Share a meal",
+    "pickMealHint": "Choose one of your saved meals to publish to the community.",
+    "pickMealEmpty": "No meals yet. Add a meal first, then share it here.",
+    "editTitle": "Edit post",
+    "editSave": "Save changes",
+    "editSuccess": "Post updated",
+    "editError": "Could not update the post.",
+    "edited": "Edited"
   },
   "welcome": {
     "title": "Welcome to nutriFlow",

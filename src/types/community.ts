@@ -33,7 +33,14 @@ export type CommunityPost = {
   likes_count: number;
   comments_count: number;
   created_at: string;
+  /** Set when the post is edited (A009-2). */
+  updated_at?: string | null;
   deleted_at: string | null;
+};
+
+export type UpdatePostInput = {
+  mealName?: string;
+  caption?: string;
 };
 
 /** Post row joined with author profile for feed cards. */

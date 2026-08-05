@@ -7,6 +7,7 @@ import {
   type CreatePostInput,
   type FeedPage,
   type FeedPost,
+  type UpdatePostInput,
 } from "@/types/community";
 import { base64ToUint8Array } from "@/utils/base64";
 import { prepareImageForUpload } from "@/utils/photos";
@@ -51,6 +52,7 @@ function mapFeedPost(row: Record<string, unknown>): FeedPost {
     likes_count: (row.likes_count as number) ?? 0,
     comments_count: (row.comments_count as number) ?? 0,
     created_at: row.created_at as string,
+    updated_at: (row.updated_at as string | null | undefined) ?? null,
     deleted_at: (row.deleted_at as string | null) ?? null,
     author: authorRow,
     image_url: publicImageUrl((row.image_path as string | null) ?? null),
@@ -310,4 +312,56 @@ export async function deleteMyPost(postId: string, authorId: string): Promise<vo
   if (error) {
     throw error;
   }
+}
+
+/** Update own post caption / meal name (A009-2). */
+export async function updateMyPost(
+  postId: string,
+  authorId: string,
+  input: UpdatePostInput,
+): Promise<FeedPost> {
+  if (!supabase) {
+    throw new Error("SUPABASE_NOT_CONFIGURED");
+  }
+
+  const patch: Record<string, unknown> = {};
+
+  if (input.mealName !== undefined) {
+    const name = input.mealName.trim();
+    if (!name) {
+      throw new Error("MEAL_NAME_REQUIRED");
+    }
+    patch.meal_name = name;
+  }
+
+  if (input.caption !== undefined) {
+    patch.caption = input.caption.trim().slice(0, MAX_CAPTION_LENGTH);
+  }
+
+  if (Object.keys(patch).length === 0) {
+    throw new Error("NOTHING_TO_UPDATE");
+  }
+
+  // Ensure updated_at moves even if DB trigger is missing
+  patch.updated_at = new Date().toISOString();
+
+  const { data, error } = await supabase
+    .from("posts")
+    .update(patch)
+    .eq("id", postId)
+    .eq("author_id", authorId)
+    .is("deleted_at", null)
+    .select(
+      `
+      *,
+      author:profiles!author_id ( id, display_name, avatar_url )
+    `,
+    )
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
+  return mapFeedPost(data as Record<string, unknown>);
 }

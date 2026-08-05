@@ -1,3 +1,4 @@
+import ProfileAvatar from "@/components/ProfileAvatar";
 import { useAlert } from "@/contexts/AlertContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -258,17 +259,13 @@ export default function PublicProfileScreen() {
                 ]}
               >
                 <View style={styles.avatarWrap}>
-                  <View style={[styles.avatar, { backgroundColor: colors.surface }]}>
-                    {profile.avatar_url ? (
-                      <Image
-                        source={{ uri: profile.avatar_url }}
-                        style={styles.avatarImage}
-                        contentFit="cover"
-                      />
-                    ) : (
-                      <Ionicons name="person" size={42} color={colors.textSecondary} />
-                    )}
-                  </View>
+                  <ProfileAvatar
+                    uri={profile.avatar_url}
+                    name={displayName}
+                    size={110}
+                    backgroundColor={colors.surface}
+                    textColor={colors.textSecondary}
+                  />
                   {online && !isBlocked ? (
                     <View
                       style={[styles.onlineDot, { borderColor: colors.card }]}
@@ -487,18 +484,6 @@ function createStyles(colors: ThemeColors) {
     },
     avatarWrap: {
       position: "relative",
-    },
-    avatar: {
-      width: 110,
-      height: 110,
-      borderRadius: 55,
-      alignItems: "center",
-      justifyContent: "center",
-      overflow: "hidden",
-    },
-    avatarImage: {
-      width: 110,
-      height: 110,
     },
     onlineDot: {
       position: "absolute",

@@ -233,7 +233,7 @@ export default function EditMealScreen() {
   return (
     <KeyboardAvoidingView
       style={[styles.container, { backgroundColor: colors.background }]}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
       keyboardVerticalOffset={Platform.OS === "ios" ? insets.top : 0}
     >
       <View style={styles.topBar}>
@@ -245,9 +245,10 @@ export default function EditMealScreen() {
       </View>
 
       <ScrollView
-        contentContainerStyle={[styles.content, { paddingBottom: bottomPadding }]}
+        contentContainerStyle={[styles.content, { paddingBottom: bottomPadding + 24 }]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
+        automaticallyAdjustKeyboardInsets
       >
         {photoUri ? (
           <View style={[styles.photoCard, { borderColor: colors.cardBorder }]}>

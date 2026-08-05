@@ -1,5 +1,7 @@
+import ProfileAvatar from "@/components/ProfileAvatar";
 import { useTheme } from "@/contexts/ThemeContext";
 import type { FeedPost } from "@/types/community";
+import { isPostEdited } from "@/utils/postEdited";
 import { formatRelativeTime } from "@/utils/relativeTime";
 import { macroColors } from "@/styles/themes";
 import { Ionicons } from "@expo/vector-icons";
@@ -7,11 +9,15 @@ import { Image } from "expo-image";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import {
+  Dimensions,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+
+const PHOTO_SIDE =
+  Math.min(Dimensions.get("window").width - 40 - 28, 420);
 
 type PostCardProps = {
   post: FeedPost;
@@ -20,8 +26,12 @@ type PostCardProps = {
   onLikePress?: () => void;
   onCommentPress?: () => void;
   onSavePress?: () => void;
-  onImagePress?: () => void;
+  /** Open full post detail (name / card). */
+  onDetailPress?: () => void;
+  /** Open zoom viewer for image. */
+  onImageZoomPress?: () => void;
   onAuthorPress?: () => void;
+  onEditPress?: () => void;
   onDeletePress?: () => void;
   likeDisabled?: boolean;
   saveDisabled?: boolean;
@@ -36,8 +46,10 @@ export default function PostCard({
   onLikePress,
   onCommentPress,
   onSavePress,
-  onImagePress,
+  onDetailPress,
+  onImageZoomPress,
   onAuthorPress,
+  onEditPress,
   onDeletePress,
   likeDisabled,
   saveDisabled,
@@ -49,6 +61,7 @@ export default function PostCard({
   const authorName =
     post.author?.display_name?.trim() || t("community.unknownAuthor");
   const relative = formatRelativeTime(post.created_at, i18n.language);
+  const edited = isPostEdited(post.created_at, post.updated_at);
   const likeId =
     testIndex !== undefined ? `like-post-index-${testIndex}` : `like-post-${post.id}`;
   const commentId =
@@ -63,6 +76,10 @@ export default function PostCard({
     testIndex !== undefined
       ? `delete-post-index-${testIndex}`
       : `delete-post-${post.id}`;
+  const editId =
+    testIndex !== undefined
+      ? `edit-post-index-${testIndex}`
+      : `edit-post-${post.id}`;
   const cardId =
     testIndex !== undefined
       ? `community-post-index-${testIndex}`
@@ -88,17 +105,13 @@ export default function PostCard({
               : `community-post-author-${post.id}`
           }
         >
-          <View style={[styles.avatar, { backgroundColor: colors.surface }]}>
-            {post.author?.avatar_url ? (
-              <Image
-                source={{ uri: post.author.avatar_url }}
-                style={styles.avatarImage}
-                contentFit="cover"
-              />
-            ) : (
-              <Ionicons name="person" size={18} color={colors.textSecondary} />
-            )}
-          </View>
+          <ProfileAvatar
+            uri={post.author?.avatar_url}
+            name={authorName}
+            size={36}
+            backgroundColor={colors.surface}
+            textColor={colors.textSecondary}
+          />
           <View style={styles.headerText}>
             <Text style={[styles.author, { color: colors.text }]} numberOfLines={1}>
               {authorName}
@@ -108,22 +121,27 @@ export default function PostCard({
             </Text>
           </View>
         </TouchableOpacity>
-        {isOwner && onDeletePress ? (
-          <TouchableOpacity
-            onPress={onDeletePress}
-            hitSlop={10}
-            testID={deleteId}
-          >
-            <Ionicons name="trash-outline" size={18} color={colors.alert} />
-          </TouchableOpacity>
+        {isOwner ? (
+          <View style={styles.ownerActions}>
+            {onEditPress ? (
+              <TouchableOpacity onPress={onEditPress} hitSlop={10} testID={editId}>
+                <Ionicons name="create-outline" size={18} color={colors.textSecondary} />
+              </TouchableOpacity>
+            ) : null}
+            {onDeletePress ? (
+              <TouchableOpacity onPress={onDeletePress} hitSlop={10} testID={deleteId}>
+                <Ionicons name="trash-outline" size={18} color={colors.alert} />
+              </TouchableOpacity>
+            ) : null}
+          </View>
         ) : null}
       </View>
 
       {post.image_url ? (
         <TouchableOpacity
           activeOpacity={0.9}
-          onPress={onImagePress}
-          disabled={!onImagePress}
+          onPress={onImageZoomPress ?? onDetailPress}
+          disabled={!onImageZoomPress && !onDetailPress}
           testID={
             testIndex !== undefined
               ? `community-post-image-index-${testIndex}`
@@ -132,16 +150,16 @@ export default function PostCard({
         >
           <Image
             source={{ uri: post.image_url }}
-            style={styles.photo}
+            style={[styles.photo, { width: PHOTO_SIDE, height: PHOTO_SIDE }]}
             contentFit="cover"
           />
         </TouchableOpacity>
       ) : null}
 
       <TouchableOpacity
-        activeOpacity={onImagePress ? 0.7 : 1}
-        onPress={onImagePress}
-        disabled={!onImagePress}
+        activeOpacity={onDetailPress ? 0.7 : 1}
+        onPress={onDetailPress}
+        disabled={!onDetailPress}
       >
         <Text style={[styles.mealName, { color: colors.text }]}>{post.meal_name}</Text>
       </TouchableOpacity>
@@ -156,6 +174,12 @@ export default function PostCard({
       {post.caption.trim() ? (
         <Text style={[styles.caption, { color: colors.textSecondary }]}>
           {post.caption}
+        </Text>
+      ) : null}
+
+      {edited ? (
+        <Text style={[styles.edited, { color: colors.textSecondary }]} testID={`edited-${post.id}`}>
+          {t("community.edited")}
         </Text>
       ) : null}
 
@@ -249,18 +273,6 @@ function createStyles(colors: ReturnType<typeof useTheme>["colors"]) {
       gap: 10,
       minWidth: 0,
     },
-    avatar: {
-      width: 36,
-      height: 36,
-      borderRadius: 18,
-      alignItems: "center",
-      justifyContent: "center",
-      overflow: "hidden",
-    },
-    avatarImage: {
-      width: 36,
-      height: 36,
-    },
     headerText: {
       flex: 1,
       minWidth: 0,
@@ -274,10 +286,15 @@ function createStyles(colors: ReturnType<typeof useTheme>["colors"]) {
       fontWeight: "500",
       marginTop: 1,
     },
+    ownerActions: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+    },
     photo: {
-      width: "100%",
-      height: 200,
       borderRadius: 12,
+      alignSelf: "center",
+      maxWidth: "100%",
     },
     mealName: {
       fontSize: 17,
@@ -292,6 +309,12 @@ function createStyles(colors: ReturnType<typeof useTheme>["colors"]) {
       fontSize: 14,
       lineHeight: 20,
       fontWeight: "500",
+    },
+    edited: {
+      fontSize: 12,
+      fontStyle: "italic",
+      fontWeight: "500",
+      marginTop: -4,
     },
     footer: {
       flexDirection: "row",

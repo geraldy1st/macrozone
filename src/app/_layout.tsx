@@ -1,3 +1,4 @@
+import AndroidSystemBars from "@/components/AndroidSystemBars";
 import NavigationGuard from "@/components/NavigationGuard";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
@@ -30,6 +31,7 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <ThemeProvider>
+        <AndroidSystemBars />
         <AuthProvider>
           <ToastProvider>
             <AlertProvider>

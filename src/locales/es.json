@@ -62,7 +62,16 @@
     "searchPlaceholder": "Buscar comidas…",
     "searchClear": "Borrar búsqueda",
     "searchEmptyTitle": "No se encontraron comidas",
-    "searchEmptyMessage": "Ninguna comida de la comunidad coincide con “{{query}}”. Prueba otro nombre."
+    "searchEmptyMessage": "Ninguna comida de la comunidad coincide con “{{query}}”. Prueba otro nombre.",
+    "createPost": "Nueva publicación",
+    "pickMealTitle": "Compartir una comida",
+    "pickMealHint": "Elige una comida guardada para publicarla en la comunidad.",
+    "pickMealEmpty": "Aún no hay comidas. Añade una y luego compártela aquí.",
+    "editTitle": "Editar publicación",
+    "editSave": "Guardar cambios",
+    "editSuccess": "Publicación actualizada",
+    "editError": "No se pudo actualizar la publicación.",
+    "edited": "Editado"
   },
   "welcome": {
     "title": "Bienvenido a nutriFlow",

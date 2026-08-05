@@ -1,3 +1,4 @@
+import ProfileAvatar from "@/components/ProfileAvatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useToast } from "@/contexts/ToastContext";
@@ -7,7 +8,6 @@ import { searchProfiles, toggleFollow } from "@/services/community";
 import type { ProfileListItem } from "@/types/community";
 import type { ThemeColors } from "@/styles/themes";
 import { Ionicons } from "@expo/vector-icons";
-import { Image } from "expo-image";
 import { router, useFocusEffect, type Href } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -213,17 +213,13 @@ export default function UserSearchScreen() {
               activeOpacity={0.75}
               testID={`user-search-row-${item.id}`}
             >
-              <View style={[styles.avatar, { backgroundColor: colors.surface }]}>
-                {item.avatar_url ? (
-                  <Image
-                    source={{ uri: item.avatar_url }}
-                    style={styles.avatarImage}
-                    contentFit="cover"
-                  />
-                ) : (
-                  <Ionicons name="person" size={20} color={colors.textSecondary} />
-                )}
-              </View>
+              <ProfileAvatar
+                uri={item.avatar_url}
+                name={item.display_name}
+                size={48}
+                backgroundColor={colors.surface}
+                textColor={colors.textSecondary}
+              />
 
               <View style={styles.rowBody}>
                 <View style={styles.nameRow}>
@@ -337,18 +333,6 @@ function createStyles(colors: ThemeColors) {
       borderRadius: 14,
       padding: 12,
       marginBottom: 10,
-    },
-    avatar: {
-      width: 48,
-      height: 48,
-      borderRadius: 24,
-      alignItems: "center",
-      justifyContent: "center",
-      overflow: "hidden",
-    },
-    avatarImage: {
-      width: 48,
-      height: 48,
     },
     rowBody: {
       flex: 1,

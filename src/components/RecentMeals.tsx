@@ -1,6 +1,7 @@
 import { useThemedStyles } from "@/hooks/useThemedStyles";
 import { Meal } from "@/storage/meals";
 import { macroColors, type ThemeColors } from "@/styles/themes";
+import { router, type Href } from "expo-router";
 import { StyleSheet, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import MealItem from "./MealItem";
@@ -43,6 +44,7 @@ export default function RecentMeals({ meals, onDelete }: RecentMealsProps) {
               carbs={meal.carbs}
               fat={meal.fat}
               photoUri={meal.photoUri}
+              onPress={() => router.push(`/meal/${meal.id}` as Href)}
             />
           ))
       )}
