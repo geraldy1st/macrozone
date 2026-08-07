@@ -19,6 +19,7 @@ function mapProfile(row: Record<string, unknown>): CommunityProfile {
     followers_count: (row.followers_count as number | undefined) ?? 0,
     following_count: (row.following_count as number | undefined) ?? 0,
     last_seen_at: (row.last_seen_at as string | null | undefined) ?? null,
+    show_community_posts: row.show_community_posts !== false,
   };
 }
 
@@ -31,6 +32,8 @@ export async function upsertMyProfile(input: {
   userId: string;
   displayName: string;
   avatarUrl?: string | null;
+  /** When set, updates public post-grid visibility (A010-2). */
+  showCommunityPosts?: boolean;
 }): Promise<CommunityProfile> {
   if (!supabase) {
     throw new Error("SUPABASE_NOT_CONFIGURED");
@@ -46,6 +49,10 @@ export async function upsertMyProfile(input: {
 
   if (input.avatarUrl !== undefined) {
     payload.avatar_url = input.avatarUrl;
+  }
+
+  if (input.showCommunityPosts !== undefined) {
+    payload.show_community_posts = input.showCommunityPosts;
   }
 
   const { data, error } = await supabase

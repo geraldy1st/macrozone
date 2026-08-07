@@ -52,6 +52,8 @@
     "commentsSendError": "No se pudo enviar el comentario.",
     "commentsDeleteSuccess": "Comentario eliminado",
     "commentsDeleteError": "No se pudo eliminar el comentario.",
+    "commentsCopied": "Comentario copiado",
+    "commentsCopyError": "No se pudo copiar el comentario.",
     "saveMeal": "Guardar comida",
     "saveAdded": "Comida guardada de la comunidad",
     "saveRemoved": "Eliminada de guardadas",
@@ -112,7 +114,8 @@
     "blockedProfileHint": "Bloqueaste a este miembro. Desbloquéalo para ver sus publicaciones.",
     "communityPosts": "Comidas de la comunidad",
     "noPostsTitle": "Aún no hay publicaciones",
-    "noPostsMessage": "Este miembro aún no ha compartido una comida con la comunidad."
+    "noPostsMessage": "Este miembro aún no ha compartido una comida con la comunidad.",
+    "postsHiddenByUser": "Este miembro ha elegido ocultar sus publicaciones de la comunidad en su perfil."
   },
   "profile": {
     "title": "Perfil",
@@ -145,6 +148,7 @@
     "save": "Guardar perfil",
     "savedMessage": "Perfil actualizado correctamente",
     "saveErrorMessage": "No se pudo guardar el perfil",
+    "removePhoto": "Eliminar foto",
     "signOut": "Cerrar sesión",
     "shareButton": "Compartir mi perfil",
     "shareTitle": "Compartir perfil",
@@ -158,6 +162,11 @@
     "healthVisible": "Visible",
     "healthHidden": "Oculto",
     "healthVisibilityHint": "Muestra u oculta la sección Salud en tu perfil.",
+    "communityPostsSection": "Publicaciones de la comunidad",
+    "communityPostsVisible": "Visible",
+    "communityPostsHidden": "Oculto",
+    "communityPostsVisibilityHint": "Muestra u oculta la cuadrícula de comidas de la comunidad en tu perfil público.",
+    "communityPostsHiddenHint": "Tus publicaciones de la comunidad están ocultas en tu perfil. Puedes mostrarlas de nuevo en Editar perfil.",
     "social": {
       "title": "Enlaces sociales",
       "description": "Añade hasta {{count}} enlaces. Introduce solo el nombre de usuario (sin https://).",
@@ -335,9 +344,11 @@
     "yesterday": "Ayer",
     "favoritesButton": "Mis comidas favoritas",
     "favoritesTitle": "Comidas favoritas",
+    "favoritesIntro": "Comidas que marcaste con estrella para acceso rápido. Ábrelas cuando quieras para ver macros o registrarlas de nuevo.",
     "favoritesEmpty": "Aún no hay comidas favoritas. Toca la estrella de una comida en Comidas para añadirla a favoritos.",
     "savedCommunityButton": "Guardadas de la comunidad",
     "savedCommunityTitle": "Guardadas de la comunidad",
+    "savedCommunityIntro": "Publicaciones de la comunidad que guardaste. Ábrelas para ver la receta, macros y comentarios.",
     "savedCommunityEmpty": "Aún no hay comidas guardadas. Toca el marcador en una publicación de la comunidad para añadirla aquí."
   },
   "recipe": {
@@ -462,6 +473,7 @@
       "subscriptionComingSoon": "Las suscripciones llegarán pronto.",
       "guestDescription": "Inicia sesión para usar el escaneo IA y acceder a tus comidas en todos tus dispositivos.",
       "signOut": "Cerrar sesión",
+      "signOutConfirm": "Tendrás que iniciar sesión de nuevo para sincronizar comidas y usar la comunidad.",
       "deleteDescription": "Elimina permanentemente tu cuenta y todos los datos asociados.",
       "deleteAccount": "Eliminar cuenta",
       "deleteTitle": "¿Eliminar cuenta?",

@@ -155,6 +155,14 @@ export default function ProfileEditScreen() {
     }
   };
 
+  const handleRemovePhoto = () => {
+    setProfile((current) => {
+      const next = { ...current };
+      delete next.photoUri;
+      return next;
+    });
+  };
+
   const handleCountrySelect = (code: string, dialCode: string) => {
     setProfile((current) => ({
       ...current,
@@ -267,7 +275,11 @@ export default function ProfileEditScreen() {
             {t("profile.personalInfo")}
           </Text>
 
-          <TouchableOpacity style={styles.avatarButton} onPress={handlePickPhoto}>
+          <TouchableOpacity
+            style={styles.avatarButton}
+            onPress={handlePickPhoto}
+            testID="profile-edit-pick-photo"
+          >
             {profile.photoUri ? (
               <Image source={{ uri: profile.photoUri }} style={styles.avatar} contentFit="cover" />
             ) : (
@@ -279,6 +291,19 @@ export default function ProfileEditScreen() {
               <Ionicons name="camera" size={14} color={colors.background} />
             </View>
           </TouchableOpacity>
+
+          {profile.photoUri ? (
+            <TouchableOpacity
+              style={styles.removePhotoBtn}
+              onPress={handleRemovePhoto}
+              testID="profile-edit-remove-photo"
+            >
+              <Ionicons name="trash-outline" size={16} color={colors.alert} />
+              <Text style={[styles.removePhotoText, { color: colors.alert }]}>
+                {t("profile.removePhoto")}
+              </Text>
+            </TouchableOpacity>
+          ) : null}
 
           <View style={fieldStyles.field}>
             <View style={styles.labelRow}>
@@ -444,6 +469,63 @@ export default function ProfileEditScreen() {
               />
             </View>
           </View>
+        </View>
+
+        <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
+          <View style={styles.sectionHeaderRow}>
+            <Text style={[styles.sectionLabel, { color: colors.primary, marginBottom: 0 }]}>
+              {t("profile.communityPostsSection")}
+            </Text>
+            <TouchableOpacity
+              style={[
+                styles.visibilityChip,
+                {
+                  backgroundColor: profile.showCommunityPosts
+                    ? colors.accent
+                    : colors.surface,
+                  borderColor: profile.showCommunityPosts
+                    ? colors.accent
+                    : colors.cardBorder,
+                },
+              ]}
+              onPress={() =>
+                setProfile((current) => ({
+                  ...current,
+                  showCommunityPosts: !current.showCommunityPosts,
+                }))
+              }
+              testID="profile-community-posts-visibility-toggle"
+            >
+              <Ionicons
+                name={
+                  profile.showCommunityPosts ? "eye-outline" : "eye-off-outline"
+                }
+                size={16}
+                color={
+                  profile.showCommunityPosts
+                    ? colors.background
+                    : colors.textSecondary
+                }
+              />
+              <Text
+                style={[
+                  styles.visibilityChipText,
+                  {
+                    color: profile.showCommunityPosts
+                      ? colors.background
+                      : colors.textSecondary,
+                  },
+                ]}
+              >
+                {profile.showCommunityPosts
+                  ? t("profile.communityPostsVisible")
+                  : t("profile.communityPostsHidden")}
+              </Text>
+            </TouchableOpacity>
+          </View>
+          <Text style={[styles.sectionHint, { color: colors.textSecondary }]}>
+            {t("profile.communityPostsVisibilityHint")}
+          </Text>
         </View>
 
         <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
@@ -992,6 +1074,20 @@ function createStyles(colors: ThemeColors) {
     avatarButton: {
       alignSelf: "center",
       marginBottom: 4,
+    },
+    removePhotoBtn: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 6,
+      alignSelf: "center",
+      paddingVertical: 10,
+      paddingHorizontal: 12,
+      marginBottom: 8,
+    },
+    removePhotoText: {
+      fontSize: 14,
+      fontWeight: "600",
     },
     avatar: {
       width: 110,

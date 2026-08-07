@@ -48,6 +48,11 @@ export default function SavedCommunityMealsScreen() {
         data={meals}
         keyExtractor={(meal) => meal.id}
         contentContainerStyle={[styles.content, { paddingBottom: bottomPadding }]}
+        ListHeaderComponent={
+          <Text style={[styles.intro, { color: colors.textSecondary }]}>
+            {t("allMeals.savedCommunityIntro")}
+          </Text>
+        }
         ListEmptyComponent={
           <View
             style={[
@@ -127,13 +132,19 @@ function createStyles(colors: ThemeColors) {
       paddingHorizontal: 20,
       gap: 10,
     },
+    intro: {
+      fontSize: 14,
+      lineHeight: 20,
+      fontWeight: "500",
+      marginBottom: 6,
+    },
     emptyCard: {
       borderWidth: 1,
       borderRadius: 16,
       padding: 28,
       alignItems: "center",
       gap: 12,
-      marginTop: 20,
+      marginTop: 12,
     },
     emptyText: {
       fontSize: 14,

@@ -54,6 +54,8 @@ export default function PublicProfileScreen() {
   const [isBlocked, setIsBlocked] = useState(false);
   const [isSelf, setIsSelf] = useState(false);
   const [posts, setPosts] = useState<FeedPost[]>([]);
+  /** Total loaded for stats (may include posts not shown when grid is hidden). */
+  const [postCount, setPostCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isActionLoading, setIsActionLoading] = useState(false);
   const [error, setError] = useState(false);
@@ -82,16 +84,22 @@ export default function PublicProfileScreen() {
       setIsBlocked(view.isBlocked);
       setIsSelf(view.isSelf);
 
+      const postsVisible =
+        view.isSelf || view.profile.show_community_posts !== false;
+
       if (!view.isBlocked) {
         const page = await fetchPostsByAuthor(id, { limit: 30 });
-        setPosts(page.posts);
+        setPostCount(page.posts.length);
+        setPosts(postsVisible ? page.posts : []);
       } else {
         setPosts([]);
+        setPostCount(0);
       }
     } catch {
       setError(true);
       setProfile(null);
       setPosts([]);
+      setPostCount(0);
     } finally {
       setIsLoading(false);
     }
@@ -283,7 +291,7 @@ export default function PublicProfileScreen() {
                 <View style={styles.statsRow}>
                   <View style={styles.stat}>
                     <Text style={[styles.statValue, { color: colors.text }]}>
-                      {posts.length}
+                      {postCount}
                     </Text>
                     <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
                       {t("social.posts")}
@@ -380,19 +388,23 @@ export default function PublicProfileScreen() {
                 )}
               </View>
 
-              {!isBlocked ? (
-                <Text style={[styles.sectionTitle, { color: colors.text }]}>
-                  {t("social.communityPosts")}
-                </Text>
-              ) : (
+              {isBlocked ? (
                 <Text style={[styles.blockedHint, { color: colors.textSecondary }]}>
                   {t("social.blockedProfileHint")}
+                </Text>
+              ) : profile.show_community_posts === false && !isSelf ? (
+                <Text style={[styles.blockedHint, { color: colors.textSecondary }]}>
+                  {t("social.postsHiddenByUser")}
+                </Text>
+              ) : (
+                <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                  {t("social.communityPosts")}
                 </Text>
               )}
             </View>
           }
           ListEmptyComponent={
-            !isBlocked ? (
+            !isBlocked && (isSelf || profile.show_community_posts !== false) ? (
               <View style={styles.centered}>
                 <Ionicons
                   name="images-outline"

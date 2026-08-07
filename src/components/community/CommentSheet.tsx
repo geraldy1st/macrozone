@@ -9,11 +9,15 @@ import {
 import { MAX_COMMENT_LENGTH, type CommunityComment } from "@/types/community";
 import { formatRelativeTime } from "@/utils/relativeTime";
 import { Ionicons } from "@expo/vector-icons";
+import * as Clipboard from "expo-clipboard";
+import * as Haptics from "expo-haptics";
+import { router, type Href } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   FlatList,
+  Keyboard,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -49,6 +53,7 @@ export default function CommentSheet({
   const [body, setBody] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSending, setIsSending] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
 
   const load = useCallback(async () => {
     if (!postId) {
@@ -71,6 +76,29 @@ export default function CommentSheet({
       setBody("");
     }
   }, [visible, postId, load]);
+
+  // Android modals often ignore KeyboardAvoidingView; lift sheet by keyboard height.
+  useEffect(() => {
+    if (!visible) {
+      setKeyboardHeight(0);
+      return;
+    }
+
+    const showEvent = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+    const hideEvent = Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
+
+    const showSub = Keyboard.addListener(showEvent, (event) => {
+      setKeyboardHeight(event.endCoordinates.height);
+    });
+    const hideSub = Keyboard.addListener(hideEvent, () => {
+      setKeyboardHeight(0);
+    });
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, [visible]);
 
   const handleSend = async () => {
     if (!user || !postId || !body.trim()) {
@@ -105,26 +133,46 @@ export default function CommentSheet({
     }
   };
 
+  const handleAuthorPress = (authorId: string) => {
+    onClose();
+    router.push(`/u/${authorId}` as Href);
+  };
+
+  const handleCopyComment = async (text: string) => {
+    const body = text.trim();
+    if (!body) {
+      return;
+    }
+    try {
+      await Clipboard.setStringAsync(body);
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      showToast(t("community.commentsCopied"), "success");
+    } catch {
+      showToast(t("community.commentsCopyError"), "error");
+    }
+  };
+
+  const bottomPad =
+    Math.max(insets.bottom, Platform.OS === "android" ? 28 : 12) +
+    (Platform.OS === "android" ? keyboardHeight : 0);
+
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <Pressable style={styles.overlay} onPress={onClose}>
+      <View style={styles.overlay}>
+        <Pressable style={styles.backdrop} onPress={onClose} />
         <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          keyboardVerticalOffset={0}
           style={styles.sheetWrap}
-          keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 24}
         >
-          <Pressable
+          <View
             style={[
               styles.sheet,
               {
                 backgroundColor: colors.card,
-                paddingBottom: Math.max(
-                  insets.bottom,
-                  Platform.OS === "android" ? 28 : 12,
-                ),
+                paddingBottom: bottomPad,
               },
             ]}
-            onPress={(e) => e.stopPropagation()}
           >
             <View style={styles.header}>
               <Text style={[styles.title, { color: colors.text }]}>
@@ -142,6 +190,7 @@ export default function CommentSheet({
                 data={comments}
                 keyExtractor={(item) => item.id}
                 style={styles.list}
+                keyboardShouldPersistTaps="handled"
                 contentContainerStyle={
                   comments.length === 0 ? styles.emptyList : undefined
                 }
@@ -158,14 +207,24 @@ export default function CommentSheet({
                   return (
                     <View style={styles.commentRow} testID={`comment-${item.id}`}>
                       <View style={styles.commentBody}>
-                        <Text style={[styles.commentAuthor, { color: colors.text }]}>
-                          {name}
-                          <Text style={{ color: colors.textSecondary, fontWeight: "500" }}>
-                            {"  "}
-                            {formatRelativeTime(item.created_at, i18n.language)}
+                        <TouchableOpacity
+                          onPress={() => handleAuthorPress(item.author_id)}
+                          hitSlop={6}
+                          testID={`comment-author-${item.id}`}
+                        >
+                          <Text style={[styles.commentAuthor, { color: colors.text }]}>
+                            {name}
+                            <Text style={{ color: colors.textSecondary, fontWeight: "500" }}>
+                              {"  "}
+                              {formatRelativeTime(item.created_at, i18n.language)}
+                            </Text>
                           </Text>
-                        </Text>
-                        <Text style={[styles.commentText, { color: colors.textSecondary }]}>
+                        </TouchableOpacity>
+                        <Text
+                          style={[styles.commentText, { color: colors.textSecondary }]}
+                          onLongPress={() => void handleCopyComment(item.body)}
+                          testID={`comment-body-${item.id}`}
+                        >
                           {item.body}
                         </Text>
                       </View>
@@ -224,9 +283,9 @@ export default function CommentSheet({
                 {t("community.commentsLoginHint")}
               </Text>
             )}
-          </Pressable>
+          </View>
         </KeyboardAvoidingView>
-      </Pressable>
+      </View>
     </Modal>
   );
 }
@@ -235,12 +294,15 @@ function createStyles(colors: ReturnType<typeof useTheme>["colors"]) {
   return StyleSheet.create({
     overlay: {
       flex: 1,
-      backgroundColor: "rgba(0,0,0,0.45)",
       justifyContent: "flex-end",
+    },
+    backdrop: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: "rgba(0,0,0,0.45)",
     },
     sheetWrap: {
       width: "100%",
-      maxHeight: "80%",
+      maxHeight: "85%",
     },
     sheet: {
       borderTopLeftRadius: 20,

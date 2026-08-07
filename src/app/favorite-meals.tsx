@@ -58,6 +58,11 @@ export default function FavoriteMealsScreen() {
         data={favoriteMeals}
         keyExtractor={(meal) => meal.id}
         contentContainerStyle={[styles.content, { paddingBottom: bottomPadding }]}
+        ListHeaderComponent={
+          <Text style={[styles.intro, { color: colors.textSecondary }]}>
+            {t("allMeals.favoritesIntro")}
+          </Text>
+        }
         ListEmptyComponent={
           <View
             style={[
@@ -120,8 +125,14 @@ function createStyles(colors: ThemeColors) {
       paddingHorizontal: 20,
       flexGrow: 1,
     },
+    intro: {
+      fontSize: 14,
+      lineHeight: 20,
+      fontWeight: "500",
+      marginBottom: 14,
+    },
     emptyCard: {
-      marginTop: 40,
+      marginTop: 12,
       borderRadius: 16,
       borderWidth: 1,
       padding: 28,

@@ -9,6 +9,8 @@ export type CommunityProfile = {
   followers_count?: number;
   following_count?: number;
   last_seen_at?: string | null;
+  /** When false, post grid is hidden on public profiles (A010-2). Default true. */
+  show_community_posts?: boolean;
 };
 
 /** Profile row for search / public cards with optional relation flags. */

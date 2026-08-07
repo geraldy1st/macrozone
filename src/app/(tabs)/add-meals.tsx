@@ -303,14 +303,14 @@ export default function AddMealScreen() {
             : undefined,
       };
 
-      const saved = await addMeal(mealInput, photoUri ?? undefined);
+      await addMeal(mealInput, photoUri ?? undefined);
       await setPendingCelebration();
 
       resetForm();
       showToast(t("addMeal.successMessage"), "success");
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      // Open meal detail so user can share to community from there (A009-1).
-      router.replace(`/meal/${saved.id}`);
+      // Home full-screen motivation overlay (A010-1). Share community stays on meal detail.
+      router.replace("/(tabs)");
     } catch {
       showAlert({
         title: t("addMeal.saveErrorTitle"),

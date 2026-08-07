@@ -68,6 +68,7 @@ export default function SettingsScreen() {
     changePassword,
     changeEmail,
     canChangeEmailWithPassword,
+    signOut,
   } = useAuth();
   const styles = useThemedStyles(createStyles);
   // Extra room so legal links stay above Android system nav (A009-1).
@@ -225,6 +226,29 @@ export default function SettingsScreen() {
     } finally {
       setIsChangingEmail(false);
     }
+  };
+
+  const handleSignOut = () => {
+    showAlert({
+      title: t("settings.account.signOut"),
+      message: t("settings.account.signOutConfirm"),
+      buttons: [
+        { text: t("mealItem.cancel"), style: "cancel" },
+        {
+          text: t("settings.account.signOut"),
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await signOut();
+              await resetOnboarding();
+              router.replace("/welcome");
+            } catch {
+              showToast(t("auth.signOutErrorMessage"), "error");
+            }
+          },
+        },
+      ],
+    });
   };
 
   const handleDeleteAccount = () => {
@@ -606,6 +630,16 @@ export default function SettingsScreen() {
             </View>
           ) : null}
 
+          <TouchableOpacity
+            style={[styles.signOutButton, { borderColor: colors.cardBorder }]}
+            onPress={handleSignOut}
+            testID="settings-sign-out-btn"
+          >
+            <Text style={[styles.signOutButtonText, { color: colors.alert }]}>
+              {t("settings.account.signOut")}
+            </Text>
+          </TouchableOpacity>
+
           <Text style={[styles.description, { color: colors.textSecondary, marginTop: 20 }]}>
             {t("settings.account.deleteDescription")}
           </Text>
@@ -832,6 +866,19 @@ function createStyles(colors: ThemeColors) {
       fontSize: 16,
       fontWeight: "500",
       borderWidth: 1,
+    },
+    signOutButton: {
+      borderRadius: 12,
+      padding: 18,
+      borderWidth: 1,
+      alignItems: "center",
+      minHeight: 52,
+      justifyContent: "center",
+      marginTop: 8,
+    },
+    signOutButtonText: {
+      fontSize: 16,
+      fontWeight: "700",
     },
     deleteButton: {
       borderRadius: 12,

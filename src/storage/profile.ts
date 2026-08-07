@@ -20,6 +20,11 @@ export type UserProfile = {
   socialLinks: SocialLink[];
   /** When false, Health section is hidden on the Profile screen. */
   showHealth: boolean;
+  /**
+   * When false, community posts grid is hidden on the public profile (and own profile).
+   * Synced to Supabase profiles.show_community_posts when signed in.
+   */
+  showCommunityPosts: boolean;
 };
 
 export const defaultProfile: UserProfile = {
@@ -34,6 +39,7 @@ export const defaultProfile: UserProfile = {
   phoneNumber: "",
   socialLinks: [],
   showHealth: true,
+  showCommunityPosts: true,
 };
 
 const PROFILE_KEY = "userProfile";
@@ -58,6 +64,7 @@ export async function getUserProfile(): Promise<UserProfile> {
     birthDate: parsed.birthDate ?? "",
     socialLinks: Array.isArray(parsed.socialLinks) ? parsed.socialLinks : [],
     showHealth: parsed.showHealth !== false,
+    showCommunityPosts: parsed.showCommunityPosts !== false,
   };
 }
 

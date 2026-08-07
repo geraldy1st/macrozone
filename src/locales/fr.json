@@ -52,6 +52,8 @@
     "commentsSendError": "Impossible d'envoyer le commentaire.",
     "commentsDeleteSuccess": "Commentaire supprimé",
     "commentsDeleteError": "Impossible de supprimer le commentaire.",
+    "commentsCopied": "Commentaire copié",
+    "commentsCopyError": "Impossible de copier le commentaire.",
     "saveMeal": "Enregistrer le repas",
     "saveAdded": "Repas enregistré depuis la communauté",
     "saveRemoved": "Retiré des repas enregistrés",
@@ -112,7 +114,8 @@
     "blockedProfileHint": "Vous avez bloqué ce membre. Débloquez-le pour revoir ses posts.",
     "communityPosts": "Repas communautaires",
     "noPostsTitle": "Aucun post pour le moment",
-    "noPostsMessage": "Ce membre n'a pas encore partagé de repas avec la communauté."
+    "noPostsMessage": "Ce membre n'a pas encore partagé de repas avec la communauté.",
+    "postsHiddenByUser": "Ce membre a choisi de masquer ses posts communauté sur son profil."
   },
   "profile": {
     "title": "Profil",
@@ -145,6 +148,7 @@
     "save": "Enregistrer le profil",
     "savedMessage": "Profil mis à jour avec succès",
     "saveErrorMessage": "Impossible d'enregistrer le profil",
+    "removePhoto": "Supprimer la photo",
     "signOut": "Se déconnecter",
     "shareButton": "Partager mon profil",
     "shareTitle": "Partager le profil",
@@ -158,6 +162,11 @@
     "healthVisible": "Visible",
     "healthHidden": "Masqué",
     "healthVisibilityHint": "Affichez ou masquez la section Santé sur votre profil.",
+    "communityPostsSection": "Posts communauté",
+    "communityPostsVisible": "Visible",
+    "communityPostsHidden": "Masqué",
+    "communityPostsVisibilityHint": "Affichez ou masquez la grille de vos repas communauté sur votre profil public.",
+    "communityPostsHiddenHint": "Vos posts communauté sont masqués sur votre profil. Vous pouvez les réafficher dans Modifier le profil.",
     "social": {
       "title": "Liens sociaux",
       "description": "Ajoutez jusqu'à {{count}} liens. Saisissez uniquement le nom d'utilisateur (sans https://).",
@@ -335,9 +344,11 @@
     "yesterday": "Hier",
     "favoritesButton": "Mes repas favoris",
     "favoritesTitle": "Repas favoris",
+    "favoritesIntro": "Les repas que vous avez marqués d'une étoile. Ouvrez-en un pour revoir les macros ou le logger à nouveau.",
     "favoritesEmpty": "Aucun repas favori pour le moment. Appuyez sur l'étoile d'un repas dans la page Repas pour l'ajouter à vos favoris.",
     "savedCommunityButton": "Enregistrés de la communauté",
     "savedCommunityTitle": "Enregistrés de la communauté",
+    "savedCommunityIntro": "Les posts communauté que vous avez mis en favori. Ouvrez un post pour la recette, les macros et la discussion.",
     "savedCommunityEmpty": "Aucun repas enregistré. Appuyez sur le signet d'un post communauté pour l'ajouter ici."
   },
   "recipe": {
@@ -462,6 +473,7 @@
       "subscriptionComingSoon": "Les abonnements arrivent bientôt.",
       "guestDescription": "Connectez-vous pour utiliser le scan IA et retrouver vos repas sur tous vos appareils.",
       "signOut": "Se déconnecter",
+      "signOutConfirm": "Vous devrez vous reconnecter pour synchroniser vos repas et utiliser la communauté.",
       "deleteDescription": "Supprimez définitivement votre compte et toutes les données associées.",
       "deleteAccount": "Supprimer le compte",
       "deleteTitle": "Supprimer le compte ?",

@@ -52,6 +52,8 @@
     "commentsSendError": "Could not send comment.",
     "commentsDeleteSuccess": "Comment deleted",
     "commentsDeleteError": "Could not delete comment.",
+    "commentsCopied": "Comment copied",
+    "commentsCopyError": "Could not copy comment.",
     "saveMeal": "Save meal",
     "saveAdded": "Meal saved from community",
     "saveRemoved": "Removed from saved meals",
@@ -112,7 +114,8 @@
     "blockedProfileHint": "You blocked this member. Unblock to see their posts again.",
     "communityPosts": "Community meals",
     "noPostsTitle": "No posts yet",
-    "noPostsMessage": "This member has not shared a meal with the community."
+    "noPostsMessage": "This member has not shared a meal with the community.",
+    "postsHiddenByUser": "This member has chosen to hide their community posts on their profile."
   },
   "profile": {
     "title": "Profile",
@@ -145,6 +148,7 @@
     "save": "Save profile",
     "savedMessage": "Profile updated successfully",
     "saveErrorMessage": "Unable to save profile",
+    "removePhoto": "Remove photo",
     "signOut": "Sign out",
     "shareButton": "Share my profile",
     "shareTitle": "Share profile",
@@ -158,6 +162,11 @@
     "healthVisible": "Visible",
     "healthHidden": "Hidden",
     "healthVisibilityHint": "Show or hide the Health section on your public profile.",
+    "communityPostsSection": "Community posts",
+    "communityPostsVisible": "Visible",
+    "communityPostsHidden": "Hidden",
+    "communityPostsVisibilityHint": "Show or hide your community meals grid on your public profile.",
+    "communityPostsHiddenHint": "Your community posts are hidden on your profile. You can show them again in Edit profile.",
     "social": {
       "title": "Social links",
       "description": "Add up to {{count}} personal links. Enter only your username (no https://).",
@@ -335,9 +344,11 @@
     "yesterday": "Yesterday",
     "favoritesButton": "My favorite meals",
     "favoritesTitle": "Favorite meals",
+    "favoritesIntro": "Meals you starred for quick access. Open one anytime to review macros or log it again.",
     "favoritesEmpty": "No favorite meals yet. Tap the star on a meal in All Meals to add it to your favorites.",
     "savedCommunityButton": "Saved from community",
     "savedCommunityTitle": "Saved from community",
+    "savedCommunityIntro": "Community posts you bookmarked. Open a post to view the recipe, macros, and discussion.",
     "savedCommunityEmpty": "No saved community meals yet. Tap the bookmark icon on a community post to save it here."
   },
   "recipe": {
@@ -462,6 +473,7 @@
       "subscriptionComingSoon": "Subscriptions are coming soon.",
       "guestDescription": "Sign in to use AI scanning and access your meals across devices.",
       "signOut": "Sign out",
+      "signOutConfirm": "You will need to sign in again to sync meals and use community features.",
       "deleteDescription": "Permanently delete your account and all associated data.",
       "deleteAccount": "Delete account",
       "deleteTitle": "Delete account?",
