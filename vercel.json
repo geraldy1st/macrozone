@@ -6,6 +6,9 @@
     },
     "api/analyze-recipe.ts": {
       "maxDuration": 30
+    },
+    "api/delete-account.ts": {
+      "maxDuration": 15
     }
   }
 }

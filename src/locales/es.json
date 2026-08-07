@@ -470,6 +470,7 @@
       "deleteSuccess": "Tu cuenta ha sido eliminada.",
       "deleteError": "No se pudo eliminar tu cuenta. Inténtalo de nuevo.",
       "deleteNotConfigured": "La eliminación requiere el servidor: despliega la API delete-account en Vercel con SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY, y configura EXPO_PUBLIC_ANALYZE_API_URL (o EXPO_PUBLIC_DELETE_ACCOUNT_API_URL).",
+      "deleteNotDeployed": "La API delete-account no está desplegada en Vercel (HTTP 404). Vuelve a desplegar el proyecto para publicar api/delete-account, con SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY.",
       "deleteUnauthorized": "Tu sesión ha caducado. Inicia sesión de nuevo e intenta eliminar la cuenta."
     },
     "language": "Idioma",

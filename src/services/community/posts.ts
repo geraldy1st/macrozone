@@ -297,20 +297,62 @@ export async function fetchPostById(postId: string): Promise<FeedPost | null> {
   return mapFeedPost(data as Record<string, unknown>);
 }
 
-/** Soft-delete own post. */
+/**
+ * Delete own post.
+ * Prefers soft-delete (deleted_at). Falls back to hard delete if soft-delete
+ * matches zero rows (RLS / missing column / silent no-op).
+ */
 export async function deleteMyPost(postId: string, authorId: string): Promise<void> {
   if (!supabase) {
     throw new Error("SUPABASE_NOT_CONFIGURED");
   }
 
-  const { error } = await supabase
+  const deletedAt = new Date().toISOString();
+
+  // Soft-delete first (keeps history if preferred by RLS/policies).
+  // Do not use .select() after soft-delete: SELECT policy often hides deleted rows,
+  // which can look like a failure even when the update succeeded.
+  const { error: softError, count: softCount } = await supabase
     .from("posts")
-    .update({ deleted_at: new Date().toISOString() })
+    .update(
+      { deleted_at: deletedAt, updated_at: deletedAt },
+      { count: "exact" },
+    )
+    .eq("id", postId)
+    .eq("author_id", authorId)
+    .is("deleted_at", null);
+
+  if (!softError && softCount && softCount > 0) {
+    return;
+  }
+
+  // Hard delete fallback (posts_delete_own RLS).
+  const { error: hardError, count: hardCount } = await supabase
+    .from("posts")
+    .delete({ count: "exact" })
     .eq("id", postId)
     .eq("author_id", authorId);
 
-  if (error) {
-    throw error;
+  if (hardError) {
+    throw hardError;
+  }
+
+  if (!hardCount || hardCount === 0) {
+    // Soft update may have worked without count support — verify post is gone from feed.
+    const { data: stillThere, error: checkError } = await supabase
+      .from("posts")
+      .select("id")
+      .eq("id", postId)
+      .is("deleted_at", null)
+      .maybeSingle();
+
+    if (checkError) {
+      throw checkError;
+    }
+
+    if (stillThere) {
+      throw softError ?? new Error("POST_DELETE_FORBIDDEN");
+    }
   }
 }
 

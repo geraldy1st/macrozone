@@ -246,12 +246,16 @@ export default function SettingsScreen() {
               // Sign-in screen (with continue as guest), not Welcome.
               router.replace("/login");
             } catch (error) {
-              const message =
-                error instanceof DeleteAccountError && error.code === "NOT_CONFIGURED"
-                  ? t("settings.account.deleteNotConfigured")
-                  : error instanceof DeleteAccountError && error.code === "UNAUTHORIZED"
-                    ? t("settings.account.deleteUnauthorized")
-                    : t("settings.account.deleteError");
+              let message = t("settings.account.deleteError");
+              if (error instanceof DeleteAccountError) {
+                if (error.code === "NOT_CONFIGURED") {
+                  message = t("settings.account.deleteNotConfigured");
+                } else if (error.code === "UNAUTHORIZED") {
+                  message = t("settings.account.deleteUnauthorized");
+                } else if (error.code === "NOT_DEPLOYED") {
+                  message = t("settings.account.deleteNotDeployed");
+                }
+              }
 
               showAlert({
                 title: t("auth.errorTitle"),

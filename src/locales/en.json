@@ -470,6 +470,7 @@
       "deleteSuccess": "Your account has been deleted.",
       "deleteError": "Unable to delete your account. Please try again.",
       "deleteNotConfigured": "Account deletion needs a server setup: deploy the delete-account API on Vercel with SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY, and set EXPO_PUBLIC_ANALYZE_API_URL (or EXPO_PUBLIC_DELETE_ACCOUNT_API_URL).",
+      "deleteNotDeployed": "The delete-account API is not deployed on Vercel (HTTP 404). Redeploy the project so api/delete-account is live, and set SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY.",
       "deleteUnauthorized": "Your session expired. Sign in again, then retry deleting your account."
     },
     "language": "Language",
