@@ -1,4 +1,7 @@
-import { GOOGLE_WEB_CLIENT_ID } from "@/constants/googleAuth";
+import {
+  GOOGLE_IOS_CLIENT_ID,
+  GOOGLE_WEB_CLIENT_ID,
+} from "@/constants/googleAuth";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 import { syncMyCommunityProfile, touchLastSeen } from "@/services/community";
 import { setStorageScope } from "@/storage/scopedKey";
@@ -146,6 +149,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       GoogleSignin.configure({
         webClientId: GOOGLE_WEB_CLIENT_ID,
+        // iOS client from Google Cloud (Bundle ID com.geraldy.macrozone)
+        ...(GOOGLE_IOS_CLIENT_ID ? { iosClientId: GOOGLE_IOS_CLIENT_ID } : {}),
         offlineAccess: false,
       });
       googleConfiguredRef.current = true;
@@ -390,6 +395,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!googleConfiguredRef.current) {
         GoogleSignin.configure({
           webClientId: GOOGLE_WEB_CLIENT_ID,
+          ...(GOOGLE_IOS_CLIENT_ID
+            ? { iosClientId: GOOGLE_IOS_CLIENT_ID }
+            : {}),
           offlineAccess: false,
         });
         googleConfiguredRef.current = true;

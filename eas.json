@@ -11,6 +11,13 @@
                 "buildType": "apk"
             }
         },
+        "preview-simulator": {
+            "distribution": "internal",
+            "autoIncrement": true,
+            "ios": {
+                "simulator": true
+            }
+        },
         "production": {
             "autoIncrement": true
         }
