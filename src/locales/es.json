@@ -168,6 +168,8 @@
     "save": "Guardar perfil",
     "savedMessage": "Perfil actualizado correctamente",
     "saveErrorMessage": "No se pudo guardar el perfil",
+    "communitySyncWarning": "Perfil guardado en este dispositivo. Bio/país/enlaces públicos: aplica la migración Supabase A011 y vuelve a guardar.",
+    "communitySyncWarning": "Perfil guardado en este dispositivo. Bio/país/enlaces públicos: aplica la migración Supabase A011 y vuelve a guardar.",
     "removePhoto": "Eliminar foto",
     "signOut": "Cerrar sesión",
     "shareButton": "Compartir mi perfil",

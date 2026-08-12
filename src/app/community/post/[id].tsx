@@ -75,7 +75,8 @@ export default function CommunityPostDetailScreen() {
   const { showToast } = useToast();
   const { showAlert } = useAlert();
   const styles = useThemedStyles(createStyles);
-  const bottomPadding = useBottomContentPadding(20, false);
+  // Extra room above Android system nav / gesture bar (A011-3).
+  const bottomPadding = useBottomContentPadding(48, false);
   const [post, setPost] = useState<FeedPost | null>(null);
   const [isSaved, setIsSaved] = useState(false);
   const [isLoading, setIsLoading] = useState(true);

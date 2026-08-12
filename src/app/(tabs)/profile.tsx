@@ -73,12 +73,15 @@ export default function ProfileScreen() {
 
     setStatsLoading(true);
     try {
-      // Keep community avatar aligned with local Profile photo (A011-1).
+      // Keep community avatar + public bio/country/links in sync (A011-3: no Google avatar).
       try {
         await syncMyCommunityProfile(user);
       } catch {
         // Non-blocking — still load remote profile/posts
       }
+
+      const refreshedLocal = await getUserProfile();
+      setProfile(refreshedLocal);
 
       const [remote, page] = await Promise.all([
         getProfile(user.id),
@@ -88,11 +91,16 @@ export default function ProfileScreen() {
       setFollowing(remote?.following_count ?? 0);
       setPosts(page.posts);
 
-      // Prefer remote community avatar on Profile when local photo is empty but remote exists
-      if (!local.photoUri?.trim() && remote?.avatar_url) {
+      // Prefer remote custom avatar when local has no photo (never Google URLs).
+      const remoteAvatar = remote?.avatar_url?.trim() ?? "";
+      if (
+        !refreshedLocal.photoUri?.trim() &&
+        remoteAvatar &&
+        remoteAvatar.includes(`${user.id}/profile-avatar`)
+      ) {
         setProfile((current) => ({
           ...current,
-          photoUri: remote.avatar_url ?? undefined,
+          photoUri: remoteAvatar,
         }));
       }
     } catch {

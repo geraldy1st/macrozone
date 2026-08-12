@@ -89,24 +89,7 @@ export async function upsertMyProfile(input: {
     payload.show_community_posts = input.showCommunityPosts;
   }
 
-  if (input.bio !== undefined) {
-    payload.bio = input.bio.trim().slice(0, 400);
-  }
-
-  if (input.countryCode !== undefined) {
-    payload.country_code = input.countryCode?.trim() || null;
-  }
-
-  if (input.socialLinks !== undefined) {
-    payload.social_links = input.socialLinks
-      .filter((link) => link.platform && link.url?.trim())
-      .slice(0, 6)
-      .map((link) => ({
-        platform: link.platform,
-        url: link.url.trim(),
-      }));
-  }
-
+  // Core fields first so name/avatar still save if public columns are missing.
   const { data, error } = await supabase
     .from("profiles")
     .upsert(payload, { onConflict: "id" })
@@ -115,6 +98,55 @@ export async function upsertMyProfile(input: {
 
   if (error) {
     throw error;
+  }
+
+  // A011 public fields (bio / country / links) — separate update so a missing
+  // migration does not block name/avatar sync.
+  const publicPayload: Record<string, unknown> = {
+    updated_at: new Date().toISOString(),
+  };
+  let hasPublicFields = false;
+
+  if (input.bio !== undefined) {
+    publicPayload.bio = input.bio.trim().slice(0, 400);
+    hasPublicFields = true;
+  }
+
+  if (input.countryCode !== undefined) {
+    publicPayload.country_code = input.countryCode?.trim() || null;
+    hasPublicFields = true;
+  }
+
+  if (input.socialLinks !== undefined) {
+    publicPayload.social_links = input.socialLinks
+      .filter((link) => link.platform && link.url?.trim())
+      .slice(0, 6)
+      .map((link) => ({
+        platform: link.platform,
+        url: link.url.trim(),
+      }));
+    hasPublicFields = true;
+  }
+
+  if (hasPublicFields) {
+    const { data: publicData, error: publicError } = await supabase
+      .from("profiles")
+      .update(publicPayload)
+      .eq("id", input.userId)
+      .select()
+      .maybeSingle();
+
+    if (publicError) {
+      console.warn(
+        "Public profile fields update failed (apply A011 SQL migration?):",
+        publicError.message,
+      );
+      return mapProfile(data as Record<string, unknown>);
+    }
+
+    if (publicData) {
+      return mapProfile(publicData as Record<string, unknown>);
+    }
   }
 
   return mapProfile(data as Record<string, unknown>);

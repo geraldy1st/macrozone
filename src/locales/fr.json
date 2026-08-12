@@ -168,6 +168,7 @@
     "save": "Enregistrer le profil",
     "savedMessage": "Profil mis à jour avec succès",
     "saveErrorMessage": "Impossible d'enregistrer le profil",
+    "communitySyncWarning": "Profil enregistré sur cet appareil. Bio/pays/liens publics : appliquez la migration Supabase A011 puis ré-enregistrez.",
     "removePhoto": "Supprimer la photo",
     "signOut": "Se déconnecter",
     "shareButton": "Partager mon profil",

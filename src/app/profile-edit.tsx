@@ -225,12 +225,16 @@ export default function ProfileEditScreen() {
       };
       await setUserProfile(cleaned);
 
-      // Keep community profile (name + public avatar) in sync when signed in
+      // Keep community profile (avatar, bio, country, links) in sync when signed in
       if (user?.id) {
         try {
           await syncMyCommunityProfile(user);
-        } catch {
-          // Local save already succeeded — don't block UX on remote profile sync
+        } catch (error) {
+          console.warn("Community profile sync failed after save:", error);
+          // Local save already succeeded — still warn so bio/country can be re-saved after SQL migration
+          showToast(t("profile.communitySyncWarning"), "info");
+          router.back();
+          return;
         }
       }
 

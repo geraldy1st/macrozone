@@ -168,6 +168,7 @@
     "save": "Save profile",
     "savedMessage": "Profile updated successfully",
     "saveErrorMessage": "Unable to save profile",
+    "communitySyncWarning": "Profile saved on this device. Public bio/country/links may need the Supabase A011 migration — re-save after applying it.",
     "removePhoto": "Remove photo",
     "signOut": "Sign out",
     "shareButton": "Share my profile",
