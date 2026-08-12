@@ -1,7 +1,15 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { fetchFeed } from "@/services/community";
+import { getHiddenUserIds } from "@/storage/hiddenUsers";
 import type { FeedPost } from "@/types/community";
 import { useCallback, useEffect, useRef, useState } from "react";
+
+function filterHidden(posts: FeedPost[], hidden: Set<string>): FeedPost[] {
+  if (hidden.size === 0) {
+    return posts;
+  }
+  return posts.filter((post) => !hidden.has(post.author_id));
+}
 
 export function useFeed(searchQuery = "") {
   const { user } = useAuth();
@@ -15,6 +23,7 @@ export function useFeed(searchQuery = "") {
   const isLoadingMoreRef = useRef(false);
   const userIdRef = useRef(user?.id ?? null);
   const searchQueryRef = useRef(searchQuery);
+  const hiddenRef = useRef<Set<string>>(new Set());
   userIdRef.current = user?.id ?? null;
   searchQueryRef.current = searchQuery;
 
@@ -23,13 +32,16 @@ export function useFeed(searchQuery = "") {
     setError(null);
 
     try {
+      const hiddenIds = await getHiddenUserIds();
+      hiddenRef.current = new Set(hiddenIds);
+
       const page = await fetchFeed({
         before: null,
         currentUserId: userIdRef.current,
         query: searchQueryRef.current || null,
       });
 
-      setPosts(page.posts);
+      setPosts(filterHidden(page.posts, hiddenRef.current));
       nextCursorRef.current = page.nextCursor;
       setNextCursor(page.nextCursor);
     } catch (err) {
@@ -58,7 +70,10 @@ export function useFeed(searchQuery = "") {
         query: searchQueryRef.current || null,
       });
 
-      setPosts((current) => [...current, ...page.posts]);
+      setPosts((current) => [
+        ...current,
+        ...filterHidden(page.posts, hiddenRef.current),
+      ]);
       nextCursorRef.current = page.nextCursor;
       setNextCursor(page.nextCursor);
     } catch (err) {

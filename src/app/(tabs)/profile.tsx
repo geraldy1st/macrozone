@@ -10,7 +10,11 @@ import {
 } from "@/data/socialLinks";
 import { useBottomContentPadding } from "@/hooks/useBottomContentPadding";
 import { useThemedStyles } from "@/hooks/useThemedStyles";
-import { fetchPostsByAuthor, getProfile } from "@/services/community";
+import {
+  fetchPostsByAuthor,
+  getProfile,
+  syncMyCommunityProfile,
+} from "@/services/community";
 import {
   defaultProfile,
   getUserProfile,
@@ -69,6 +73,13 @@ export default function ProfileScreen() {
 
     setStatsLoading(true);
     try {
+      // Keep community avatar aligned with local Profile photo (A011-1).
+      try {
+        await syncMyCommunityProfile(user);
+      } catch {
+        // Non-blocking — still load remote profile/posts
+      }
+
       const [remote, page] = await Promise.all([
         getProfile(user.id),
         fetchPostsByAuthor(user.id, { limit: 30 }),
@@ -76,12 +87,20 @@ export default function ProfileScreen() {
       setFollowers(remote?.followers_count ?? 0);
       setFollowing(remote?.following_count ?? 0);
       setPosts(page.posts);
+
+      // Prefer remote community avatar on Profile when local photo is empty but remote exists
+      if (!local.photoUri?.trim() && remote?.avatar_url) {
+        setProfile((current) => ({
+          ...current,
+          photoUri: remote.avatar_url ?? undefined,
+        }));
+      }
     } catch {
       setPosts([]);
     } finally {
       setStatsLoading(false);
     }
-  }, [user?.id]);
+  }, [user]);
 
   useFocusEffect(
     useCallback(() => {

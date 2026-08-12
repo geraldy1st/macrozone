@@ -3,6 +3,13 @@ import { useAlert } from "@/contexts/AlertContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useToast } from "@/contexts/ToastContext";
+import { getCountryByCode } from "@/data/countries";
+import {
+  buildSocialUrl,
+  formatSocialUrlLabel,
+  getSocialPlatform,
+  type SocialPlatform,
+} from "@/data/socialLinks";
 import { useBottomContentPadding } from "@/hooks/useBottomContentPadding";
 import { useThemedStyles } from "@/hooks/useThemedStyles";
 import {
@@ -12,6 +19,7 @@ import {
   toggleFollow,
   unblockUser,
 } from "@/services/community";
+import { hideUser } from "@/storage/hiddenUsers";
 import type { CommunityProfile, FeedPost } from "@/types/community";
 import type { ThemeColors } from "@/styles/themes";
 import { isUserOnline } from "@/utils/presence";
@@ -24,6 +32,10 @@ import {
   ActivityIndicator,
   Dimensions,
   FlatList,
+  Linking,
+  Modal,
+  Pressable,
+  Share,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -37,7 +49,7 @@ const GRID_SIZE =
 
 /**
  * Public profile: macrozone://u/{userId}
- * A008-1: follow, counters, post grid, block.
+ * A011-2: bio, country, links, share, ⋮ menu (block / hide / report / share).
  */
 export default function PublicProfileScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -54,11 +66,11 @@ export default function PublicProfileScreen() {
   const [isBlocked, setIsBlocked] = useState(false);
   const [isSelf, setIsSelf] = useState(false);
   const [posts, setPosts] = useState<FeedPost[]>([]);
-  /** Total loaded for stats (may include posts not shown when grid is hidden). */
   const [postCount, setPostCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isActionLoading, setIsActionLoading] = useState(false);
   const [error, setError] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const load = useCallback(async () => {
     if (!id) {
@@ -116,6 +128,14 @@ export default function PublicProfileScreen() {
   const online = isUserOnline(profile?.last_seen_at);
   const followers = profile?.followers_count ?? 0;
   const following = profile?.following_count ?? 0;
+  const country = profile?.country_code
+    ? getCountryByCode(profile.country_code)
+    : null;
+  const countryDisplay = country
+    ? `${country.flag} ${country.name}`
+    : null;
+  const bio = profile?.bio?.trim() ?? "";
+  const socialLinks = (profile?.social_links ?? []).filter((l) => l.url.trim());
 
   const requireAuth = (message: string) => {
     showAlert({
@@ -126,6 +146,26 @@ export default function PublicProfileScreen() {
         { text: t("auth.signIn"), onPress: () => router.push("/login") },
       ],
     });
+  };
+
+  const handleShareProfile = async () => {
+    if (!profile) {
+      return;
+    }
+    const shareUrl = `macrozone://u/${profile.id}`;
+    const message = t("profile.shareMessage", {
+      name: displayName,
+      url: shareUrl,
+    });
+    try {
+      await Share.share({
+        message: `${message}\n${shareUrl}`,
+        title: t("profile.shareTitle"),
+        url: shareUrl,
+      });
+    } catch {
+      showToast(t("profile.shareError"), "error");
+    }
   };
 
   const handleFollow = async () => {
@@ -174,6 +214,7 @@ export default function PublicProfileScreen() {
       return;
     }
 
+    setMenuOpen(false);
     showAlert({
       title: t("social.blockTitle"),
       message: t("social.blockMessage", { name: displayName }),
@@ -195,6 +236,55 @@ export default function PublicProfileScreen() {
             } finally {
               setIsActionLoading(false);
             }
+          },
+        },
+      ],
+    });
+  };
+
+  const handleHide = () => {
+    if (!user || !profile) {
+      requireAuth(t("social.authRequiredHide"));
+      return;
+    }
+    setMenuOpen(false);
+    showAlert({
+      title: t("social.hideTitle"),
+      message: t("social.hideMessage", { name: displayName }),
+      buttons: [
+        { text: t("mealItem.cancel"), style: "cancel" },
+        {
+          text: t("social.hideConfirm"),
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await hideUser(profile.id);
+              showToast(t("social.hideSuccess"), "success");
+              if (router.canGoBack()) {
+                router.back();
+              } else {
+                router.replace("/(tabs)/community" as Href);
+              }
+            } catch {
+              showToast(t("social.hideError"), "error");
+            }
+          },
+        },
+      ],
+    });
+  };
+
+  const handleReport = () => {
+    setMenuOpen(false);
+    showAlert({
+      title: t("social.reportTitle"),
+      message: t("social.reportMessage", { name: displayName }),
+      buttons: [
+        { text: t("mealItem.cancel"), style: "cancel" },
+        {
+          text: t("social.reportConfirm"),
+          onPress: () => {
+            showToast(t("social.reportSuccess"), "success");
           },
         },
       ],
@@ -238,7 +328,18 @@ export default function PublicProfileScreen() {
         <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>
           {t("profile.publicTitle")}
         </Text>
-        <View style={styles.backButton} />
+        {!isSelf && profile && !error ? (
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => setMenuOpen(true)}
+            testID="public-profile-menu-btn"
+            accessibilityLabel={t("social.moreOptions")}
+          >
+            <Ionicons name="ellipsis-vertical" size={20} color={colors.text} />
+          </TouchableOpacity>
+        ) : (
+          <View style={styles.backButton} />
+        )}
       </View>
 
       {isLoading ? (
@@ -282,11 +383,9 @@ export default function PublicProfileScreen() {
                   ) : null}
                 </View>
 
-                <View style={styles.nameRow}>
-                  <Text style={[styles.name, { color: colors.text }]} numberOfLines={1}>
-                    {displayName}
-                  </Text>
-                </View>
+                <Text style={[styles.name, { color: colors.text }]} numberOfLines={1}>
+                  {displayName}
+                </Text>
 
                 <View style={styles.statsRow}>
                   <View style={styles.stat}>
@@ -315,22 +414,95 @@ export default function PublicProfileScreen() {
                   </View>
                 </View>
 
+                {bio && !isBlocked ? (
+                  <Text style={[styles.bio, { color: colors.textSecondary }]}>
+                    {bio}
+                  </Text>
+                ) : null}
+
+                {countryDisplay && !isBlocked ? (
+                  <Text style={[styles.country, { color: colors.textSecondary }]}>
+                    {countryDisplay}
+                  </Text>
+                ) : null}
+
+                {socialLinks.length > 0 && !isBlocked ? (
+                  <View style={styles.socialList}>
+                    {socialLinks.map((link) => {
+                      const platform = getSocialPlatform(
+                        link.platform as SocialPlatform,
+                      );
+                      if (!platform) {
+                        return null;
+                      }
+                      const openUrl = buildSocialUrl(
+                        link.platform as SocialPlatform,
+                        link.url,
+                      );
+                      return (
+                        <TouchableOpacity
+                          key={`${link.platform}-${link.url}`}
+                          style={[
+                            styles.socialRow,
+                            {
+                              backgroundColor: colors.surface,
+                              borderColor: colors.cardBorder,
+                            },
+                          ]}
+                          onPress={() => {
+                            void Linking.openURL(openUrl).catch(() => {
+                              showToast(t("profile.social.openError"), "error");
+                            });
+                          }}
+                          testID={`public-profile-social-${link.platform}`}
+                        >
+                          <Ionicons
+                            name={platform.icon}
+                            size={18}
+                            color={colors.accent}
+                          />
+                          <Text
+                            style={[styles.socialUrl, { color: colors.primary }]}
+                            numberOfLines={1}
+                          >
+                            {formatSocialUrlLabel(link.url)}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                ) : null}
+
                 {isSelf ? (
-                  <TouchableOpacity
-                    style={[styles.primaryBtn, { backgroundColor: colors.accent }]}
-                    onPress={() => router.push("/profile-edit" as Href)}
-                    testID="public-profile-edit-btn"
-                  >
-                    <Text style={[styles.primaryBtnText, { color: colors.background }]}>
-                      {t("profile.editButton")}
-                    </Text>
-                  </TouchableOpacity>
+                  <View style={styles.actionsRow}>
+                    <TouchableOpacity
+                      style={[
+                        styles.primaryBtn,
+                        styles.actionFlex,
+                        { backgroundColor: colors.accent },
+                      ]}
+                      onPress={() => router.push("/profile-edit" as Href)}
+                      testID="public-profile-edit-btn"
+                    >
+                      <Text style={[styles.primaryBtnText, { color: colors.background }]}>
+                        {t("profile.editButton")}
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[
+                        styles.iconBtn,
+                        { borderColor: colors.cardBorder, backgroundColor: colors.surface },
+                      ]}
+                      onPress={() => void handleShareProfile()}
+                      testID="public-profile-share-btn"
+                      accessibilityLabel={t("profile.shareButton")}
+                    >
+                      <Ionicons name="share-outline" size={20} color={colors.accent} />
+                    </TouchableOpacity>
+                  </View>
                 ) : isBlocked ? (
                   <TouchableOpacity
-                    style={[
-                      styles.secondaryBtn,
-                      { borderColor: colors.cardBorder },
-                    ]}
+                    style={[styles.secondaryBtn, { borderColor: colors.cardBorder }]}
                     onPress={() => void handleUnblock()}
                     disabled={isActionLoading}
                     testID="public-profile-unblock-btn"
@@ -373,16 +545,12 @@ export default function PublicProfileScreen() {
                         styles.iconBtn,
                         { borderColor: colors.cardBorder, backgroundColor: colors.surface },
                       ]}
-                      onPress={handleBlock}
+                      onPress={() => void handleShareProfile()}
                       disabled={isActionLoading}
-                      testID="public-profile-block-btn"
-                      accessibilityLabel={t("social.block")}
+                      testID="public-profile-share-btn"
+                      accessibilityLabel={t("profile.shareButton")}
                     >
-                      <Ionicons
-                        name="ban-outline"
-                        size={20}
-                        color={colors.alert}
-                      />
+                      <Ionicons name="share-outline" size={20} color={colors.accent} />
                     </TouchableOpacity>
                   </View>
                 )}
@@ -454,9 +622,100 @@ export default function PublicProfileScreen() {
           )}
         />
       )}
+
+      <Modal
+        visible={menuOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setMenuOpen(false)}
+      >
+        <Pressable style={styles.menuOverlay} onPress={() => setMenuOpen(false)}>
+          <View
+            style={[
+              styles.menuSheet,
+              { backgroundColor: colors.card, borderColor: colors.cardBorder },
+            ]}
+          >
+            <MenuRow
+              icon="ban-outline"
+              label={t("social.block")}
+              color={colors.alert}
+              onPress={handleBlock}
+              testID="public-profile-menu-block"
+            />
+            <MenuRow
+              icon="eye-off-outline"
+              label={t("social.hide")}
+              color={colors.text}
+              onPress={handleHide}
+              testID="public-profile-menu-hide"
+            />
+            <MenuRow
+              icon="flag-outline"
+              label={t("social.report")}
+              color={colors.text}
+              onPress={handleReport}
+              testID="public-profile-menu-report"
+            />
+            <MenuRow
+              icon="share-outline"
+              label={t("profile.shareButton")}
+              color={colors.text}
+              onPress={() => {
+                setMenuOpen(false);
+                void handleShareProfile();
+              }}
+              testID="public-profile-menu-share"
+            />
+            <TouchableOpacity
+              style={styles.menuCancel}
+              onPress={() => setMenuOpen(false)}
+            >
+              <Text style={[styles.menuCancelText, { color: colors.textSecondary }]}>
+                {t("mealItem.cancel")}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
+
+function MenuRow({
+  icon,
+  label,
+  color,
+  onPress,
+  testID,
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
+  color: string;
+  onPress: () => void;
+  testID: string;
+}) {
+  return (
+    <TouchableOpacity style={menuRowStyles.row} onPress={onPress} testID={testID}>
+      <Ionicons name={icon} size={20} color={color} />
+      <Text style={[menuRowStyles.label, { color }]}>{label}</Text>
+    </TouchableOpacity>
+  );
+}
+
+const menuRowStyles = StyleSheet.create({
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 4,
+  },
+  label: {
+    fontSize: 16,
+    fontWeight: "600",
+  },
+});
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
@@ -507,15 +766,10 @@ function createStyles(colors: ThemeColors) {
       backgroundColor: "#22c55e",
       borderWidth: 2,
     },
-    nameRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 8,
-      maxWidth: "100%",
-    },
     name: {
       fontSize: 22,
       fontWeight: "800",
+      maxWidth: "100%",
     },
     statsRow: {
       flexDirection: "row",
@@ -536,6 +790,36 @@ function createStyles(colors: ThemeColors) {
       fontSize: 12,
       fontWeight: "600",
       marginTop: 2,
+    },
+    bio: {
+      fontSize: 14,
+      lineHeight: 20,
+      fontWeight: "500",
+      textAlign: "center",
+      width: "100%",
+    },
+    country: {
+      fontSize: 14,
+      fontWeight: "600",
+      textAlign: "center",
+    },
+    socialList: {
+      width: "100%",
+      gap: 8,
+    },
+    socialRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 10,
+      borderWidth: 1,
+      borderRadius: 12,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+    },
+    socialUrl: {
+      flex: 1,
+      fontSize: 14,
+      fontWeight: "600",
     },
     actionsRow: {
       flexDirection: "row",
@@ -630,6 +914,29 @@ function createStyles(colors: ThemeColors) {
       lineHeight: 20,
       textAlign: "center",
       fontWeight: "500",
+    },
+    menuOverlay: {
+      flex: 1,
+      backgroundColor: "rgba(0,0,0,0.45)",
+      justifyContent: "flex-end",
+    },
+    menuSheet: {
+      borderTopLeftRadius: 18,
+      borderTopRightRadius: 18,
+      borderWidth: 1,
+      paddingHorizontal: 20,
+      paddingTop: 12,
+      paddingBottom: 28,
+      gap: 2,
+    },
+    menuCancel: {
+      marginTop: 8,
+      paddingVertical: 14,
+      alignItems: "center",
+    },
+    menuCancelText: {
+      fontSize: 15,
+      fontWeight: "600",
     },
   });
 }

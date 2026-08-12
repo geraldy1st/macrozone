@@ -1,4 +1,4 @@
-import ImageZoomViewer from "@/components/ImageZoomViewer";
+import ProfileAvatar from "@/components/ProfileAvatar";
 import CommentSheet from "@/components/community/CommentSheet";
 import EditPostModal from "@/components/community/EditPostModal";
 import PickMealForShareModal from "@/components/community/PickMealForShareModal";
@@ -13,14 +13,24 @@ import { useToast } from "@/contexts/ToastContext";
 import { useBottomContentPadding } from "@/hooks/useBottomContentPadding";
 import { useFeed } from "@/hooks/useFeed";
 import { useThemedStyles } from "@/hooks/useThemedStyles";
-import { deleteMyPost, toggleLike, updateMyPost } from "@/services/community";
+import {
+  deleteMyPost,
+  searchProfiles,
+  toggleLike,
+  updateMyPost,
+} from "@/services/community";
 import type { Meal } from "@/storage/meals";
 import {
   getSavedCommunityMealIds,
   toggleSavedCommunityMeal,
 } from "@/storage/savedCommunityMeals";
+import {
+  addSearchHistory,
+  getSearchHistory,
+  removeSearchHistoryItem,
+} from "@/storage/searchHistory";
 import type { ThemeColors } from "@/styles/themes";
-import type { FeedPost } from "@/types/community";
+import type { FeedPost, ProfileListItem } from "@/types/community";
 import { mealToSharePayload } from "@/utils/shareMealPayload";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
@@ -40,6 +50,8 @@ import {
 
 const SEARCH_DEBOUNCE_MS = 300;
 
+type SearchMode = "meals" | "people";
+
 export default function CommunityScreen() {
   const { t } = useTranslation();
   const { colors } = useTheme();
@@ -52,12 +64,16 @@ export default function CommunityScreen() {
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [searchInput, setSearchInput] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [searchMode, setSearchMode] = useState<SearchMode>("meals");
+  const [searchHistory, setSearchHistory] = useState<string[]>([]);
+  const [peopleResults, setPeopleResults] = useState<ProfileListItem[]>([]);
+  const [peopleLoading, setPeopleLoading] = useState(false);
+  const [peopleError, setPeopleError] = useState(false);
   const [pickMealVisible, setPickMealVisible] = useState(false);
   const [shareVisible, setShareVisible] = useState(false);
   const [sharePayload, setSharePayload] = useState<ShareMealPayload | null>(null);
   const [editingPost, setEditingPost] = useState<FeedPost | null>(null);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
-  const [zoomUri, setZoomUri] = useState<string | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -65,6 +81,8 @@ export default function CommunityScreen() {
     }, SEARCH_DEBOUNCE_MS);
     return () => clearTimeout(timer);
   }, [searchInput]);
+
+  const mealQuery = searchMode === "meals" ? debouncedSearch : "";
 
   const {
     posts,
@@ -76,21 +94,76 @@ export default function CommunityScreen() {
     loadMore,
     removePostLocally,
     patchPostLocally,
-  } = useFeed(debouncedSearch);
+  } = useFeed(mealQuery);
 
   const loadSavedIds = useCallback(async () => {
     const ids = await getSavedCommunityMealIds();
     setSavedIds(new Set(ids));
   }, []);
 
+  const loadHistory = useCallback(async () => {
+    setSearchHistory(await getSearchHistory());
+  }, []);
+
   useFocusEffect(
     useCallback(() => {
       void refresh();
       void loadSavedIds();
-    }, [refresh, loadSavedIds]),
+      void loadHistory();
+    }, [refresh, loadSavedIds, loadHistory]),
   );
 
+  useEffect(() => {
+    if (searchMode !== "people") {
+      setPeopleResults([]);
+      setPeopleError(false);
+      return;
+    }
+
+    if (!debouncedSearch) {
+      setPeopleResults([]);
+      setPeopleError(false);
+      setPeopleLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setPeopleLoading(true);
+    setPeopleError(false);
+
+    void (async () => {
+      try {
+        const rows = await searchProfiles({
+          query: debouncedSearch,
+          currentUserId: user?.id ?? null,
+          limit: 20,
+        });
+        if (cancelled) {
+          return;
+        }
+        setPeopleResults(rows);
+        await addSearchHistory(debouncedSearch);
+        setSearchHistory(await getSearchHistory());
+      } catch {
+        if (!cancelled) {
+          setPeopleError(true);
+          setPeopleResults([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setPeopleLoading(false);
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [searchMode, debouncedSearch, user?.id]);
+
   const isSearching = debouncedSearch.length > 0;
+  const showHistory =
+    searchInput.length === 0 && searchHistory.length > 0 && searchMode === "people";
 
   const handleSave = async (post: FeedPost) => {
     if (!user) {
@@ -264,6 +337,57 @@ export default function CommunityScreen() {
         </TouchableOpacity>
       </View>
 
+      <View style={styles.modeRow}>
+        <TouchableOpacity
+          style={[
+            styles.modeChip,
+            {
+              backgroundColor:
+                searchMode === "meals" ? colors.accent : colors.surface,
+              borderColor: colors.cardBorder,
+            },
+          ]}
+          onPress={() => setSearchMode("meals")}
+          testID="community-search-mode-meals"
+        >
+          <Text
+            style={[
+              styles.modeChipText,
+              {
+                color:
+                  searchMode === "meals" ? colors.background : colors.textSecondary,
+              },
+            ]}
+          >
+            {t("community.searchModeMeals")}
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            styles.modeChip,
+            {
+              backgroundColor:
+                searchMode === "people" ? colors.accent : colors.surface,
+              borderColor: colors.cardBorder,
+            },
+          ]}
+          onPress={() => setSearchMode("people")}
+          testID="community-search-mode-people"
+        >
+          <Text
+            style={[
+              styles.modeChipText,
+              {
+                color:
+                  searchMode === "people" ? colors.background : colors.textSecondary,
+              },
+            ]}
+          >
+            {t("community.searchModePeople")}
+          </Text>
+        </TouchableOpacity>
+      </View>
+
       <View
         style={[
           styles.searchRow,
@@ -273,7 +397,11 @@ export default function CommunityScreen() {
         <Ionicons name="search" size={18} color={colors.textSecondary} />
         <TextInput
           style={[styles.searchInput, { color: colors.text }]}
-          placeholder={t("community.searchPlaceholder")}
+          placeholder={
+            searchMode === "people"
+              ? t("community.searchPeoplePlaceholder")
+              : t("community.searchPlaceholder")
+          }
           placeholderTextColor={colors.textSecondary}
           value={searchInput}
           onChangeText={setSearchInput}
@@ -294,6 +422,42 @@ export default function CommunityScreen() {
           </TouchableOpacity>
         ) : null}
       </View>
+
+      {showHistory ? (
+        <View style={styles.historyBlock} testID="community-search-history">
+          <Text style={[styles.historyTitle, { color: colors.textSecondary }]}>
+            {t("community.searchHistoryTitle")}
+          </Text>
+          {searchHistory.map((item) => (
+            <TouchableOpacity
+              key={item}
+              style={[
+                styles.historyRow,
+                { borderColor: colors.cardBorder, backgroundColor: colors.card },
+              ]}
+              onPress={() => setSearchInput(item)}
+              testID={`community-search-history-${item}`}
+            >
+              <Ionicons name="time-outline" size={16} color={colors.textSecondary} />
+              <Text
+                style={[styles.historyText, { color: colors.text }]}
+                numberOfLines={1}
+              >
+                {item}
+              </Text>
+              <TouchableOpacity
+                hitSlop={10}
+                onPress={() => {
+                  void removeSearchHistoryItem(item).then(setSearchHistory);
+                }}
+                testID={`community-search-history-remove-${item}`}
+              >
+                <Ionicons name="close" size={16} color={colors.textSecondary} />
+              </TouchableOpacity>
+            </TouchableOpacity>
+          ))}
+        </View>
+      ) : null}
 
       {!user && isConfigured ? (
         <View
@@ -316,7 +480,80 @@ export default function CommunityScreen() {
         </View>
       ) : null}
 
-      {isLoading && posts.length === 0 ? (
+      {searchMode === "people" ? (
+        peopleLoading && peopleResults.length === 0 ? (
+          <View style={styles.centered}>
+            <ActivityIndicator color={colors.accent} />
+          </View>
+        ) : peopleError ? (
+          <View style={styles.centered}>
+            <Text style={[styles.emptyTitle, { color: colors.text }]}>
+              {t("social.searchError")}
+            </Text>
+          </View>
+        ) : (
+          <FlatList
+            data={peopleResults}
+            keyExtractor={(item) => item.id}
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={{ paddingBottom: bottomPadding, flexGrow: 1 }}
+            ListEmptyComponent={
+              isSearching ? (
+                <View style={styles.centered}>
+                  <Ionicons name="search-outline" size={40} color={colors.textSecondary} />
+                  <Text style={[styles.emptyTitle, { color: colors.text }]}>
+                    {t("social.searchEmptyTitle")}
+                  </Text>
+                  <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+                    {t("social.searchEmptyMessage")}
+                  </Text>
+                </View>
+              ) : (
+                <View style={styles.centered}>
+                  <Ionicons name="people-outline" size={40} color={colors.textSecondary} />
+                  <Text style={[styles.emptyTitle, { color: colors.text }]}>
+                    {t("community.searchPeopleHint")}
+                  </Text>
+                </View>
+              )
+            }
+            renderItem={({ item }) => {
+              const name =
+                item.display_name?.trim() || t("profile.displayNameFallback");
+              return (
+                <TouchableOpacity
+                  style={[
+                    styles.personRow,
+                    { backgroundColor: colors.card, borderColor: colors.cardBorder },
+                  ]}
+                  onPress={() => router.push(`/u/${item.id}` as Href)}
+                  testID={`community-person-${item.id}`}
+                >
+                  <ProfileAvatar
+                    uri={item.avatar_url}
+                    name={name}
+                    size={44}
+                    backgroundColor={colors.surface}
+                    textColor={colors.textSecondary}
+                  />
+                  <View style={styles.personText}>
+                    <Text style={[styles.personName, { color: colors.text }]} numberOfLines={1}>
+                      {name}
+                    </Text>
+                    <Text style={[styles.personMeta, { color: colors.textSecondary }]}>
+                      {t("social.followersCount", {
+                        count: item.followers_count ?? 0,
+                      })}
+                    </Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />
+                </TouchableOpacity>
+              );
+            }}
+            showsVerticalScrollIndicator={false}
+          />
+        )
+      ) : isLoading && posts.length === 0 ? (
         <View style={styles.centered}>
           <ActivityIndicator color={colors.accent} />
         </View>
@@ -402,11 +639,6 @@ export default function CommunityScreen() {
               onDetailPress={() =>
                 router.push(`/community/post/${item.id}` as Href)
               }
-              onImageZoomPress={
-                item.image_url
-                  ? () => setZoomUri(item.image_url ?? null)
-                  : () => router.push(`/community/post/${item.id}` as Href)
-              }
               onAuthorPress={
                 item.author_id
                   ? () => router.push(`/u/${item.author_id}` as Href)
@@ -473,12 +705,6 @@ export default function CommunityScreen() {
         onClose={() => setEditingPost(null)}
         onSave={(input) => void handleSaveEdit(input)}
       />
-
-      <ImageZoomViewer
-        visible={Boolean(zoomUri)}
-        imageUri={zoomUri}
-        onClose={() => setZoomUri(null)}
-      />
     </View>
   );
 }
@@ -500,6 +726,68 @@ function createStyles(colors: ThemeColors) {
     titleBlock: {
       flex: 1,
       minWidth: 0,
+    },
+    modeRow: {
+      flexDirection: "row",
+      gap: 8,
+      marginBottom: 10,
+    },
+    modeChip: {
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+      borderRadius: 999,
+      borderWidth: 1,
+    },
+    modeChipText: {
+      fontSize: 13,
+      fontWeight: "700",
+    },
+    historyBlock: {
+      marginBottom: 12,
+      gap: 6,
+    },
+    historyTitle: {
+      fontSize: 12,
+      fontWeight: "700",
+      textTransform: "uppercase",
+      letterSpacing: 0.5,
+      marginBottom: 2,
+    },
+    historyRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 10,
+      borderWidth: 1,
+      borderRadius: 12,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+    },
+    historyText: {
+      flex: 1,
+      fontSize: 14,
+      fontWeight: "600",
+    },
+    personRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+      borderWidth: 1,
+      borderRadius: 14,
+      padding: 12,
+      marginBottom: 10,
+    },
+    personText: {
+      flex: 1,
+      minWidth: 0,
+      gap: 2,
+    },
+    personName: {
+      fontSize: 16,
+      fontWeight: "700",
+    },
+    personMeta: {
+      fontSize: 13,
+      fontWeight: "500",
     },
     title: {
       fontSize: 28,

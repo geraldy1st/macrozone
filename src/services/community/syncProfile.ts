@@ -49,13 +49,15 @@ function isCustomUploadedAvatar(url: string | null | undefined, userId: string):
 /**
  * Push local profile + OAuth metadata to public `profiles`.
  * Priority (A010-1): custom local/uploaded photo > existing custom remote > Google > none.
- * Google picture is never used when the user has a custom profile photo.
- * Also syncs show_community_posts (A010-2).
+ * Also syncs show_community_posts, bio, country, social links (A011-2).
  */
 export async function syncMyCommunityProfile(user: User): Promise<void> {
   let displayName = oauthDisplayName(user);
   let avatarUrl: string | null | undefined = undefined;
   let showCommunityPosts: boolean | undefined;
+  let bio: string | undefined;
+  let countryCode: string | null | undefined;
+  let socialLinks: { platform: string; url: string }[] | undefined;
 
   try {
     const local = await getUserProfile();
@@ -63,34 +65,33 @@ export async function syncMyCommunityProfile(user: User): Promise<void> {
       displayName = local.name.trim();
     }
     showCommunityPosts = local.showCommunityPosts !== false;
+    bio = local.bio ?? "";
+    countryCode = local.countryCode?.trim() || null;
+    socialLinks = local.socialLinks
+      .filter((link) => link.url.trim())
+      .map((link) => ({ platform: link.platform, url: link.url.trim() }));
 
     const photo = local.photoUri?.trim() ?? "";
 
     if (photo.startsWith("http")) {
-      // Explicit remote custom URL (or previously uploaded public URL stored locally)
       avatarUrl = photo;
     } else if (photo && isLocalImageUri(photo)) {
       try {
         avatarUrl = await uploadProfileAvatar(user.id, photo);
       } catch (error) {
         console.warn("Profile avatar upload failed:", error);
-        // Keep existing custom remote if any; do not fall back to Google over a custom intent
         const existing = await getProfile(user.id);
         if (isCustomUploadedAvatar(existing?.avatar_url, user.id)) {
-          avatarUrl = undefined; // leave remote custom as-is
+          avatarUrl = undefined;
         } else {
           avatarUrl = null;
         }
       }
     } else {
-      // No local photo: clear Google if we only had Google, prefer null over wrong photo.
-      // If remote is already a custom upload, leave it unless user cleared local intentionally.
       const existing = await getProfile(user.id);
       if (isCustomUploadedAvatar(existing?.avatar_url, user.id)) {
-        // User cleared local photo — remove custom community avatar
         avatarUrl = null;
       } else {
-        // No custom photo: Google only as last resort
         avatarUrl = oauthAvatarUrl(user);
       }
     }
@@ -104,5 +105,8 @@ export async function syncMyCommunityProfile(user: User): Promise<void> {
     displayName,
     ...(avatarUrl !== undefined ? { avatarUrl } : {}),
     ...(showCommunityPosts !== undefined ? { showCommunityPosts } : {}),
+    ...(bio !== undefined ? { bio } : {}),
+    ...(countryCode !== undefined ? { countryCode } : {}),
+    ...(socialLinks !== undefined ? { socialLinks } : {}),
   });
 }

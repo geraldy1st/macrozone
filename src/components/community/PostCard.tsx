@@ -8,6 +8,9 @@ import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { useToast } from "@/contexts/ToastContext";
+import * as Clipboard from "expo-clipboard";
+import * as Haptics from "expo-haptics";
 import {
   Dimensions,
   StyleSheet,
@@ -26,10 +29,8 @@ type PostCardProps = {
   onLikePress?: () => void;
   onCommentPress?: () => void;
   onSavePress?: () => void;
-  /** Open full post detail (name / card). */
+  /** Open full post detail (name / image / card). Zoom is only on detail (A011-1). */
   onDetailPress?: () => void;
-  /** Open zoom viewer for image. */
-  onImageZoomPress?: () => void;
   onAuthorPress?: () => void;
   onEditPress?: () => void;
   onDeletePress?: () => void;
@@ -47,7 +48,6 @@ export default function PostCard({
   onCommentPress,
   onSavePress,
   onDetailPress,
-  onImageZoomPress,
   onAuthorPress,
   onEditPress,
   onDeletePress,
@@ -57,7 +57,22 @@ export default function PostCard({
 }: PostCardProps) {
   const { t, i18n } = useTranslation();
   const { colors } = useTheme();
+  const { showToast } = useToast();
   const styles = useMemo(() => createStyles(colors), [colors]);
+
+  const copyCaption = async () => {
+    const text = post.caption.trim();
+    if (!text) {
+      return;
+    }
+    try {
+      await Clipboard.setStringAsync(text);
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      showToast(t("community.captionCopied"), "success");
+    } catch {
+      showToast(t("community.captionCopyError"), "error");
+    }
+  };
   const authorName =
     post.author?.display_name?.trim() || t("community.unknownAuthor");
   const relative = formatRelativeTime(post.created_at, i18n.language);
@@ -140,8 +155,8 @@ export default function PostCard({
       {post.image_url ? (
         <TouchableOpacity
           activeOpacity={0.9}
-          onPress={onImageZoomPress ?? onDetailPress}
-          disabled={!onImageZoomPress && !onDetailPress}
+          onPress={onDetailPress}
+          disabled={!onDetailPress}
           testID={
             testIndex !== undefined
               ? `community-post-image-index-${testIndex}`
@@ -172,7 +187,15 @@ export default function PostCard({
       </View>
 
       {post.caption.trim() ? (
-        <Text style={[styles.caption, { color: colors.textSecondary }]}>
+        <Text
+          style={[styles.caption, { color: colors.textSecondary }]}
+          onLongPress={() => void copyCaption()}
+          testID={
+            testIndex !== undefined
+              ? `community-post-caption-index-${testIndex}`
+              : `community-post-caption-${post.id}`
+          }
+        >
           {post.caption}
         </Text>
       ) : null}

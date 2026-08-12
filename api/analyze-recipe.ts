@@ -6,26 +6,48 @@ import {
 } from "./lib/security";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
+type AnalyzeLanguage = "en" | "fr" | "es";
+
 type AnalyzeRecipeRequest = {
   recipe: string;
   mealName?: string;
-  language?: "en" | "fr";
+  language?: AnalyzeLanguage | string;
 };
 
 const GEMINI_MODEL = "gemini-2.5-flash";
 
-function buildPrompt(language: "en" | "fr", recipe: string, mealName?: string) {
+function resolveLanguage(raw: string | undefined): AnalyzeLanguage {
+  const code = (raw ?? "en").toLowerCase().split("-")[0];
+  if (code === "fr") return "fr";
+  if (code === "es") return "es";
+  return "en";
+}
+
+function buildPrompt(language: AnalyzeLanguage, recipe: string, mealName?: string) {
   const dish = mealName?.trim() ? ` for "${mealName.trim()}"` : "";
+  const dishFr = mealName?.trim() ? ` pour « ${mealName.trim()} »` : "";
+  const dishEs = mealName?.trim() ? ` para « ${mealName.trim()} »` : "";
 
   if (language === "fr") {
-    return `À partir de cette recette${dish}, calcule les macros nutritionnelles totales en tenant compte des quantités et proportions des ingrédients.
+    return `À partir de cette recette${dishFr}, calcule les macros nutritionnelles totales en tenant compte des quantités et proportions des ingrédients.
 Normalise la recette avec des quantités claires si nécessaire.
 Recette:
 ${recipe}
 
 Réponds UNIQUEMENT en JSON valide:
 {"calories":0,"protein":0,"carbs":0,"fat":0,"recipe":"recette normalisée avec ingrédients, quantités et étapes"}
-Utilise des nombres entiers pour les macros.`;
+Utilise des nombres entiers pour les macros. Le champ recipe doit être en français.`;
+  }
+
+  if (language === "es") {
+    return `A partir de esta receta${dishEs}, calcula los macros nutricionales totales según las cantidades y proporciones de los ingredientes.
+Normaliza la receta con cantidades claras si es necesario.
+Receta:
+${recipe}
+
+Responde ÚNICAMENTE con JSON válido:
+{"calories":0,"protein":0,"carbs":0,"fat":0,"recipe":"receta normalizada con ingredientes, cantidades y pasos"}
+Usa números enteros para los macros. El campo recipe debe estar en español.`;
   }
 
   return `From this recipe${dish}, calculate total nutritional macros based on ingredient quantities and proportions.
@@ -35,7 +57,7 @@ ${recipe}
 
 Respond ONLY with valid JSON:
 {"calories":0,"protein":0,"carbs":0,"fat":0,"recipe":"normalized recipe with ingredients, quantities and steps"}
-Use whole numbers for macros.`;
+Use whole numbers for macros. The recipe field must be in English.`;
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -82,7 +104,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   res.setHeader("X-RateLimit-Remaining", String(remaining));
 
-  const language = body.language === "fr" ? "fr" : "en";
+  const language = resolveLanguage(body.language);
 
   try {
     const response = await fetch(

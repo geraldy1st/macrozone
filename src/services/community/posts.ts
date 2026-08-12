@@ -268,8 +268,11 @@ export async function fetchPostsByAuthor(
   return { posts, nextCursor };
 }
 
-/** Fetch a single public post by id. */
-export async function fetchPostById(postId: string): Promise<FeedPost | null> {
+/** Fetch a single public post by id. Optionally resolve liked_by_me. */
+export async function fetchPostById(
+  postId: string,
+  options?: { currentUserId?: string | null },
+): Promise<FeedPost | null> {
   if (!supabase) {
     throw new Error("SUPABASE_NOT_CONFIGURED");
   }
@@ -294,7 +297,23 @@ export async function fetchPostById(postId: string): Promise<FeedPost | null> {
     return null;
   }
 
-  return mapFeedPost(data as Record<string, unknown>);
+  const post = mapFeedPost(data as Record<string, unknown>);
+
+  if (options?.currentUserId) {
+    const { data: likeRow } = await supabase
+      .from("likes")
+      .select("post_id")
+      .eq("user_id", options.currentUserId)
+      .eq("post_id", postId)
+      .maybeSingle();
+
+    return {
+      ...post,
+      liked_by_me: Boolean(likeRow),
+    };
+  }
+
+  return post;
 }
 
 /**

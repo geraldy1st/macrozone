@@ -1,5 +1,11 @@
 /** Community feed + social types — aligned with supabase/migrations. */
 
+/** Public social link on community profiles (A011-2). */
+export type PublicSocialLink = {
+  platform: string;
+  url: string;
+};
+
 export type CommunityProfile = {
   id: string;
   display_name: string;
@@ -11,6 +17,12 @@ export type CommunityProfile = {
   last_seen_at?: string | null;
   /** When false, post grid is hidden on public profiles (A010-2). Default true. */
   show_community_posts?: boolean;
+  /** Public bio (A011-2). */
+  bio?: string;
+  /** ISO country code (A011-2). */
+  country_code?: string | null;
+  /** Public social links (A011-2). */
+  social_links?: PublicSocialLink[];
 };
 
 /** Profile row for search / public cards with optional relation flags. */

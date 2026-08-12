@@ -14,6 +14,7 @@ import {
   recipeDataFromLegacy,
   type RecipeData,
 } from "@/types/recipe";
+import { resolveAiLanguage } from "@/utils/aiLanguage";
 import { analyzeRecipeText } from "@/utils/analyzeRecipe";
 import { getMealAiErrorMessage } from "@/utils/mealAiErrors";
 import { saveMealPhoto } from "@/utils/photos";
@@ -125,7 +126,7 @@ export default function EditMealScreen() {
     setIsAnalyzingRecipe(true);
 
     try {
-      const language = i18n.language === "fr" ? "fr" : "en";
+      const language = resolveAiLanguage(i18n.language);
       const analysis = await analyzeRecipeText(
         recipeTextForAi.trim(),
         language,

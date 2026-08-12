@@ -1,5 +1,5 @@
 import { ANALYZE_RECIPE_API_URL } from "@/constants/api";
-import type { AnalyzeMealErrorCode } from "@/utils/analyzeMeal";
+import type { AiLanguage } from "@/utils/aiLanguage";
 import { AnalyzeMealError } from "@/utils/analyzeMeal";
 
 export type RecipeAnalysis = {
@@ -12,7 +12,7 @@ export type RecipeAnalysis = {
 
 export async function analyzeRecipeText(
   recipe: string,
-  language: "en" | "fr",
+  language: AiLanguage,
   accessToken: string,
   mealName?: string,
 ): Promise<RecipeAnalysis> {

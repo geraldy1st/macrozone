@@ -1,4 +1,5 @@
 import { ANALYZE_API_URL } from "@/constants/api";
+import type { AiLanguage } from "@/utils/aiLanguage";
 
 export type MealAnalysis = {
   name: string;
@@ -30,7 +31,7 @@ export class AnalyzeMealError extends Error {
 
 export async function analyzeMealPhoto(
   imageBase64: string,
-  language: "en" | "fr",
+  language: AiLanguage,
   accessToken?: string,
 ): Promise<MealAnalysis> {
   if (!ANALYZE_API_URL) {

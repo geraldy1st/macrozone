@@ -7,25 +7,41 @@ import {
 } from "./lib/security";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
+type AnalyzeLanguage = "en" | "fr" | "es";
+
 type AnalyzeRequest = {
   image: string;
-  language?: "en" | "fr";
+  language?: AnalyzeLanguage | string;
 };
 
 const GEMINI_MODEL = "gemini-2.5-flash";
 
-function buildPrompt(language: "en" | "fr") {
+function resolveLanguage(raw: string | undefined): AnalyzeLanguage {
+  const code = (raw ?? "en").toLowerCase().split("-")[0];
+  if (code === "fr") return "fr";
+  if (code === "es") return "es";
+  return "en";
+}
+
+function buildPrompt(language: AnalyzeLanguage) {
   if (language === "fr") {
     return `Analyse cette photo de repas. Estime les macros pour la portion visible et rédige une recette avec ingrédients et quantités proportionnelles.
 Réponds UNIQUEMENT en JSON valide:
 {"name":"nom du plat","calories":0,"protein":0,"carbs":0,"fat":0,"description":"brève description","recipe":"liste d'ingrédients avec quantités et étapes"}
-Utilise des nombres entiers pour les macros. La recette doit inclure les proportions pour ajuster les macros.`;
+Utilise des nombres entiers pour les macros. La recette doit inclure les proportions pour ajuster les macros. Tous les champs texte doivent être en français.`;
+  }
+
+  if (language === "es") {
+    return `Analiza esta foto de comida. Estima los macros de la porción visible y escribe una receta con ingredientes y cantidades proporcionales.
+Responde ÚNICAMENTE con JSON válido:
+{"name":"nombre del plato","calories":0,"protein":0,"carbs":0,"fat":0,"description":"breve descripción","recipe":"lista de ingredientes con cantidades y pasos"}
+Usa números enteros para los macros. La receta debe incluir proporciones para ajustar macros. Todos los campos de texto deben estar en español.`;
   }
 
   return `Analyze this meal photo. Estimate macros for the visible portion and write a recipe with proportional ingredient amounts.
 Respond ONLY with valid JSON:
 {"name":"meal name","calories":0,"protein":0,"carbs":0,"fat":0,"description":"short description","recipe":"ingredient list with quantities and steps"}
-Use whole numbers for macros. The recipe must include proportions to adjust macros.`;
+Use whole numbers for macros. The recipe must include proportions to adjust macros. All text fields must be in English.`;
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -69,7 +85,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   res.setHeader("X-RateLimit-Remaining", String(remaining));
 
-  const language = body.language === "fr" ? "fr" : "en";
+  const language = resolveLanguage(body.language);
 
   try {
     const response = await fetch(

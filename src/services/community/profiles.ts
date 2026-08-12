@@ -1,13 +1,35 @@
+import type { SocialLink } from "@/data/socialLinks";
 import { supabase } from "@/lib/supabase";
 import {
   PROFILE_SEARCH_PAGE_SIZE,
   type CommunityProfile,
   type ProfileListItem,
   type PublicProfileView,
+  type PublicSocialLink,
 } from "@/types/community";
 import { isUserOnline } from "@/utils/presence";
 import { isBlockedByMe } from "./blocks";
 import { isFollowing } from "./follows";
+
+function mapSocialLinks(raw: unknown): PublicSocialLink[] {
+  if (!Array.isArray(raw)) {
+    return [];
+  }
+  return raw
+    .map((item) => {
+      if (!item || typeof item !== "object") {
+        return null;
+      }
+      const row = item as Record<string, unknown>;
+      const platform = typeof row.platform === "string" ? row.platform.trim() : "";
+      const url = typeof row.url === "string" ? row.url.trim() : "";
+      if (!platform || !url) {
+        return null;
+      }
+      return { platform, url };
+    })
+    .filter((link): link is PublicSocialLink => Boolean(link));
+}
 
 function mapProfile(row: Record<string, unknown>): CommunityProfile {
   return {
@@ -20,6 +42,12 @@ function mapProfile(row: Record<string, unknown>): CommunityProfile {
     following_count: (row.following_count as number | undefined) ?? 0,
     last_seen_at: (row.last_seen_at as string | null | undefined) ?? null,
     show_community_posts: row.show_community_posts !== false,
+    bio: typeof row.bio === "string" ? row.bio : "",
+    country_code:
+      typeof row.country_code === "string" && row.country_code.trim()
+        ? row.country_code.trim()
+        : null,
+    social_links: mapSocialLinks(row.social_links),
   };
 }
 
@@ -34,6 +62,12 @@ export async function upsertMyProfile(input: {
   avatarUrl?: string | null;
   /** When set, updates public post-grid visibility (A010-2). */
   showCommunityPosts?: boolean;
+  /** Public bio (A011-2). */
+  bio?: string;
+  /** ISO country code (A011-2). */
+  countryCode?: string | null;
+  /** Public social links (A011-2). */
+  socialLinks?: SocialLink[] | PublicSocialLink[];
 }): Promise<CommunityProfile> {
   if (!supabase) {
     throw new Error("SUPABASE_NOT_CONFIGURED");
@@ -53,6 +87,24 @@ export async function upsertMyProfile(input: {
 
   if (input.showCommunityPosts !== undefined) {
     payload.show_community_posts = input.showCommunityPosts;
+  }
+
+  if (input.bio !== undefined) {
+    payload.bio = input.bio.trim().slice(0, 400);
+  }
+
+  if (input.countryCode !== undefined) {
+    payload.country_code = input.countryCode?.trim() || null;
+  }
+
+  if (input.socialLinks !== undefined) {
+    payload.social_links = input.socialLinks
+      .filter((link) => link.platform && link.url?.trim())
+      .slice(0, 6)
+      .map((link) => ({
+        platform: link.platform,
+        url: link.url.trim(),
+      }));
   }
 
   const { data, error } = await supabase
@@ -157,7 +209,7 @@ export async function searchProfiles(options: {
   let query = supabase
     .from("profiles")
     .select(
-      "id, display_name, avatar_url, created_at, updated_at, followers_count, following_count, last_seen_at",
+      "id, display_name, avatar_url, created_at, updated_at, followers_count, following_count, last_seen_at, bio, country_code, social_links",
     )
     .order("followers_count", { ascending: false })
     .limit(limit);

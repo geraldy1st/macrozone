@@ -6,9 +6,10 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useEffect } from "react";
 import {
   AccessibilityInfo,
+  Dimensions,
+  Modal,
   StyleSheet,
   Text,
-  useWindowDimensions,
   View,
 } from "react-native";
 
@@ -20,8 +21,9 @@ type MotivationOverlayProps = {
 };
 
 /**
- * Full-screen celebration after adding a meal.
- * pointerEvents="none" so navigation / taps still work underneath.
+ * Full-screen celebration after adding a meal (A011-1).
+ * Uses Modal so it covers the entire screen (tabs + system UI margins).
+ * pointerEvents="none" so navigation / taps still work underneath once dismissed.
  */
 export default function MotivationOverlay({
   visible,
@@ -29,8 +31,6 @@ export default function MotivationOverlay({
   palette,
   onHide,
 }: MotivationOverlayProps) {
-  const { width, height } = useWindowDimensions();
-
   useEffect(() => {
     if (!visible) {
       return;
@@ -57,41 +57,51 @@ export default function MotivationOverlay({
     };
   }, [visible, quote, onHide]);
 
-  if (!visible || !quote.trim()) {
+  if (!quote.trim()) {
     return null;
   }
 
+  const { width, height } = Dimensions.get("screen");
+
   return (
-    <View
-      pointerEvents="none"
-      style={[styles.root, { width, height }]}
-      testID="motivation-overlay"
-      accessibilityElementsHidden
-      importantForAccessibility="no-hide-descendants"
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      statusBarTranslucent
+      presentationStyle="overFullScreen"
+      onRequestClose={onHide}
     >
-      <LinearGradient
-        colors={palette.colors}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={StyleSheet.absoluteFill}
-      />
-      <View style={styles.content}>
-        <Text
-          style={[styles.quote, { color: palette.textColor }]}
-          testID="motivation-overlay-quote"
-        >
-          {quote}
-        </Text>
+      <View
+        pointerEvents="none"
+        style={[styles.root, { width, height }]}
+        testID="motivation-overlay"
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+      >
+        <LinearGradient
+          colors={palette.colors}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+        <View style={styles.content}>
+          <Text
+            style={[styles.quote, { color: palette.textColor }]}
+            testID="motivation-overlay-quote"
+          >
+            {quote}
+          </Text>
+        </View>
       </View>
-    </View>
+    </Modal>
   );
 }
 
 const styles = StyleSheet.create({
   root: {
     ...StyleSheet.absoluteFillObject,
-    zIndex: 100,
-    elevation: 100,
+    flex: 1,
   },
   content: {
     flex: 1,

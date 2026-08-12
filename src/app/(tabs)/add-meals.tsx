@@ -11,6 +11,7 @@ import {
   hasRecipeContent,
   type RecipeData,
 } from "@/types/recipe";
+import { resolveAiLanguage } from "@/utils/aiLanguage";
 import { analyzeMealPhoto } from "@/utils/analyzeMeal";
 import { analyzeRecipeText } from "@/utils/analyzeRecipe";
 import { getMealAiErrorMessage } from "@/utils/mealAiErrors";
@@ -31,14 +32,23 @@ import {
   ActivityIndicator,
   Keyboard,
   KeyboardAvoidingView,
+  LayoutAnimation,
   Platform,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
+  UIManager,
   View,
 } from "react-native";
+
+if (
+  Platform.OS === "android" &&
+  UIManager.setLayoutAnimationEnabledExperimental
+) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 import { useBottomContentPadding } from "@/hooks/useBottomContentPadding";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -66,6 +76,7 @@ export default function AddMealScreen() {
   const [recipeAuthorName, setRecipeAuthorName] = useState<string>();
   const [isAnalyzingRecipe, setIsAnalyzingRecipe] = useState(false);
   const [hasAiResult, setHasAiResult] = useState(false);
+  const [recipeExpanded, setRecipeExpanded] = useState(false);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const scrollRef = useRef<ScrollView>(null);
   const recipeNotesRef = useRef<TextInput>(null);
@@ -105,6 +116,12 @@ export default function AddMealScreen() {
     setRecipeSource(undefined);
     setRecipeAuthorName(undefined);
     setHasAiResult(false);
+    setRecipeExpanded(false);
+  };
+
+  const toggleRecipeSection = () => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setRecipeExpanded((current) => !current);
   };
 
   const markRecipeAsUserEdited = () => {
@@ -145,7 +162,7 @@ export default function AddMealScreen() {
     try {
       const { base64, uri: preparedUri } = await prepareImageForUpload(uri);
       setPhotoUri(preparedUri);
-      const language = i18n.language === "fr" ? "fr" : "en";
+      const language = resolveAiLanguage(i18n.language);
       const analysis = await analyzeMealPhoto(
         base64,
         language,
@@ -243,7 +260,7 @@ export default function AddMealScreen() {
     setIsAnalyzingRecipe(true);
 
     try {
-      const language = i18n.language === "fr" ? "fr" : "en";
+      const language = resolveAiLanguage(i18n.language);
       const analysis = await analyzeRecipeText(
         recipeTextForAi.trim(),
         language,
@@ -480,48 +497,84 @@ export default function AddMealScreen() {
         testID="meal-description-input"
       />
 
-      <StructuredRecipeForm
-        value={recipeData}
-        onChange={handleRecipeDataChange}
-        colors={colors}
-        disabled={isAnalyzingRecipe}
-        notesInputRef={recipeNotesRef}
-        onNotesFocus={scrollRecipeIntoView}
-        testIDPrefix="meal-recipe"
-      />
-
-      {hasRecipeContent(recipeData) ? (
-        <RecipeAttribution
-          recipeSource={recipeSource}
-          recipeAuthorName={recipeAuthorName}
+      <TouchableOpacity
+        style={[
+          styles.recipeToggle,
+          { backgroundColor: colors.card, borderColor: colors.cardBorder },
+        ]}
+        onPress={toggleRecipeSection}
+        activeOpacity={0.85}
+        testID="meal-recipe-toggle"
+      >
+        <View style={styles.recipeToggleLeft}>
+          <Ionicons name="restaurant-outline" size={18} color={colors.accent} />
+          <View style={styles.recipeToggleText}>
+            <Text style={[styles.recipeToggleTitle, { color: colors.text }]}>
+              {t("addMeal.recipe")}
+            </Text>
+            <Text style={[styles.recipeToggleHint, { color: colors.textSecondary }]}>
+              {recipeExpanded
+                ? t("addMeal.recipeCollapseHint")
+                : t("addMeal.recipeExpandHint")}
+            </Text>
+          </View>
+        </View>
+        <Ionicons
+          name={recipeExpanded ? "chevron-up" : "chevron-down"}
+          size={20}
+          color={colors.textSecondary}
         />
-      ) : null}
+      </TouchableOpacity>
 
-      {canUseAiScan && recipeTextForAi.trim().length >= 10 && (
-        <TouchableOpacity
-          style={[styles.recipeAiButton, { borderColor: colors.cardBorder, backgroundColor: colors.card }]}
-          onPress={handleAnalyzeRecipe}
-          disabled={isAnalyzingRecipe || isAnalyzing}
-          testID="meal-analyze-recipe-btn"
-        >
+      {recipeExpanded ? (
+        <View style={styles.recipePanel}>
+          <StructuredRecipeForm
+            value={recipeData}
+            onChange={handleRecipeDataChange}
+            colors={colors}
+            disabled={isAnalyzingRecipe}
+            notesInputRef={recipeNotesRef}
+            onNotesFocus={scrollRecipeIntoView}
+            testIDPrefix="meal-recipe"
+          />
+
+          {hasRecipeContent(recipeData) ? (
+            <RecipeAttribution
+              recipeSource={recipeSource}
+              recipeAuthorName={recipeAuthorName}
+            />
+          ) : null}
+
+          {canUseAiScan && hasRecipeContent(recipeData) ? (
+            <TouchableOpacity
+              style={[
+                styles.recipeAiButton,
+                { borderColor: colors.cardBorder, backgroundColor: colors.card },
+              ]}
+              onPress={handleAnalyzeRecipe}
+              disabled={isAnalyzingRecipe || isAnalyzing}
+              testID="meal-analyze-recipe-btn"
+            >
+              {isAnalyzingRecipe ? (
+                <ActivityIndicator color={colors.accent} />
+              ) : (
+                <>
+                  <Ionicons name="sparkles" size={18} color={colors.accent} />
+                  <Text style={[styles.recipeAiButtonText, { color: colors.text }]}>
+                    {t("addMeal.analyzeRecipe")}
+                  </Text>
+                </>
+              )}
+            </TouchableOpacity>
+          ) : null}
+
           {isAnalyzingRecipe ? (
-            <ActivityIndicator color={colors.accent} />
-          ) : (
-            <>
-              <Ionicons name="sparkles" size={18} color={colors.accent} />
-              <Text style={[styles.recipeAiButtonText, { color: colors.text }]}>
-                {t("addMeal.analyzeRecipe")}
-              </Text>
-            </>
-          )}
-        </TouchableOpacity>
-      )}
-
-      {isAnalyzingRecipe && (
-        <Text style={[styles.analyzingText, { color: colors.textSecondary }]}>
-          {t("addMeal.analyzingRecipe")}
-        </Text>
-      )}
+            <Text style={[styles.analyzingText, { color: colors.textSecondary }]}>
+              {t("addMeal.analyzingRecipe")}
+            </Text>
+          ) : null}
+        </View>
+      ) : null}
 
       </ScrollView>
 
@@ -729,6 +782,42 @@ function createScreenStyles(colors: ReturnType<typeof useTheme>["colors"]) {
     fontWeight: "500",
     marginTop: 12,
     marginBottom: -4,
+  },
+  recipeToggle: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    borderWidth: 1,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+    marginTop: 4,
+    gap: 12,
+  },
+  recipeToggleLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    flex: 1,
+    minWidth: 0,
+  },
+  recipeToggleText: {
+    flex: 1,
+    minWidth: 0,
+    gap: 2,
+  },
+  recipeToggleTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  recipeToggleHint: {
+    fontSize: 12,
+    fontWeight: "500",
+    lineHeight: 16,
+  },
+  recipePanel: {
+    marginTop: 10,
+    gap: 4,
   },
   recipeAiButton: {
     flexDirection: "row",
