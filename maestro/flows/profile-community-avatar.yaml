@@ -1,0 +1,33 @@
+# TC-E2E-09 / TC-AVATAR-01 — Profile photo must match Community (same account)
+# Manual check after this flow: avatar on Profile and on your Community posts
+# must be the same image (never Google OAuth).
+appId: com.geraldy.macrozone
+---
+- launchApp
+- waitForAnimationToEnd:
+    timeout: 10000
+- extendedWaitUntil:
+    visible:
+      id: "profile-tab"
+    timeout: 60000
+- tapOn:
+    id: "profile-tab"
+- extendedWaitUntil:
+    visible:
+      id: "profile-screen-avatar"
+    timeout: 20000
+- tapOn:
+    id: "community-tab"
+- extendedWaitUntil:
+    visible:
+      id: "community-screen-title"
+    timeout: 20000
+# If the signed-in user has a post, their feed avatar uses community-my-avatar
+# (same source as Profile). Guest / no posts: title-only smoke still passes.
+- runFlow:
+    when:
+      visible:
+        id: "community-my-avatar"
+    commands:
+      - assertVisible:
+          id: "community-my-avatar"

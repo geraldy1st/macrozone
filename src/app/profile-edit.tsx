@@ -24,6 +24,7 @@ import {
 import { syncMyCommunityProfile } from "@/services/community";
 import type { ThemeColors } from "@/styles/themes";
 import { formatBirthDateDisplay, parseIsoDate, toIsoDate } from "@/utils/age";
+import { resolveDisplayAvatarUri } from "@/utils/avatar";
 import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker, {
   type DateTimePickerEvent,
@@ -284,8 +285,12 @@ export default function ProfileEditScreen() {
             onPress={handlePickPhoto}
             testID="profile-edit-pick-photo"
           >
-            {profile.photoUri ? (
-              <Image source={{ uri: profile.photoUri }} style={styles.avatar} contentFit="cover" />
+            {resolveDisplayAvatarUri(profile.photoUri) ? (
+              <Image
+                source={{ uri: resolveDisplayAvatarUri(profile.photoUri) ?? "" }}
+                style={styles.avatar}
+                contentFit="cover"
+              />
             ) : (
               <View style={[styles.avatarPlaceholder, { backgroundColor: colors.surface }]}>
                 <Ionicons name="person" size={42} color={colors.textSecondary} />
@@ -296,7 +301,7 @@ export default function ProfileEditScreen() {
             </View>
           </TouchableOpacity>
 
-          {profile.photoUri ? (
+          {resolveDisplayAvatarUri(profile.photoUri) ? (
             <TouchableOpacity
               style={styles.removePhotoBtn}
               onPress={handleRemovePhoto}

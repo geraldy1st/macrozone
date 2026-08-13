@@ -12,10 +12,12 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { useToast } from "@/contexts/ToastContext";
 import { useBottomContentPadding } from "@/hooks/useBottomContentPadding";
 import { useFeed } from "@/hooks/useFeed";
+import { useMyAvatarUri } from "@/hooks/useMyAvatarUri";
 import { useThemedStyles } from "@/hooks/useThemedStyles";
 import {
   deleteMyPost,
   searchProfiles,
+  syncMyCommunityProfile,
   toggleLike,
   updateMyPost,
 } from "@/services/community";
@@ -31,6 +33,7 @@ import {
 } from "@/storage/searchHistory";
 import type { ThemeColors } from "@/styles/themes";
 import type { FeedPost, ProfileListItem } from "@/types/community";
+import { resolveAuthorAvatarUri } from "@/utils/avatar";
 import { mealToSharePayload } from "@/utils/shareMealPayload";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
@@ -60,6 +63,7 @@ export default function CommunityScreen() {
   const { showAlert } = useAlert();
   const styles = useThemedStyles(createStyles);
   const bottomPadding = useBottomContentPadding();
+  const { myAvatarUri, reloadMyAvatar } = useMyAvatarUri();
   const [commentPostId, setCommentPostId] = useState<string | null>(null);
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [searchInput, setSearchInput] = useState("");
@@ -110,7 +114,13 @@ export default function CommunityScreen() {
       void refresh();
       void loadSavedIds();
       void loadHistory();
-    }, [refresh, loadSavedIds, loadHistory]),
+      void reloadMyAvatar();
+      if (user) {
+        void syncMyCommunityProfile(user)
+          .then(() => reloadMyAvatar())
+          .catch(() => undefined);
+      }
+    }, [refresh, loadSavedIds, loadHistory, reloadMyAvatar, user]),
   );
 
   useEffect(() => {
@@ -530,7 +540,12 @@ export default function CommunityScreen() {
                   testID={`community-person-${item.id}`}
                 >
                   <ProfileAvatar
-                    uri={item.avatar_url}
+                    uri={resolveAuthorAvatarUri({
+                      authorId: item.id,
+                      remoteUri: item.avatar_url,
+                      myUserId: user?.id,
+                      myAvatarUri,
+                    })}
                     name={name}
                     size={44}
                     backgroundColor={colors.surface}
@@ -629,6 +644,12 @@ export default function CommunityScreen() {
             <PostCard
               post={item}
               testIndex={index}
+              avatarUri={resolveAuthorAvatarUri({
+                authorId: item.author_id,
+                remoteUri: item.author?.avatar_url,
+                myUserId: user?.id,
+                myAvatarUri,
+              })}
               isOwner={Boolean(user && user.id === item.author_id)}
               isSaved={savedIds.has(item.id)}
               onLikePress={() =>

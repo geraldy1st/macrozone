@@ -344,6 +344,9 @@ Checklist exécutée 1× par sprint ou avant chaque release APK (~25 min) :
 | TC-UNIT-08 | AnalyzeMealError 401 | `analyzeMeal.ts` | Code UNAUTHORIZED | P1 |
 | TC-UNIT-09 | Objectifs par défaut | `goals.ts` | Valeurs defaultMacroGoals | P1 |
 | TC-UNIT-10 | Changement langue i18n | `i18n` | Clé FR/EN résolue | P2 |
+| TC-UNIT-11 | Photo Profile = Community (moi) | `avatar.ts` | Même URI résolue pour l’auteur connecté | P0 |
+| TC-UNIT-12 | Photo Google jamais affichée | `avatar.ts` | `googleusercontent` → null (initiales) | P0 |
+| TC-UNIT-13 | Autre membre garde sa photo remote | `avatar.ts` | URI remote custom conservée | P0 |
 
 ### 7.3 Tests E2E mobile Maestro (TC-E2E)
 
@@ -357,8 +360,23 @@ Checklist exécutée 1× par sprint ou avant chaque release APK (~25 min) :
 | TC-E2E-06 | Mode avion → erreur IA | `offline-analysis.yaml` | P1 |
 | TC-E2E-07 | Bouton submit visible | Assertion sans scroll | P1 |
 | TC-E2E-08 | Photo caméra | **Manuel** | P1 |
+| TC-E2E-09 | Photo Profile identique à Community | `profile-community-avatar.yaml` | P0 |
 
-### 7.4 Exemple de flow Maestro
+### 7.4 Photo de profil Profile vs Community (TC-AVATAR)
+
+**Règle :** une seule photo par utilisateur — celle choisie dans **Edit profile**. Elle s’affiche telle quelle sur **Profile** et sur **Community → Member profile** (et sur les posts / People). Google OAuth et toute autre URL hors `profile-avatar` / fichier local sont ignorées.
+
+| ID | Titre | Préconditions | Étapes | Résultat attendu | Priorité |
+|---|---|---|---|---|---|
+| TC-AVATAR-01 | Photo app identique Profile / Community | Compte connecté, photo choisie dans Edit profile | 1. Ouvrir Profile et noter la photo. 2. Ouvrir Community. 3. Trouver un de ses posts (ou son Member profile). | Même visage / même fichier (pas Google, pas initiales si une photo app existe) | P0 |
+| TC-AVATAR-02 | Sans photo app → initiales des deux côtés | Compte connecté, photo de profil supprimée | 1. Edit profile → Remove photo → Save. 2. Profile. 3. Community (ses posts / Member profile). | Placeholder / initiales des deux côtés, **aucune** photo Google | P0 |
+| TC-AVATAR-03 | Google OAuth ignoré | Compte Google, aucune photo app | 1. Se connecter avec Google. 2. Ne pas ajouter de photo. 3. Comparer Profile et Community. | Initiales des deux côtés (URL `googleusercontent` masquée) | P0 |
+| TC-AVATAR-04 | Autre membre | Deux comptes, B a une photo app | Depuis le compte A, ouvrir un post / Member profile de B | Photo de B (custom), pas celle de A | P1 |
+| TC-AVATAR-05 | Après changement de photo | Photo A puis nouvelle photo B | 1. Changer la photo dans Edit profile → Save. 2. Profile. 3. Community (pull to refresh). | Profile et Community montrent **B**, plus A | P0 |
+
+Automatisation : TC-UNIT-11/12/13 (`__tests__/components/profileAvatar.test.ts`). Parcours écran : `maestro/flows/profile-community-avatar.yaml`.
+
+### 7.5 Exemple de flow Maestro
 
 **Fichier : `maestro/flows/add-meal-manual.yaml`**
 
@@ -538,6 +556,7 @@ Ordre recommandé pour démarrer l'implémentation dans le repo `macrozone` :
 | REQ-P0-06 Image trop grande | TC-API-05 | Oui | P0 |
 | REQ-P1-01 Langue FR/EN | TC-E2E-04 | Oui | P1 |
 | REQ-P1-05 Bouton visible | TC-E2E-07 | Oui | P1 |
+| REQ-A011 Photo Profile = Community | TC-AVATAR-01 à 05, TC-UNIT-11/12/13, TC-E2E-09 | Partiel (Jest + Maestro navigation) | P0 |
 
 ---
 

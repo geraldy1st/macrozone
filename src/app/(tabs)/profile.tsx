@@ -23,6 +23,7 @@ import {
 import type { ThemeColors } from "@/styles/themes";
 import type { FeedPost } from "@/types/community";
 import { calculateAge } from "@/utils/age";
+import { resolveDisplayAvatarUri } from "@/utils/avatar";
 import { captureAndShareImage } from "@/utils/shareImage";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
@@ -91,13 +92,8 @@ export default function ProfileScreen() {
       setFollowing(remote?.following_count ?? 0);
       setPosts(page.posts);
 
-      // Prefer remote custom avatar when local has no photo (never Google URLs).
-      const remoteAvatar = remote?.avatar_url?.trim() ?? "";
-      if (
-        !refreshedLocal.photoUri?.trim() &&
-        remoteAvatar &&
-        remoteAvatar.includes(`${user.id}/profile-avatar`)
-      ) {
+      const remoteAvatar = resolveDisplayAvatarUri(remote?.avatar_url);
+      if (!resolveDisplayAvatarUri(refreshedLocal.photoUri) && remoteAvatar) {
         setProfile((current) => ({
           ...current,
           photoUri: remoteAvatar,
@@ -205,10 +201,18 @@ export default function ProfileScreen() {
           { backgroundColor: colors.card, borderColor: colors.cardBorder },
         ]}
       >
-        <View style={styles.avatarContainer}>
-          {profile.photoUri ? (
+        <View
+          style={styles.avatarContainer}
+          testID="profile-screen-avatar"
+          accessibilityLabel={
+            resolveDisplayAvatarUri(profile.photoUri)
+              ? "profile-avatar-custom"
+              : "profile-avatar-initials"
+          }
+        >
+          {resolveDisplayAvatarUri(profile.photoUri) ? (
             <Image
-              source={{ uri: profile.photoUri }}
+              source={{ uri: resolveDisplayAvatarUri(profile.photoUri) ?? "" }}
               style={styles.avatar}
               contentFit="cover"
             />

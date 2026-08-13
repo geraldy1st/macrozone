@@ -29,6 +29,8 @@ type PostCardProps = {
   onLikePress?: () => void;
   onCommentPress?: () => void;
   onSavePress?: () => void;
+  /** Override author avatar (own Profile photo so Community matches Profile). */
+  avatarUri?: string | null;
   /** Open full post detail (name / image / card). Zoom is only on detail (A011-1). */
   onDetailPress?: () => void;
   onAuthorPress?: () => void;
@@ -47,6 +49,7 @@ export default function PostCard({
   onLikePress,
   onCommentPress,
   onSavePress,
+  avatarUri,
   onDetailPress,
   onAuthorPress,
   onEditPress,
@@ -121,11 +124,12 @@ export default function PostCard({
           }
         >
           <ProfileAvatar
-            uri={post.author?.avatar_url}
+            uri={avatarUri ?? post.author?.avatar_url}
             name={authorName}
             size={36}
             backgroundColor={colors.surface}
             textColor={colors.textSecondary}
+            testID={isOwner ? "community-my-avatar" : undefined}
           />
           <View style={styles.headerText}>
             <Text style={[styles.author, { color: colors.text }]} numberOfLines={1}>

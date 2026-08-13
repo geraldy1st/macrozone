@@ -94,6 +94,7 @@ Les dialogues utilisent le texte i18n :
 | `auth-login-wrong-password.yaml` | Échec login |
 | `auth-delete-account.yaml` | Delete account |
 | `community-smoke.yaml` | Onglet Community (invité) |
+| `profile-community-avatar.yaml` | Photo Profile = Community (TC-AVATAR) |
 | `community-share-like-comment.yaml` | Share / like / comment / delete |
 | `settings-account.yaml` | Settings Account (invité) |
 | `add-meal-manual.yaml` | Ajout repas manuel |

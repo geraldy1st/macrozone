@@ -6,8 +6,8 @@ import { useThemedStyles } from "@/hooks/useThemedStyles";
 import { listBlockedProfiles, unblockUser } from "@/services/community";
 import type { CommunityProfile } from "@/types/community";
 import type { ThemeColors } from "@/styles/themes";
+import ProfileAvatar from "@/components/ProfileAvatar";
 import { Ionicons } from "@expo/vector-icons";
-import { Image } from "expo-image";
 import { router, useFocusEffect, type Href } from "expo-router";
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -134,17 +134,13 @@ export default function BlockedUsersScreen() {
                 onPress={() => router.push(`/u/${item.id}` as Href)}
                 activeOpacity={0.75}
               >
-                <View style={[styles.avatar, { backgroundColor: colors.surface }]}>
-                  {item.avatar_url ? (
-                    <Image
-                      source={{ uri: item.avatar_url }}
-                      style={styles.avatarImage}
-                      contentFit="cover"
-                    />
-                  ) : (
-                    <Ionicons name="person" size={20} color={colors.textSecondary} />
-                  )}
-                </View>
+                <ProfileAvatar
+                  uri={item.avatar_url}
+                  name={item.display_name}
+                  size={40}
+                  backgroundColor={colors.surface}
+                  textColor={colors.textSecondary}
+                />
                 <Text style={[styles.name, { color: colors.text }]} numberOfLines={1}>
                   {item.display_name?.trim() || t("profile.displayNameFallback")}
                 </Text>

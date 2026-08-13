@@ -7,7 +7,7 @@ import {
   type PublicProfileView,
   type PublicSocialLink,
 } from "@/types/community";
-import { isGoogleHostedAvatar } from "@/utils/avatar";
+import { resolveDisplayAvatarUri } from "@/utils/avatar";
 import { isUserOnline } from "@/utils/presence";
 import { isBlockedByMe } from "./blocks";
 import { isFollowing } from "./follows";
@@ -36,10 +36,9 @@ function mapProfile(row: Record<string, unknown>): CommunityProfile {
   return {
     id: row.id as string,
     display_name: (row.display_name as string) ?? "",
-    avatar_url: (() => {
-      const raw = (row.avatar_url as string | null) ?? null;
-      return isGoogleHostedAvatar(raw) ? null : raw;
-    })(),
+    avatar_url: resolveDisplayAvatarUri(
+      (row.avatar_url as string | null) ?? null,
+    ),
     created_at: row.created_at as string,
     updated_at: row.updated_at as string,
     followers_count: (row.followers_count as number | undefined) ?? 0,

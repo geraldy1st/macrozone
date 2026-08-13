@@ -11,6 +11,7 @@ import {
   type SocialPlatform,
 } from "@/data/socialLinks";
 import { useBottomContentPadding } from "@/hooks/useBottomContentPadding";
+import { useMyAvatarUri } from "@/hooks/useMyAvatarUri";
 import { useThemedStyles } from "@/hooks/useThemedStyles";
 import {
   blockUser,
@@ -22,6 +23,7 @@ import {
 import { hideUser } from "@/storage/hiddenUsers";
 import type { CommunityProfile, FeedPost } from "@/types/community";
 import type { ThemeColors } from "@/styles/themes";
+import { resolveAuthorAvatarUri } from "@/utils/avatar";
 import { isUserOnline } from "@/utils/presence";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
@@ -60,6 +62,7 @@ export default function PublicProfileScreen() {
   const { showAlert } = useAlert();
   const styles = useThemedStyles(createStyles);
   const bottomPadding = useBottomContentPadding(20, false);
+  const { myAvatarUri } = useMyAvatarUri();
 
   const [profile, setProfile] = useState<CommunityProfile | null>(null);
   const [isFollowing, setIsFollowing] = useState(false);
@@ -369,7 +372,12 @@ export default function PublicProfileScreen() {
               >
                 <View style={styles.avatarWrap}>
                   <ProfileAvatar
-                    uri={profile.avatar_url}
+                    uri={resolveAuthorAvatarUri({
+                      authorId: profile.id,
+                      remoteUri: profile.avatar_url,
+                      myUserId: user?.id,
+                      myAvatarUri,
+                    })}
                     name={displayName}
                     size={110}
                     backgroundColor={colors.surface}

@@ -1,10 +1,16 @@
 import { getUserProfile, setUserProfile } from "@/storage/profile";
-import { isGoogleHostedAvatar } from "@/utils/avatar";
+import {
+  isAppProfilePhoto,
+  isLocalImageUri,
+} from "@/utils/avatar";
 import type { User } from "@supabase/supabase-js";
 import { uploadProfileAvatar } from "./avatarUpload";
-import { getProfile, upsertMyProfile } from "./profiles";
+import { upsertMyProfile } from "./profiles";
 
-function oauthDisplayName(user: User): string {
+function localDisplayName(user: User, localName: string): string {
+  if (localName.trim()) {
+    return localName.trim();
+  }
   const meta = user.user_metadata ?? {};
   if (typeof meta.full_name === "string" && meta.full_name.trim()) {
     return meta.full_name.trim();
@@ -18,112 +24,58 @@ function oauthDisplayName(user: User): string {
   return "User";
 }
 
-function isLocalImageUri(uri: string): boolean {
-  return (
-    uri.startsWith("file:") ||
-    uri.startsWith("content:") ||
-    uri.startsWith("ph:") ||
-    uri.startsWith("assets-library:") ||
-    uri.startsWith("/")
-  );
-}
-
-export { isGoogleHostedAvatar } from "@/utils/avatar";
-
-/** Uploaded community avatars live under meal-posts/{userId}/profile-avatar.jpg */
-function isCustomUploadedAvatar(url: string | null | undefined, userId: string): boolean {
-  if (!url) {
-    return false;
-  }
-  return url.includes(`${userId}/profile-avatar`);
-}
-
 /**
- * Push local profile to public `profiles`.
- * Avatar policy (A011-3): app profile photo only — never Google OAuth picture.
- * Also syncs show_community_posts, bio, country, social links.
- * After a successful local upload, stores the public URL in local photoUri so
- * Profile and Community display the same image.
+ * One photo: Edit profile → upload to storage → same URL on Profile and Member profile.
+ * Clears Google / leftover URLs from local + remote.
  */
 export async function syncMyCommunityProfile(user: User): Promise<void> {
-  let displayName = oauthDisplayName(user);
-  /** `null` clears remote avatar; `undefined` leaves it unchanged only on upload soft-fail of existing custom. */
-  let avatarUrl: string | null | undefined = null;
-  let showCommunityPosts = true;
-  let bio = "";
-  let countryCode: string | null = null;
-  let socialLinks: { platform: string; url: string }[] = [];
-  let persistLocalPhotoUri: string | undefined;
+  const local = await getUserProfile();
+  const displayName = localDisplayName(user, local.name);
+  const showCommunityPosts = local.showCommunityPosts !== false;
+  const bio = local.bio ?? "";
+  const countryCode = local.countryCode?.trim() || null;
+  const socialLinks = local.socialLinks
+    .filter((link) => link.url.trim())
+    .map((link) => ({ platform: link.platform, url: link.url.trim() }));
 
-  try {
-    const local = await getUserProfile();
-    if (local.name.trim()) {
-      displayName = local.name.trim();
-    }
-    showCommunityPosts = local.showCommunityPosts !== false;
-    bio = local.bio ?? "";
-    countryCode = local.countryCode?.trim() || null;
-    socialLinks = local.socialLinks
-      .filter((link) => link.url.trim())
-      .map((link) => ({ platform: link.platform, url: link.url.trim() }));
+  const photo = local.photoUri?.trim() ?? "";
+  let avatarUrl: string | null = null;
+  let nextLocalPhoto: string | null = photo && isAppProfilePhoto(photo) ? photo : null;
 
-    const photo = local.photoUri?.trim() ?? "";
-
-    if (photo && isLocalImageUri(photo)) {
-      try {
-        avatarUrl = await uploadProfileAvatar(user.id, photo);
-        persistLocalPhotoUri = avatarUrl;
-      } catch (error) {
-        console.warn("Profile avatar upload failed:", error);
-        const existing = await getProfile(user.id);
-        if (isCustomUploadedAvatar(existing?.avatar_url, user.id)) {
-          // Keep existing custom remote; do not fall back to Google
-          avatarUrl = undefined;
-        } else {
-          avatarUrl = null;
-        }
-      }
-    } else if (photo.startsWith("http") && !isGoogleHostedAvatar(photo)) {
-      // Already a public custom URL (e.g. previous upload)
-      avatarUrl = photo;
-    } else {
-      // No app photo, or only a Google URL stored locally — clear remote avatar
+  if (photo && isLocalImageUri(photo)) {
+    try {
+      avatarUrl = await uploadProfileAvatar(user.id, photo);
+      nextLocalPhoto = avatarUrl;
+    } catch (error) {
+      console.warn("Profile avatar upload failed:", error);
+      // Keep showing the local file on this device; do not push a corrupt remote URL.
       avatarUrl = null;
-      if (photo && isGoogleHostedAvatar(photo)) {
-        persistLocalPhotoUri = ""; // strip Google URL from local profile
-      }
     }
-  } catch (error) {
-    console.warn("syncMyCommunityProfile local read failed:", error);
+  } else if (photo && isAppProfilePhoto(photo)) {
+    avatarUrl = photo;
+    nextLocalPhoto = photo;
+  } else {
     avatarUrl = null;
+    nextLocalPhoto = null;
   }
 
   await upsertMyProfile({
     userId: user.id,
     displayName,
-    ...(avatarUrl !== undefined ? { avatarUrl } : {}),
+    avatarUrl,
     showCommunityPosts,
     bio,
     countryCode,
     socialLinks,
   });
 
-  // Unify Profile tab photo with community avatar (public URL, never Google).
-  if (persistLocalPhotoUri !== undefined) {
-    try {
-      const local = await getUserProfile();
-      if (persistLocalPhotoUri === "") {
-        const next = { ...local };
-        delete next.photoUri;
-        await setUserProfile(next);
-      } else if (local.photoUri !== persistLocalPhotoUri) {
-        await setUserProfile({
-          ...local,
-          photoUri: persistLocalPhotoUri,
-        });
-      }
-    } catch {
-      // Non-blocking
+  if ((local.photoUri ?? null) !== nextLocalPhoto) {
+    const next = { ...local };
+    if (nextLocalPhoto) {
+      next.photoUri = nextLocalPhoto;
+    } else {
+      delete next.photoUri;
     }
+    await setUserProfile(next);
   }
 }
