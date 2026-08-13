@@ -1,3 +1,4 @@
+import { resolveDisplayAvatarUri } from "@/utils/avatar";
 import { Image } from "expo-image";
 import { useMemo } from "react";
 import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from "react-native";
@@ -41,7 +42,7 @@ export default function ProfileAvatar({
   testID,
 }: ProfileAvatarProps) {
   const initials = useMemo(() => getAvatarInitials(name), [name]);
-  const remote = uri?.trim().startsWith("http") ? uri.trim() : null;
+  const remote = resolveDisplayAvatarUri(uri);
   const fontSize = Math.max(11, Math.round(size * 0.36));
 
   return (

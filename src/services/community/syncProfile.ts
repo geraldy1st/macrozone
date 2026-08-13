@@ -1,4 +1,5 @@
 import { getUserProfile, setUserProfile } from "@/storage/profile";
+import { isGoogleHostedAvatar } from "@/utils/avatar";
 import type { User } from "@supabase/supabase-js";
 import { uploadProfileAvatar } from "./avatarUpload";
 import { getProfile, upsertMyProfile } from "./profiles";
@@ -27,17 +28,7 @@ function isLocalImageUri(uri: string): boolean {
   );
 }
 
-/** Google-hosted avatar URLs (not used for community avatars — A011-3). */
-export function isGoogleHostedAvatar(url: string | null | undefined): boolean {
-  if (!url) {
-    return false;
-  }
-  return (
-    /googleusercontent\.com/i.test(url) ||
-    /ggpht\.com/i.test(url) ||
-    /google\.com\/.*\/photo/i.test(url)
-  );
-}
+export { isGoogleHostedAvatar } from "@/utils/avatar";
 
 /** Uploaded community avatars live under meal-posts/{userId}/profile-avatar.jpg */
 function isCustomUploadedAvatar(url: string | null | undefined, userId: string): boolean {

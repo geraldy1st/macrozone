@@ -1,6 +1,6 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { getUserProfile } from "@/storage/profile";
-import type { User } from "@supabase/supabase-js";
+import { resolveDisplayAvatarUri } from "@/utils/avatar";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { usePathname } from "expo-router";
@@ -12,17 +12,6 @@ type TabProfileIconProps = {
   size: number;
   focused: boolean;
 };
-
-function oauthAvatarUrl(user: User) {
-  const meta = user.user_metadata ?? {};
-  if (typeof meta.avatar_url === "string" && meta.avatar_url.trim()) {
-    return meta.avatar_url.trim();
-  }
-  if (typeof meta.picture === "string" && meta.picture.trim()) {
-    return meta.picture.trim();
-  }
-  return null;
-}
 
 export default function TabProfileIcon({
   color,
@@ -41,10 +30,9 @@ export default function TabProfileIcon({
 
     try {
       const profile = await getUserProfile();
-      const local = profile.photoUri?.trim() || null;
-      setPhotoUri(local ?? oauthAvatarUrl(user));
+      setPhotoUri(resolveDisplayAvatarUri(profile.photoUri));
     } catch {
-      setPhotoUri(oauthAvatarUrl(user));
+      setPhotoUri(null);
     }
   }, [user]);
 

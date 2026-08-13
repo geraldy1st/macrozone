@@ -1,8 +1,7 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useToast } from "@/contexts/ToastContext";
-import { createPost, upsertMyProfile } from "@/services/community";
-import { getUserProfile } from "@/storage/profile";
+import { createPost } from "@/services/community";
 import { MAX_CAPTION_LENGTH } from "@/types/community";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
@@ -69,22 +68,10 @@ export default function ShareToCommunityModal({
     setIsSharing(true);
 
     try {
-      const localProfile = await getUserProfile();
-      const remoteAvatar =
-        typeof user.user_metadata?.avatar_url === "string"
-          ? user.user_metadata.avatar_url
-          : typeof user.user_metadata?.picture === "string"
-            ? user.user_metadata.picture
-            : undefined;
-
-      await upsertMyProfile({
-        userId: user.id,
-        displayName:
-          localProfile.name.trim() ||
-          user.email?.split("@")[0] ||
-          "User",
-        ...(remoteAvatar !== undefined ? { avatarUrl: remoteAvatar } : {}),
-      });
+      const { syncMyCommunityProfile } = await import(
+        "@/services/community/syncProfile"
+      );
+      await syncMyCommunityProfile(user);
 
       await createPost(user.id, {
         mealName: meal.mealName,

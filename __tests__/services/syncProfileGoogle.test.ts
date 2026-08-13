@@ -1,4 +1,4 @@
-import { isGoogleHostedAvatar } from "@/services/community/syncProfile";
+import { isGoogleHostedAvatar } from "@/utils/avatar";
 
 describe("isGoogleHostedAvatar", () => {
   it("detects Google avatar hosts", () => {
