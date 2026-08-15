@@ -129,8 +129,6 @@ export default function PublicProfileScreen() {
   const displayName =
     profile?.display_name?.trim() || t("profile.displayNameFallback");
   const online = isUserOnline(profile?.last_seen_at);
-  const followers = profile?.followers_count ?? 0;
-  const following = profile?.following_count ?? 0;
   const country = profile?.country_code
     ? getCountryByCode(profile.country_code)
     : null;
@@ -395,32 +393,12 @@ export default function PublicProfileScreen() {
                   {displayName}
                 </Text>
 
-                <View style={styles.statsRow}>
-                  <View style={styles.stat}>
-                    <Text style={[styles.statValue, { color: colors.text }]}>
-                      {postCount}
-                    </Text>
-                    <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
-                      {t("social.posts")}
-                    </Text>
-                  </View>
-                  <View style={styles.stat}>
-                    <Text style={[styles.statValue, { color: colors.text }]}>
-                      {followers}
-                    </Text>
-                    <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
-                      {t("social.followers")}
-                    </Text>
-                  </View>
-                  <View style={styles.stat}>
-                    <Text style={[styles.statValue, { color: colors.text }]}>
-                      {following}
-                    </Text>
-                    <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
-                      {t("social.following")}
-                    </Text>
-                  </View>
-                </View>
+                <Text
+                  style={[styles.cookbookLine, { color: colors.textSecondary }]}
+                  testID="public-profile-cookbook"
+                >
+                  {t("social.cookbookCount", { count: postCount })}
+                </Text>
 
                 {bio && !isBlocked ? (
                   <Text style={[styles.bio, { color: colors.textSecondary }]}>
@@ -779,25 +757,11 @@ function createStyles(colors: ThemeColors) {
       fontWeight: "800",
       maxWidth: "100%",
     },
-    statsRow: {
-      flexDirection: "row",
-      width: "100%",
-      justifyContent: "space-around",
-      marginTop: 4,
-      marginBottom: 4,
-    },
-    stat: {
-      alignItems: "center",
-      minWidth: 72,
-    },
-    statValue: {
-      fontSize: 18,
-      fontWeight: "800",
-    },
-    statLabel: {
-      fontSize: 12,
+    cookbookLine: {
+      fontSize: 13,
       fontWeight: "600",
-      marginTop: 2,
+      marginTop: 6,
+      marginBottom: 4,
     },
     bio: {
       fontSize: 14,

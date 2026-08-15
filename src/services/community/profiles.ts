@@ -246,7 +246,7 @@ export async function searchProfiles(options: {
     .select(
       "id, display_name, avatar_url, created_at, updated_at, followers_count, following_count, last_seen_at, bio, country_code, social_links",
     )
-    .order("followers_count", { ascending: false })
+    .order("display_name", { ascending: true })
     .limit(limit);
 
   if (raw) {

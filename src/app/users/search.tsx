@@ -234,9 +234,7 @@ export default function UserSearchScreen() {
                   ) : null}
                 </View>
                 <Text style={[styles.meta, { color: colors.textSecondary }]}>
-                  {t("social.followersCount", {
-                    count: item.followers_count ?? 0,
-                  })}
+                  {t("social.openCookbook")}
                 </Text>
               </View>
 

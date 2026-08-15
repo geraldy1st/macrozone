@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>nutriFlow — plan architectural UI</title>
+  <style>
+    :root {
+      --bg: #0b0b14;
+      --bg2: #12121f;
+      --card: #16162a;
+      --surface: #1e1e32;
+      --border: #2a2a4a;
+      --text: #f4f4f8;
+      --muted: #8b8ba0;
+      --accent: #ff6b35;
+      --primary: #4fc3f7;
+      --protein: #4ecdc4;
+      --carbs: #ffd93d;
+      --fat: #6bcb77;
+      --alert: #ff5252;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; background: var(--bg); color: var(--text); font-family: "Segoe UI", system-ui, sans-serif; }
+    a { color: var(--primary); }
+    .page { max-width: 1180px; margin: 0 auto; padding: 40px 24px 80px; }
+    header.hero { margin-bottom: 40px; }
+    .kicker { color: var(--accent); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; font-size: 12px; }
+    h1 { font-size: clamp(28px, 4vw, 44px); letter-spacing: -0.04em; margin: 8px 0 12px; }
+    .lede { font-size: 18px; line-height: 1.55; color: var(--muted); max-width: 720px; }
+    section { margin: 48px 0; }
+    h2 { font-size: 22px; margin: 0 0 14px; }
+    h3 { font-size: 15px; margin: 0 0 8px; color: var(--primary); }
+    p, li { line-height: 1.55; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 18px; }
+    .muted { color: var(--muted); }
+    .tag { display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px; background: #2a1a14; color: var(--accent); }
+    .ok { color: var(--fat); }
+    .no { color: var(--alert); }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    th { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; }
+    .phones { display: flex; gap: 22px; flex-wrap: wrap; justify-content: center; margin-top: 20px; }
+    .phone-wrap { text-align: center; }
+    .phone-label { font-size: 13px; color: var(--muted); margin-top: 10px; font-weight: 600; }
+    .phone {
+      width: 280px; height: 580px; background: #0f0f1a; border: 8px solid #1a1a28;
+      border-radius: 36px; overflow: hidden; position: relative; box-shadow: 0 20px 50px rgba(0,0,0,.45);
+      text-align: left;
+    }
+    .status { height: 22px; padding: 4px 16px; font-size: 10px; color: var(--muted); display: flex; justify-content: space-between; }
+    .screen { padding: 8px 14px 70px; height: calc(100% - 22px); overflow: hidden; }
+    .tabbar {
+      position: absolute; left: 0; right: 0; bottom: 0; height: 64px;
+      background: #12121c; border-top: 1px solid var(--border);
+      display: grid; grid-template-columns: 1fr 1fr 64px 1fr 1fr; align-items: end; padding: 6px 6px 10px;
+    }
+    .tab { text-align: center; font-size: 9px; color: var(--muted); }
+    .tab.active { color: var(--primary); }
+    .tab .ico { font-size: 16px; display: block; margin-bottom: 2px; }
+    .fab {
+      width: 52px; height: 52px; border-radius: 18px; background: var(--accent); color: #1a120e;
+      display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 700;
+      margin: 0 auto 10px; transform: translateY(-10px); box-shadow: 0 8px 20px rgba(255,107,53,.35);
+    }
+    .title { font-size: 22px; font-weight: 800; letter-spacing: -0.03em; }
+    .sub { font-size: 11px; color: var(--muted); margin: 2px 0 10px; }
+    .macro { background: var(--surface); border-radius: 12px; padding: 10px; margin-bottom: 8px; }
+    .macro b { font-size: 22px; }
+    .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+    .mini { background: var(--surface); border-radius: 10px; padding: 8px; font-size: 10px; }
+    .mini b { display: block; font-size: 14px; }
+    .meal { display: flex; gap: 8px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 8px; margin-top: 8px; }
+    .thumb { width: 44px; height: 44px; border-radius: 8px; background: linear-gradient(135deg,#4ecdc4,#ff6b35); }
+    .thumb.food2 { background: linear-gradient(135deg,#ffd93d,#6bcb77); }
+    .thumb.food3 { background: linear-gradient(135deg,#ff6b35,#4fc3f7); }
+    .meal p { margin: 0; font-size: 12px; font-weight: 700; }
+    .meal span { font-size: 10px; color: var(--muted); }
+    .insp-card { border: 1px solid var(--border); border-radius: 14px; overflow: hidden; margin-top: 8px; background: var(--card); }
+    .insp-photo { height: 110px; background: linear-gradient(160deg,#2a3a2a,#4ecdc4 40%,#ffd93d); }
+    .insp-photo.alt { background: linear-gradient(160deg,#3a2a20,#ff6b35 50%,#ffd93d); }
+    .insp-body { padding: 8px 10px 10px; }
+    .insp-body h4 { margin: 0 0 2px; font-size: 13px; }
+    .chips { display: flex; gap: 4px; flex-wrap: wrap; margin: 6px 0; }
+    .chip { font-size: 9px; font-weight: 700; border-radius: 999px; padding: 2px 6px; border: 1px solid; }
+    .c-cal { color: var(--accent); border-color: #ff6b3566; }
+    .c-p { color: var(--protein); border-color: #4ecdc466; }
+    .cta { width: 100%; border: 0; border-radius: 10px; padding: 8px; background: var(--surface); color: var(--text); font-weight: 700; font-size: 11px; cursor: pointer; }
+    .cta.main { background: var(--accent); color: #1a120e; }
+    .avatar { width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg,#4fc3f7,#4ecdc4); margin: 8px auto 6px; }
+    .name { text-align: center; font-weight: 800; font-size: 16px; }
+    .cookbook { font-size: 10px; color: var(--muted); text-align: center; margin-bottom: 8px; }
+    .mode { display: flex; gap: 6px; background: var(--surface); padding: 4px; border-radius: 999px; margin-bottom: 10px; }
+    .mode button { flex: 1; border: 0; background: transparent; color: var(--muted); font-size: 11px; font-weight: 700; padding: 6px; border-radius: 999px; cursor: pointer; }
+    .mode button.on { background: var(--accent); color: #1a120e; }
+    .flow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 13px; }
+    .flow span { background: var(--surface); border: 1px solid var(--border); padding: 6px 10px; border-radius: 999px; }
+    .arrow { color: var(--muted); }
+    .principles li { margin: 8px 0; }
+    footer.note { margin-top: 56px; color: var(--muted); font-size: 13px; }
+    @media (max-width: 800px) {
+      .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="hero">
+      <div class="kicker">Direction validée · première version dans l’app</div>
+      <h1>nutriFlow, version « s’inspirer »</h1>
+      <p class="lede">
+        Plan visuel des directions <strong>B</strong> (barre autour du geste quotidien)
+        et <strong>C</strong> (deux modes : Suivi / Inspiration).
+        La communauté reste utile — comme une <em>bibliothèque de repas</em>, pas une scène pour flexer.
+      </p>
+    </header>
+
+    <section>
+      <h2>1. Promesse</h2>
+      <div class="grid-2">
+        <div class="card">
+          <h3>Ce que l’app est</h3>
+          <p>Un carnet de macros. J’ajoute ce que je mange, je vois ma journée, je retrouve mes plats.</p>
+          <p class="muted">Les repas des autres servent à <strong>cuisiner / logger plus vite</strong>, pas à se comparer.</p>
+        </div>
+        <div class="card">
+          <h3>Ce que l’app n’est pas</h3>
+          <p class="no">Pas un réseau où l’on poste pour les likes, les abonnés, ou “regarde ce que je mange”.</p>
+          <p class="ok">Un plat partagé = une fiche pratique : photo utile, macros, recette, bouton « l’essayer ».</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>2. Architecture des écrans (B + C)</h2>
+      <p class="muted">Quatre destinations. Le « + » au centre est le geste n°1. Le mode C apparaît comme un interrupteur léger, pas comme une 2ᵉ app.</p>
+      <div class="flow" style="margin: 16px 0 20px;">
+        <span>Journal</span><span class="arrow">→</span>
+        <span>+ Repas</span><span class="arrow">→</span>
+        <span>Inspiration</span><span class="arrow">→</span>
+        <span>Moi</span>
+      </div>
+      <table>
+        <thead>
+          <tr><th>Onglet</th><th>Rôle</th><th>Une seule question</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Journal</strong></td>
+            <td>Aujourd’hui (macros) + historique, favoris, recettes gardées</td>
+            <td>Où en suis-je ? Qu’ai-je déjà mangé ?</td>
+          </tr>
+          <tr>
+            <td><strong>+ Repas</strong></td>
+            <td>Scanner / saisie / recette optionnelle</td>
+            <td>Qu’est-ce que je viens de manger ?</td>
+          </tr>
+          <tr>
+            <td><strong>Inspiration</strong> <span class="tag">ex-Communauté</span></td>
+            <td>Catalogue de plats à reproduire. Pas un fil d’ego.</td>
+            <td>Quel plat puis-je essayer ?</td>
+          </tr>
+          <tr>
+            <td><strong>Moi</strong></td>
+            <td>Identité + carnet public (optionnel) + réglages</td>
+            <td>Qui suis-je dans l’app ?</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>3. Mode C — Suivi ou Inspiration</h2>
+      <div class="grid-2">
+        <div class="card">
+          <h3>Mode Suivi (défaut)</h3>
+          <p>Journal + ajout. Inspiration est un onglet discret. Idéal au petit-déj’ : je logge, je sors.</p>
+        </div>
+        <div class="card">
+          <h3>Mode Inspiration</h3>
+          <p>On ouvre le catalogue. On cherche « bowl », on garde un plat, on l’ajoute à <em>aujourd’hui</em>. Pas besoin de scroller des selfies.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>4. Maquettes cliquables</h2>
+      <p class="muted">Clique les boutons sous les téléphones, ou les onglets en bas des mockups. Ce n’est pas l’app réelle — juste une maquette HTML.</p>
+
+      <div class="phones">
+        <div class="phone-wrap">
+          <div class="phone" id="phone-a">
+            <div class="status"><span>9:41</span><span>LTE  ▮▮▮</span></div>
+            <div class="screen" id="screen-a"></div>
+            <div class="tabbar">
+              <div class="tab active" data-go="journal"><span class="ico">▦</span>Journal</div>
+              <div class="tab" data-go="journal"><span class="ico"></span></div>
+              <div class="fab" data-go="add" title="Ajouter un repas">+</div>
+              <div class="tab" data-go="insp"><span class="ico">◎</span>Inspirer</div>
+              <div class="tab" data-go="me"><span class="ico">●</span>Moi</div>
+            </div>
+          </div>
+          <div class="phone-label">Parcours quotidien</div>
+        </div>
+
+        <div class="phone-wrap">
+          <div class="phone" id="phone-b">
+            <div class="status"><span>9:41</span><span>LTE  ▮▮▮</span></div>
+            <div class="screen" id="screen-b"></div>
+            <div class="tabbar">
+              <div class="tab" data-go="journal"><span class="ico">▦</span>Journal</div>
+              <div class="tab"></div>
+              <div class="fab" data-go="add">+</div>
+              <div class="tab active" data-go="insp"><span class="ico">◎</span>Inspirer</div>
+              <div class="tab" data-go="me"><span class="ico">●</span>Moi</div>
+            </div>
+          </div>
+          <div class="phone-label">Inspiration (pas un flex feed)</div>
+        </div>
+
+        <div class="phone-wrap">
+          <div class="phone" id="phone-c">
+            <div class="status"><span>9:41</span><span>LTE  ▮▮▮</span></div>
+            <div class="screen" id="screen-c"></div>
+            <div class="tabbar">
+              <div class="tab" data-go="journal"><span class="ico">▦</span>Journal</div>
+              <div class="tab"></div>
+              <div class="fab" data-go="add">+</div>
+              <div class="tab" data-go="insp"><span class="ico">◎</span>Inspirer</div>
+              <div class="tab active" data-go="me"><span class="ico">●</span>Moi</div>
+            </div>
+          </div>
+          <div class="phone-label">Carnet, pas vitrine</div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>5. Règles sociales anti-flex</h2>
+      <div class="grid-3">
+        <div class="card">
+          <h3>On garde</h3>
+          <ul class="principles">
+            <li>Photo du <strong>plat</strong> (lisible, utile)</li>
+            <li>Macros honnêtes</li>
+            <li>Recette / temps / portions</li>
+            <li>« Ajouter à ma journée »</li>
+            <li>« Garder pour plus tard »</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>On réduit</h3>
+          <ul class="principles">
+            <li>Compteurs followers sur les cartes</li>
+            <li>Cœur comme trophée (devient optionnel : « utile »)</li>
+            <li>Bio / liens comme page influenceur</li>
+            <li>Grille Instagram de flex photos</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>On refuse</h3>
+          <ul class="principles">
+            <li>Classements « qui poste le plus »</li>
+            <li>Stories, streaks sociaux, badges ego</li>
+            <li>Pression à publier chaque repas</li>
+            <li>Publier sans recette ni macros = peu mis en avant</li>
+          </ul>
+        </div>
+      </div>
+      <p class="muted" style="margin-top:14px;">
+        Publier un repas n’est plus le but. C’est un <strong>don au catalogue</strong> :
+        « voici un plat que tu peux refaire ». Le membre profile ressemble à un
+        <em>petit carnet de recettes</em>, pas à un compte Instagram.
+      </p>
+    </section>
+
+    <section>
+      <h2>6. Flux principaux</h2>
+      <div class="card">
+        <p><strong>Logger</strong></p>
+        <div class="flow">
+          <span>Ouvrir l’app</span><span class="arrow">→</span>
+          <span>Journal (macros du jour)</span><span class="arrow">→</span>
+          <span>+</span><span class="arrow">→</span>
+          <span>Scan ou saisie</span><span class="arrow">→</span>
+          <span>Retour Journal + motivation</span>
+        </div>
+        <p style="margin-top:18px;"><strong>S’inspirer</strong></p>
+        <div class="flow">
+          <span>Inspiration</span><span class="arrow">→</span>
+          <span>Chercher un plat</span><span class="arrow">→</span>
+          <span>Ouvrir la fiche</span><span class="arrow">→</span>
+          <span>Ajouter à aujourd’hui</span>
+          <span class="muted">ou garder pour plus tard</span>
+        </div>
+        <p style="margin-top:18px;"><strong>Partager (optionnel)</strong></p>
+        <div class="flow">
+          <span>Détail d’un de mes repas</span><span class="arrow">→</span>
+          <span>Proposer au catalogue</span><span class="arrow">→</span>
+          <span>Fiche (photo plat + macros + recette)</span>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>7. Ce qui changerait dans le code actuel</h2>
+      <table>
+        <thead><tr><th>Aujourd’hui</th><th>Dans ce plan</th></tr></thead>
+        <tbody>
+          <tr><td>4 onglets : Home, All Meals, Community, Profile</td><td>Journal, +, Inspiration, Moi</td></tr>
+          <tr><td>Ajouter = bouton sur Accueil seulement</td><td>+ central, toujours visible</td></tr>
+          <tr><td>Community = fil social (likes, follow, show-off facile)</td><td>Catalogue + fiche « essayer ce plat »</td></tr>
+          <tr><td>Profil = vitrine (stats, grille, follow)</td><td>Identité + carnet optionnel + réglages</td></tr>
+          <tr><td>Home et All Meals se chevauchent</td><td>Un seul Journal (aujourd’hui + historique)</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <footer class="note">
+      Fichier autonome : <code>docs/ui/nutriflow-architecture.html</code>.
+      La barre Journal / + / Inspiration / Moi et le catalogue « essayer ce plat » sont maintenant dans l’app.
+    </footer>
+  </div>
+
+  <script>
+    const screens = {
+      journal: `
+        <div class="mode"><button class="on">Suivi</button><button>Inspiration</button></div>
+        <div class="title">Aujourd’hui</div>
+        <div class="sub">Jeudi 13 août · objectif 2000 kcal</div>
+        <div class="macro">Calories<br><b>1 240</b> <span class="muted">/ 2000</span></div>
+        <div class="row3">
+          <div class="mini">P<br><b>82g</b></div>
+          <div class="mini">G<br><b>140g</b></div>
+          <div class="mini">L<br><b>38g</b></div>
+        </div>
+        <div class="meal"><div class="thumb"></div><div><p>Bowl saumon</p><span>520 kcal · midi</span></div></div>
+        <div class="meal"><div class="thumb food2"></div><div><p>Yaourt + fruits</p><span>180 kcal · matin</span></div></div>
+      `,
+      add: `
+        <div class="title">Ajouter</div>
+        <div class="sub">Le geste du jour — 20 secondes</div>
+        <div class="card" style="padding:12px;margin-top:8px;">
+          <p style="margin:0 0 8px;font-size:13px;font-weight:700;">Scanner un plat</p>
+          <p class="muted" style="margin:0;font-size:11px;">Photo → macros proposées → tu verifies → tu sauves.</p>
+        </div>
+        <div class="card" style="padding:12px;margin-top:8px;">
+          <p style="margin:0 0 8px;font-size:13px;font-weight:700;">Saisie rapide</p>
+          <p class="muted" style="margin:0;font-size:11px;">Nom + calories. Recette en option, repliée.</p>
+        </div>
+        <div class="card" style="padding:12px;margin-top:8px;">
+          <p style="margin:0;font-size:12px;">Depuis Inspiration : « Ajouter à aujourd’hui » préremplit cet écran.</p>
+        </div>
+      `,
+      insp: `
+        <div class="mode"><button>Suivi</button><button class="on">Inspiration</button></div>
+        <div class="title">Inspiration</div>
+        <div class="sub">Des plats à refaire — pas un fil pour flexer</div>
+        <input placeholder="bowl, curry, 400 kcal…" style="width:100%;background:#1e1e32;border:1px solid #2a2a4a;border-radius:10px;padding:8px;color:#fff;font-size:12px;" />
+        <div class="insp-card">
+          <div class="insp-photo"></div>
+          <div class="insp-body">
+            <h4>Bowl saumon & quinoa</h4>
+            <span class="muted" style="font-size:10px;">Fiche de Hinata · 25 min</span>
+            <div class="chips">
+              <span class="chip c-cal">520 kcal</span>
+              <span class="chip c-p">P 38g</span>
+            </div>
+            <button class="cta main">Ajouter à ma journée</button>
+            <button class="cta" style="margin-top:6px;">Garder pour plus tard</button>
+          </div>
+        </div>
+      `,
+      me: `
+        <div style="display:flex;justify-content:flex-end;font-size:16px;color:#8b8ba0;">⚙</div>
+        <div class="avatar"></div>
+        <div class="name">Hinata</div>
+        <div class="cookbook">Carnet optionnel · 6 fiches proposées</div>
+        <p class="muted" style="text-align:center;font-size:11px;margin:0 8px 10px;">Pas de score d’abonnés en gros. Juste toi + tes réglages.</p>
+        <button class="cta">Voir mon carnet</button>
+        <div class="meal" style="margin-top:10px;"><div class="thumb food3"></div><div><p>Objectifs</p><span>2000 kcal · P 150</span></div></div>
+        <div class="meal"><div class="thumb food2"></div><div><p>Plats gardés</p><span>Depuis Inspiration</span></div></div>
+      `
+    };
+
+    function render(el, key) {
+      el.innerHTML = screens[key];
+    }
+
+    render(document.getElementById("screen-a"), "journal");
+    render(document.getElementById("screen-b"), "insp");
+    render(document.getElementById("screen-c"), "me");
+
+    document.querySelectorAll("[data-go]").forEach((node) => {
+      node.addEventListener("click", () => {
+        const key = node.getAttribute("data-go");
+        const phone = node.closest(".phone");
+        const screen = phone.querySelector(".screen");
+        render(screen, key);
+        phone.querySelectorAll(".tab").forEach((t) => t.classList.remove("active"));
+        if (key === "journal") phone.querySelectorAll(".tab")[0].classList.add("active");
+        if (key === "insp") phone.querySelectorAll(".tab")[3].classList.add("active");
+        if (key === "me") phone.querySelectorAll(".tab")[4].classList.add("active");
+      });
+    });
+  </script>
+</body>
+</html>

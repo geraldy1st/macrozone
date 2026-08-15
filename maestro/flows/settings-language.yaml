@@ -21,7 +21,7 @@ appId: com.geraldy.macrozone
     id: "language-fr"
 - tapOn:
     id: "home-tab"
-- assertVisible: "Accueil"
+- assertVisible: "Aujourd’hui|Aujourd'hui"
 - tapOn:
     id: "profile-tab"
 - tapOn:
@@ -30,4 +30,4 @@ appId: com.geraldy.macrozone
     id: "language-en"
 - tapOn:
     id: "home-tab"
-- assertVisible: "Home"
+- assertVisible: "Today"

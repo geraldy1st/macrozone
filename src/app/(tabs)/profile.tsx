@@ -56,8 +56,6 @@ export default function ProfileScreen() {
   const shareRef = useRef<View>(null);
   const [profile, setProfile] = useState<UserProfile>(defaultProfile);
   const [posts, setPosts] = useState<FeedPost[]>([]);
-  const [followers, setFollowers] = useState(0);
-  const [following, setFollowing] = useState(0);
   const [isSharing, setIsSharing] = useState(false);
   const [statsLoading, setStatsLoading] = useState(false);
 
@@ -67,8 +65,6 @@ export default function ProfileScreen() {
 
     if (!user?.id) {
       setPosts([]);
-      setFollowers(0);
-      setFollowing(0);
       return;
     }
 
@@ -88,8 +84,6 @@ export default function ProfileScreen() {
         getProfile(user.id),
         fetchPostsByAuthor(user.id, { limit: 30 }),
       ]);
-      setFollowers(remote?.followers_count ?? 0);
-      setFollowing(remote?.following_count ?? 0);
       setPosts(page.posts);
 
       const remoteAvatar = resolveDisplayAvatarUri(remote?.avatar_url);
@@ -274,32 +268,14 @@ export default function ProfileScreen() {
         </View>
 
         {user ? (
-          <View style={styles.statsRow} testID="profile-stats-row">
-            <View style={styles.stat}>
-              <Text style={[styles.statValue, { color: colors.text }]}>
-                {statsLoading ? "—" : postCount}
-              </Text>
-              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
-                {t("social.posts")}
-              </Text>
-            </View>
-            <View style={styles.stat}>
-              <Text style={[styles.statValue, { color: colors.text }]}>
-                {statsLoading ? "—" : followers}
-              </Text>
-              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
-                {t("social.followers")}
-              </Text>
-            </View>
-            <View style={styles.stat}>
-              <Text style={[styles.statValue, { color: colors.text }]}>
-                {statsLoading ? "—" : following}
-              </Text>
-              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
-                {t("social.following")}
-              </Text>
-            </View>
-          </View>
+          <Text
+            style={[styles.cookbookLine, { color: colors.textSecondary }]}
+            testID="profile-stats-row"
+          >
+            {statsLoading
+              ? "—"
+              : t("social.cookbookCount", { count: postCount })}
+          </Text>
         ) : null}
 
         {profile.bio.trim() ? (
@@ -592,22 +568,9 @@ function createStyles(colors: ThemeColors) {
       fontSize: 13,
       fontWeight: "700",
     },
-    statsRow: {
-      flexDirection: "row",
-      justifyContent: "space-around",
-      paddingVertical: 4,
-    },
-    stat: {
-      alignItems: "center",
-      minWidth: 72,
-      gap: 2,
-    },
-    statValue: {
-      fontSize: 18,
-      fontWeight: "800",
-    },
-    statLabel: {
-      fontSize: 12,
+    cookbookLine: {
+      textAlign: "center",
+      fontSize: 13,
       fontWeight: "600",
     },
     bio: {

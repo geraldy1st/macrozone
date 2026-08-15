@@ -23,6 +23,10 @@ import {
 import type { FeedPost } from "@/types/community";
 import type { ThemeColors } from "@/styles/themes";
 import { macroColors } from "@/styles/themes";
+import {
+  addCommunityMealForToday,
+  checkCommunityDuplicateToday,
+} from "@/utils/addMealFromCommunity";
 import { isPostEdited } from "@/utils/postEdited";
 import { Ionicons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
@@ -127,6 +131,38 @@ export default function CommunityPostDetailScreen() {
   );
 
   const isOwner = Boolean(user && post && user.id === post.author_id);
+
+  const confirmAddToday = async () => {
+    if (!post) {
+      return;
+    }
+    await addCommunityMealForToday(post);
+    showToast(t("allMeals.addedForToday"), "success");
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    router.push("/(tabs)" as Href);
+  };
+
+  const handleAddToday = async () => {
+    if (!post) {
+      return;
+    }
+    const isDuplicate = await checkCommunityDuplicateToday(post.id);
+    if (isDuplicate) {
+      showAlert({
+        title: t("allMeals.duplicateTitle"),
+        message: t("allMeals.duplicateMessage", { name: post.meal_name }),
+        buttons: [
+          { text: t("mealItem.cancel"), style: "cancel" },
+          {
+            text: t("allMeals.duplicateConfirm"),
+            onPress: () => void confirmAddToday(),
+          },
+        ],
+      });
+      return;
+    }
+    await confirmAddToday();
+  };
 
   const handleToggleSave = async () => {
     if (!post) {
@@ -399,7 +435,7 @@ export default function CommunityPostDetailScreen() {
           testID="community-post-author-link"
         >
           <Text style={[styles.author, { color: colors.primary }]}>
-            {t("community.byAuthor", { name: authorName })}
+            {t("community.cardBy", { name: authorName })}
           </Text>
         </TouchableOpacity>
         {isPostEdited(post.created_at, post.updated_at) ? (
@@ -420,6 +456,16 @@ export default function CommunityPostDetailScreen() {
           <MacroBox label="F" value={`${post.fat}g`} color={macroColors.fat} colors={colors} />
         </View>
 
+        <TouchableOpacity
+          style={[styles.addTodayButton, { backgroundColor: colors.accent }]}
+          onPress={() => void handleAddToday()}
+          testID="community-post-add-today"
+        >
+          <Text style={[styles.addTodayText, { color: colors.background }]}>
+            {t("community.addToToday")}
+          </Text>
+        </TouchableOpacity>
+
         {isRemote ? (
           <View style={styles.socialRow}>
             <TouchableOpacity
@@ -427,14 +473,15 @@ export default function CommunityPostDetailScreen() {
               onPress={() => void handleLike()}
               disabled={likeBusy}
               testID="community-post-detail-like"
+              accessibilityLabel={t("community.useful")}
             >
               <Ionicons
                 name={post.liked_by_me ? "heart" : "heart-outline"}
-                size={22}
-                color={post.liked_by_me ? colors.alert : colors.textSecondary}
+                size={20}
+                color={post.liked_by_me ? colors.accent : colors.textSecondary}
               />
               <Text style={[styles.socialCount, { color: colors.textSecondary }]}>
-                {post.likes_count}
+                {t("community.useful")}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -442,10 +489,7 @@ export default function CommunityPostDetailScreen() {
               onPress={() => setCommentsOpen(true)}
               testID="community-post-detail-comments"
             >
-              <Ionicons name="chatbubble-outline" size={20} color={colors.textSecondary} />
-              <Text style={[styles.socialCount, { color: colors.textSecondary }]}>
-                {post.comments_count}
-              </Text>
+              <Ionicons name="chatbubble-outline" size={18} color={colors.textSecondary} />
             </TouchableOpacity>
           </View>
         ) : null}
@@ -647,6 +691,16 @@ function createStyles(colors: ThemeColors) {
       flexDirection: "row",
       gap: 8,
       marginBottom: 14,
+    },
+    addTodayButton: {
+      borderRadius: 12,
+      paddingVertical: 14,
+      alignItems: "center",
+      marginBottom: 14,
+    },
+    addTodayText: {
+      fontSize: 15,
+      fontWeight: "800",
     },
     socialRow: {
       flexDirection: "row",

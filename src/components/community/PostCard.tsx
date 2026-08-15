@@ -29,6 +29,7 @@ type PostCardProps = {
   onLikePress?: () => void;
   onCommentPress?: () => void;
   onSavePress?: () => void;
+  onAddTodayPress?: () => void;
   /** Override author avatar (own Profile photo so Community matches Profile). */
   avatarUri?: string | null;
   /** Open full post detail (name / image / card). Zoom is only on detail (A011-1). */
@@ -49,6 +50,7 @@ export default function PostCard({
   onLikePress,
   onCommentPress,
   onSavePress,
+  onAddTodayPress,
   avatarUri,
   onDetailPress,
   onAuthorPress,
@@ -133,7 +135,7 @@ export default function PostCard({
           />
           <View style={styles.headerText}>
             <Text style={[styles.author, { color: colors.text }]} numberOfLines={1}>
-              {authorName}
+              {t("community.cardBy", { name: authorName })}
             </Text>
             <Text style={[styles.meta, { color: colors.textSecondary }]}>
               {relative}
@@ -210,41 +212,25 @@ export default function PostCard({
         </Text>
       ) : null}
 
+      {onAddTodayPress ? (
+        <TouchableOpacity
+          style={[styles.primaryCta, { backgroundColor: colors.accent }]}
+          onPress={onAddTodayPress}
+          testID={
+            testIndex !== undefined
+              ? `add-today-index-${testIndex}`
+              : `add-today-${post.id}`
+          }
+        >
+          <Text style={[styles.primaryCtaText, { color: colors.background }]}>
+            {t("community.addToToday")}
+          </Text>
+        </TouchableOpacity>
+      ) : null}
+
       <View style={styles.footer}>
         <TouchableOpacity
-          style={styles.action}
-          onPress={onLikePress}
-          disabled={likeDisabled || !onLikePress}
-          testID={likeId}
-        >
-          <Ionicons
-            name={post.liked_by_me ? "heart" : "heart-outline"}
-            size={20}
-            color={post.liked_by_me ? colors.alert : colors.textSecondary}
-          />
-          <Text style={[styles.actionText, { color: colors.textSecondary }]}>
-            {post.likes_count}
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.action}
-          onPress={onCommentPress}
-          disabled={!onCommentPress}
-          testID={commentId}
-        >
-          <Ionicons
-            name="chatbubble-outline"
-            size={18}
-            color={colors.textSecondary}
-          />
-          <Text style={[styles.actionText, { color: colors.textSecondary }]}>
-            {post.comments_count}
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.action}
+          style={styles.secondaryCta}
           onPress={onSavePress}
           disabled={saveDisabled || !onSavePress}
           testID={saveId}
@@ -252,10 +238,47 @@ export default function PostCard({
         >
           <Ionicons
             name={isSaved ? "bookmark" : "bookmark-outline"}
-            size={18}
+            size={16}
             color={isSaved ? colors.accent : colors.textSecondary}
           />
+          <Text
+            style={[
+              styles.actionText,
+              { color: isSaved ? colors.accent : colors.textSecondary },
+            ]}
+          >
+            {t("community.saveMeal")}
+          </Text>
         </TouchableOpacity>
+
+        <View style={styles.quietActions}>
+          <TouchableOpacity
+            style={styles.action}
+            onPress={onLikePress}
+            disabled={likeDisabled || !onLikePress}
+            testID={likeId}
+            accessibilityLabel={t("community.useful")}
+          >
+            <Ionicons
+              name={post.liked_by_me ? "heart" : "heart-outline"}
+              size={18}
+              color={post.liked_by_me ? colors.accent : colors.textSecondary}
+            />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.action}
+            onPress={onCommentPress}
+            disabled={!onCommentPress}
+            testID={commentId}
+          >
+            <Ionicons
+              name="chatbubble-outline"
+              size={16}
+              color={colors.textSecondary}
+            />
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -343,11 +366,32 @@ function createStyles(colors: ReturnType<typeof useTheme>["colors"]) {
       fontWeight: "500",
       marginTop: -4,
     },
+    primaryCta: {
+      borderRadius: 10,
+      paddingVertical: 10,
+      alignItems: "center",
+    },
+    primaryCtaText: {
+      fontSize: 14,
+      fontWeight: "800",
+    },
     footer: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 18,
+      justifyContent: "space-between",
+      gap: 12,
       paddingTop: 2,
+    },
+    secondaryCta: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+      flexShrink: 1,
+    },
+    quietActions: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 14,
     },
     action: {
       flexDirection: "row",
@@ -355,7 +399,7 @@ function createStyles(colors: ReturnType<typeof useTheme>["colors"]) {
       gap: 6,
     },
     actionText: {
-      fontSize: 14,
+      fontSize: 13,
       fontWeight: "600",
     },
   });

@@ -1,4 +1,3 @@
-import AnimatedPressable from "@/components/AnimatedPressable";
 import AppLogo from "@/components/AppLogo";
 import CopyButton from "@/components/CopyButton";
 import HomeHeader from "@/components/HomeHeader";
@@ -7,6 +6,7 @@ import MotivationOverlay from "@/components/MotivationOverlay";
 import RecentMeals from "@/components/RecentMeals";
 import ReminderToggle from "@/components/ReminderToggle";
 import ShareButton from "@/components/ShareButton";
+import TrackingModeSwitch from "@/components/TrackingModeSwitch";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import {
@@ -20,13 +20,13 @@ import { consumePendingCelebration } from "@/storage/celebration";
 import { getMeals, Meal } from "@/storage/meals";
 import { getUserProfile } from "@/storage/profile";
 import { globalStyles } from "@/styles/global";
-import { macroColors, type ThemeColors } from "@/styles/themes";
+import type { ThemeColors } from "@/styles/themes";
 import { filterMealsForToday } from "@/utils/groupMealsByDay";
 import { Ionicons } from "@expo/vector-icons";
-import { router, useFocusEffect } from "expo-router";
+import { router, useFocusEffect, type Href } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 export default function HomeScreen() {
   const { t, i18n } = useTranslation();
@@ -84,16 +84,24 @@ export default function HomeScreen() {
         contentContainerStyle={[styles.content, { paddingBottom: bottomPadding }]}
         showsVerticalScrollIndicator={false}
       >
+        <TrackingModeSwitch active="tracking" />
+
         <View style={styles.heroSection}>
           <View style={globalStyles.header}>
             <View style={styles.titleRow}>
               <AppLogo size={44} />
               <View style={styles.titleBlock}>
                 <Text
-                  style={[globalStyles.title, styles.appTitle, { color: colors.text }]}
+                  style={[styles.brand, { color: colors.textSecondary }]}
                   numberOfLines={1}
                 >
                   {t("app.name")}
+                </Text>
+                <Text
+                  style={[globalStyles.title, styles.appTitle, { color: colors.text }]}
+                  numberOfLines={1}
+                >
+                  {t("home.todayTitle")}
                 </Text>
                 <HomeHeader />
               </View>
@@ -104,18 +112,47 @@ export default function HomeScreen() {
 
         <MacroGrid meals={todayMeals} />
 
-        <AnimatedPressable
-          style={[styles.addMealButton, { backgroundColor: macroColors.accent }]}
-          onPress={() => router.push("/(tabs)/add-meals")}
-          testID="home-add-meal-btn"
-        >
-          <View style={styles.addMealButtonContent}>
-            <Ionicons name="add-circle" size={22} color={colors.text} />
-            <Text style={[styles.addMealButtonText, { color: colors.text }]}>
-              {t("home.addMeal")}
+        <View style={styles.libraryRow}>
+          <TouchableOpacity
+            style={[
+              styles.libraryChip,
+              { backgroundColor: colors.card, borderColor: colors.cardBorder },
+            ]}
+            onPress={() => router.push("/(tabs)/meals" as Href)}
+            testID="all-meals-tab"
+          >
+            <Ionicons name="time-outline" size={16} color={colors.accent} />
+            <Text style={[styles.libraryChipText, { color: colors.text }]}>
+              {t("home.history")}
             </Text>
-          </View>
-        </AnimatedPressable>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.libraryChip,
+              { backgroundColor: colors.card, borderColor: colors.cardBorder },
+            ]}
+            onPress={() => router.push("/favorite-meals" as Href)}
+            testID="journal-favorites-btn"
+          >
+            <Ionicons name="star" size={16} color={colors.accent} />
+            <Text style={[styles.libraryChipText, { color: colors.text }]}>
+              {t("allMeals.favoritesButton")}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.libraryChip,
+              { backgroundColor: colors.card, borderColor: colors.cardBorder },
+            ]}
+            onPress={() => router.push("/saved-community-meals" as Href)}
+            testID="journal-saved-btn"
+          >
+            <Ionicons name="bookmark" size={16} color={colors.accent} />
+            <Text style={[styles.libraryChipText, { color: colors.text }]}>
+              {t("home.savedInspiration")}
+            </Text>
+          </TouchableOpacity>
+        </View>
 
         <View style={styles.actionsCard}>
           <CopyButton meals={todayMeals} />
@@ -158,23 +195,32 @@ function createStyles(colors: ThemeColors) {
       flex: 1,
       minWidth: 0,
     },
+    brand: {
+      fontSize: 12,
+      fontWeight: "700",
+      letterSpacing: 0.4,
+      textTransform: "none",
+    },
     appTitle: {
       fontSize: 24,
     },
-    addMealButton: {
+    libraryRow: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 8,
       marginTop: 16,
-      borderRadius: 14,
-      paddingVertical: 16,
-      paddingHorizontal: 18,
     },
-    addMealButtonContent: {
+    libraryChip: {
       flexDirection: "row",
       alignItems: "center",
-      justifyContent: "center",
-      gap: 10,
+      gap: 6,
+      borderWidth: 1,
+      borderRadius: 999,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
     },
-    addMealButtonText: {
-      fontSize: 16,
+    libraryChipText: {
+      fontSize: 12,
       fontWeight: "700",
     },
     actionsCard: {

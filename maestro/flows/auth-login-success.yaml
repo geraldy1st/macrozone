@@ -28,5 +28,5 @@ appId: com.geraldy.macrozone
       - tapOn:
           id: "auth-submit-btn"
 - extendedWaitUntil:
-    visible: "nutriFlow|Profil|Profile|Communauté|Community|Add Meal|Ajouter"
+    visible: "nutriFlow|Profil|Profile|Moi|Me|Yo|Communauté|Community|Inspiration|Add Meal|Ajouter|Today|Aujourd"
     timeout: 25000

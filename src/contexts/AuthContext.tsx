@@ -13,7 +13,7 @@ import {
   normalizeEmail,
   userHasEmailPasswordAuth,
 } from "@/utils/email";
-import { GoogleSignin } from "@react-native-google-signin/google-signin";
+import { getNativeGoogleSignin } from "@/lib/googleSignIn";
 import type { Session, User } from "@supabase/supabase-js";
 import * as WebBrowser from "expo-web-browser";
 import {
@@ -90,7 +90,8 @@ function isGoogleSignInCancelled(error: unknown): boolean {
 }
 
 async function signOutGoogleSafely() {
-  if (Platform.OS === "web") {
+  const GoogleSignin = getNativeGoogleSignin();
+  if (!GoogleSignin) {
     return;
   }
 
@@ -142,7 +143,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (Platform.OS === "web" || !GOOGLE_WEB_CLIENT_ID || googleConfiguredRef.current) {
+    if (!GOOGLE_WEB_CLIENT_ID || googleConfiguredRef.current) {
+      return;
+    }
+
+    const GoogleSignin = getNativeGoogleSignin();
+    if (!GoogleSignin) {
       return;
     }
 
@@ -155,7 +161,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
       googleConfiguredRef.current = true;
     } catch {
-      // Native module missing (e.g. Expo Go) — signInWithGoogle will surface a clear error.
+      // Native module missing (e.g. Expo Go) — browser OAuth is used instead.
     }
   }, []);
 
@@ -381,8 +387,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error("AUTH_NOT_CONFIGURED");
     }
 
-    // Native module is not available on web — reuse browser OAuth.
-    if (Platform.OS === "web") {
+    const GoogleSignin = getNativeGoogleSignin();
+
+    // Expo Go / web / missing native module — reuse browser OAuth.
+    if (!GoogleSignin) {
       await signInWithOAuth("google");
       return;
     }

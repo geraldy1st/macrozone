@@ -1,4 +1,5 @@
 import ProfileAvatar from "@/components/ProfileAvatar";
+import TrackingModeSwitch from "@/components/TrackingModeSwitch";
 import CommentSheet from "@/components/community/CommentSheet";
 import EditPostModal from "@/components/community/EditPostModal";
 import PickMealForShareModal from "@/components/community/PickMealForShareModal";
@@ -33,6 +34,10 @@ import {
 } from "@/storage/searchHistory";
 import type { ThemeColors } from "@/styles/themes";
 import type { FeedPost, ProfileListItem } from "@/types/community";
+import {
+  addCommunityMealForToday,
+  checkCommunityDuplicateToday,
+} from "@/utils/addMealFromCommunity";
 import { resolveAuthorAvatarUri } from "@/utils/avatar";
 import { mealToSharePayload } from "@/utils/shareMealPayload";
 import { Ionicons } from "@expo/vector-icons";
@@ -174,6 +179,33 @@ export default function CommunityScreen() {
   const isSearching = debouncedSearch.length > 0;
   const showHistory =
     searchInput.length === 0 && searchHistory.length > 0 && searchMode === "people";
+
+  const confirmAddToday = async (post: FeedPost) => {
+    await addCommunityMealForToday(post);
+    showToast(t("allMeals.addedForToday"), "success");
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    router.push("/(tabs)" as Href);
+  };
+
+  const handleAddToday = async (post: FeedPost) => {
+    const isDuplicate = await checkCommunityDuplicateToday(post.id);
+    if (isDuplicate) {
+      showAlert({
+        title: t("allMeals.duplicateTitle"),
+        message: t("allMeals.duplicateMessage", { name: post.meal_name }),
+        buttons: [
+          { text: t("mealItem.cancel"), style: "cancel" },
+          {
+            text: t("allMeals.duplicateConfirm"),
+            onPress: () => void confirmAddToday(post),
+          },
+        ],
+      });
+      return;
+    }
+
+    await confirmAddToday(post);
+  };
 
   const handleSave = async (post: FeedPost) => {
     if (!user) {
@@ -322,6 +354,7 @@ export default function CommunityScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <TrackingModeSwitch active="inspiration" />
       <View style={styles.titleRow}>
         <View style={styles.titleBlock}>
           <Text
@@ -336,14 +369,16 @@ export default function CommunityScreen() {
         </View>
         <TouchableOpacity
           style={[
-            styles.createBtn,
-            { backgroundColor: colors.accent },
+            styles.proposeBtn,
+            { borderColor: colors.cardBorder, backgroundColor: colors.surface },
           ]}
           onPress={openCreatePost}
           testID="community-create-post-btn"
           accessibilityLabel={t("community.createPost")}
         >
-          <Ionicons name="add" size={24} color={colors.background} />
+          <Text style={[styles.proposeBtnText, { color: colors.accent }]}>
+            {t("community.createPost")}
+          </Text>
         </TouchableOpacity>
       </View>
 
@@ -556,9 +591,7 @@ export default function CommunityScreen() {
                       {name}
                     </Text>
                     <Text style={[styles.personMeta, { color: colors.textSecondary }]}>
-                      {t("social.followersCount", {
-                        count: item.followers_count ?? 0,
-                      })}
+                      {t("social.openCookbook")}
                     </Text>
                   </View>
                   <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />
@@ -616,7 +649,7 @@ export default function CommunityScreen() {
           ListEmptyComponent={
             <View style={styles.centered}>
               <Ionicons
-                name={isSearching ? "search-outline" : "people-outline"}
+                name={isSearching ? "search-outline" : "restaurant-outline"}
                 size={40}
                 color={colors.textSecondary}
               />
@@ -657,6 +690,7 @@ export default function CommunityScreen() {
               }
               onCommentPress={() => setCommentPostId(item.id)}
               onSavePress={() => void handleSave(item)}
+              onAddTodayPress={() => void handleAddToday(item)}
               onDetailPress={() =>
                 router.push(`/community/post/${item.id}` as Href)
               }
@@ -820,13 +854,18 @@ function createStyles(colors: ThemeColors) {
       marginTop: 6,
       fontWeight: "500",
     },
-    createBtn: {
-      width: 44,
-      height: 44,
-      borderRadius: 22,
-      alignItems: "center",
-      justifyContent: "center",
-      marginTop: 2,
+    proposeBtn: {
+      borderWidth: 1,
+      borderRadius: 999,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      marginTop: 4,
+      maxWidth: 140,
+    },
+    proposeBtnText: {
+      fontSize: 12,
+      fontWeight: "700",
+      textAlign: "center",
     },
     searchRow: {
       flexDirection: "row",

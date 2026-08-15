@@ -3,4 +3,4 @@
 appId: com.geraldy.macrozone
 ---
 - runFlow: subflows/signup-and-open-app.yaml
-- assertVisible: "Profil|Profile|Perfil|nutriFlow|Communauté|Community"
+- assertVisible: "Profil|Profile|Perfil|Moi|Me|Yo|nutriFlow|Communauté|Community|Inspiration|Journal"

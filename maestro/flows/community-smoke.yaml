@@ -23,5 +23,5 @@ appId: com.geraldy.macrozone
     timeout: 15000
 # Title testID may be missing on older APKs — assert tab + guest banner text as fallback
 - extendedWaitUntil:
-    visible: "Community|Communauté|Comunidad|Meals shared|Repas partagés|Comidas compartidas"
+    visible: "Inspiration|Inspiración|Community|Communauté|Comunidad|plats à refaire|Meals to cook|Platos para repetir|Meals shared|Repas partagés|Comidas compartidas"
     timeout: 20000

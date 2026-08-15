@@ -16,7 +16,7 @@ appId: com.geraldy.macrozone
 - tapOn:
     id: "home-tab"
 - tapOn:
-    id: "home-add-meal-btn"
+    id: "add-meals-tab"
 - tapOn:
     id: "meal-name-input"
 - eraseText

@@ -7,7 +7,7 @@ appId: com.geraldy.macrozone
 - tapOn:
     id: "home-tab"
 - tapOn:
-    id: "home-add-meal-btn"
+    id: "add-meals-tab"
 - extendedWaitUntil:
     visible:
       id: "meal-name-input"
@@ -44,7 +44,7 @@ appId: com.geraldy.macrozone
 - tapOn:
     id: "community-share-submit"
 - extendedWaitUntil:
-    visible: "Communauté|Community|Comunidad"
+    visible: "Inspiration|Inspiración|Communauté|Community|Comunidad"
     timeout: 25000
 - extendedWaitUntil:
     visible:
