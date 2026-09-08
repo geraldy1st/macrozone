@@ -1,3 +1,4 @@
+# TC-E2E-01 / REQ-P0-01 + REQ-P0-03 — ajout manuel + macros accueil
 appId: com.geraldy.macrozone
 ---
 - launchApp
@@ -31,6 +32,16 @@ appId: com.geraldy.macrozone
 - extendedWaitUntil:
     visible: "Meal added successfully|Repas ajouté avec succès"
     timeout: 8000
+- tapOn:
+    id: "home-tab"
+- extendedWaitUntil:
+    visible:
+      id: "macro-grid"
+    timeout: 10000
+- assertVisible:
+    id: "macro-grid"
+# Calories from the meal (hero value) — text or dedicated testID
+- assertVisible: "450"
 - tapOn:
     id: "all-meals-tab"
 - assertVisible: "Salade Cesar"

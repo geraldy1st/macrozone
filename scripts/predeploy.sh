@@ -43,6 +43,7 @@ echo "==> Maestro smoke (guest flows)"
 maestro test maestro/flows/community-smoke.yaml
 maestro test maestro/flows/settings-account.yaml
 maestro test maestro/flows/add-meal-manual.yaml
+maestro test maestro/flows/meal-persistence-relaunch.yaml
 
 if [[ "${RUN_FULL_E2E:-0}" == "1" ]]; then
   echo "==> Maestro full e2e with Faker user (auth + community)"

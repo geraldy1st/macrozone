@@ -1,0 +1,61 @@
+# TC-E2E-05 / REQ-P0-04 — persistance repas après stopApp + relaunch (sans clearState)
+appId: com.geraldy.macrozone
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: "Bienvenue|Welcome|nutriFlow"
+    timeout: 20000
+- runFlow:
+    when:
+      visible: "Continuer en tant qu'invité|Continue as guest|Continuar como invitado"
+    commands:
+      - tapOn:
+          id: "welcome-guest-btn"
+- extendedWaitUntil:
+    visible: "nutriFlow|Today|Aujourd|Hoy"
+    timeout: 20000
+- tapOn:
+    id: "add-meals-tab"
+- tapOn:
+    id: "meal-name-input"
+- eraseText
+- inputText: "PersistMealP0"
+- tapOn:
+    id: "meal-calories-input"
+- eraseText
+- inputText: "321"
+- hideKeyboard
+- tapOn:
+    id: "add-meal-submit"
+- extendedWaitUntil:
+    visible: "Meal added successfully|Repas ajouté avec succès|Comida añadida"
+    timeout: 8000
+- tapOn:
+    id: "all-meals-tab"
+- assertVisible: "PersistMealP0"
+- stopApp
+- launchApp:
+    clearState: false
+- waitForAnimationToEnd:
+    timeout: 10000
+- runFlow:
+    when:
+      visible: "Continuer en tant qu'invité|Continue as guest|Continuar como invitado"
+    commands:
+      - tapOn:
+          id: "welcome-guest-btn"
+- extendedWaitUntil:
+    visible: "nutriFlow|Today|Aujourd|Hoy|PersistMealP0|Meals|Repas|Comidas"
+    timeout: 30000
+- runFlow:
+    when:
+      visible:
+        id: "all-meals-tab"
+    commands:
+      - tapOn:
+          id: "all-meals-tab"
+- extendedWaitUntil:
+    visible: "PersistMealP0"
+    timeout: 20000
+- assertVisible: "PersistMealP0"

@@ -11,6 +11,8 @@ type MacroCardProps = {
   color: string;
   unit?: string;
   variant?: "hero" | "compact";
+  testID?: string;
+  valueTestID?: string;
 };
 
 export default function MacroCard({
@@ -20,6 +22,8 @@ export default function MacroCard({
   color,
   unit = "",
   variant = "compact",
+  testID,
+  valueTestID,
 }: MacroCardProps) {
   const { t } = useTranslation();
   const styles = useThemedStyles(createStyles);
@@ -28,7 +32,7 @@ export default function MacroCard({
   const isHero = variant === "hero";
 
   return (
-    <View style={[styles.card, isHero && styles.heroCard]}>
+    <View style={[styles.card, isHero && styles.heroCard]} testID={testID}>
       <View style={styles.header}>
         <Text
           style={[styles.label, isHero && styles.heroLabel]}
@@ -46,6 +50,7 @@ export default function MacroCard({
         numberOfLines={1}
         adjustsFontSizeToFit
         minimumFontScale={0.7}
+        testID={valueTestID}
       >
         {current.toLocaleString()}
         {unit}

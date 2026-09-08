@@ -66,6 +66,11 @@ npm run test:e2e:community
 
 # Community — share + like + comment + delete post
 npm run test:e2e:community:full
+
+# Repas P0
+npm run test:e2e:meal:manual
+npm run test:e2e:meal:persist
+npm run test:e2e:meal:gallery
 ```
 
 Manuellement :
@@ -98,6 +103,8 @@ Les dialogues utilisent le texte i18n :
 | `community-share-like-comment.yaml` | Share / like / comment / delete |
 | `settings-account.yaml` | Settings Account (invité) |
 | `add-meal-manual.yaml` | Ajout repas manuel |
+| `meal-persistence-relaunch.yaml` | Persistance après relaunch (guest smoke) |
+| `add-meal-gallery-ai.yaml` | Galerie + chemin IA (hors smoke) |
 | `delete-meal.yaml` | Suppression repas |
 | `settings-language.yaml` | Langue |
 
@@ -114,3 +121,7 @@ Les dialogues utilisent le texte i18n :
 - Les flows Community **full** nécessitent les tables Supabase (`posts`, `likes`, `comments`, `profiles`) et le réseau.
 - `clearState: true` sur signup évite les sessions résiduelles.
 - Après un build EAS, réinstalle l’APK avant de relancer Maestro.
+
+## Fixtures
+
+- `maestro/fixtures/meal-sample.jpg` — JPEG pour addMedia (flow gallery).

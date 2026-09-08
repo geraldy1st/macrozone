@@ -1,0 +1,72 @@
+# TC-E2E-02 / REQ-P0-02 — galerie + chemin Analyse IA
+# HORS smoke predeploy (dépend permissions système + Gemini réseau).
+# Lancer : npm run test:e2e:meal:gallery
+#
+# Notes flaky / device :
+# - addMedia injecte maestro/fixtures/meal-sample.jpg dans la médiathèque du device.
+# - L'UI système du photo picker (Android) varie ; la sélection média peut échouer.
+# - canUseAiScan exige un utilisateur authentifié : en invité, assert du bandeau auth.
+# - Tap Analyze (analyze-photo-btn) optionnel : activer manuellement si RUN_AI=1 et Gemini OK.
+#   Ne pas faire échouer la CI si Gemini est indisponible.
+appId: com.geraldy.macrozone
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: "Bienvenue|Welcome|nutriFlow"
+    timeout: 20000
+- runFlow:
+    when:
+      visible: "Continuer en tant qu'invité|Continue as guest|Continuar como invitado"
+    commands:
+      - tapOn:
+          id: "welcome-guest-btn"
+- extendedWaitUntil:
+    visible: "nutriFlow|Today|Aujourd|Hoy"
+    timeout: 20000
+- tapOn:
+    id: "add-meals-tab"
+- addMedia:
+    - "maestro/fixtures/meal-sample.jpg"
+# Chemin authentifié (scan-meal-btn) OU invité (bandeau auth) — couverture partielle OK
+- runFlow:
+    when:
+      visible:
+        id: "scan-meal-btn"
+    commands:
+      - tapOn:
+          id: "scan-meal-btn"
+      # EN / FR / ES — addMeal.choosePhoto
+      - tapOn: "Choose from Gallery|Choisir dans la galerie|Elegir de la galería"
+      # Tentative sélection média système (peut être flaky selon OEM)
+      - runFlow:
+          when:
+            visible: "Photos|Gallery|Galerie|Recents|Récents"
+          commands:
+            - tapOn: "Photos|Gallery|Galerie|Recents|Récents"
+      - runFlow:
+          when:
+            visible:
+              id: "analyze-photo-btn"
+          commands:
+            - assertVisible:
+                id: "analyze-photo-btn"
+            - assertVisible:
+                id: "remove-photo-btn"
+            # Optionnel RUN_AI=1 — ne pas activer en CI (Gemini réseau) :
+            # - tapOn:
+            #     id: "analyze-photo-btn"
+- runFlow:
+    when:
+      visible:
+        id: "auth-prompt-btn"
+    commands:
+      - assertVisible:
+          id: "auth-prompt-btn"
+# Au minimum : écran add-meals + inputs macros stables (testIDs P0)
+- assertVisible:
+    id: "meal-name-input"
+- assertVisible:
+    id: "meal-calories-input"
+- assertVisible:
+    id: "meal-protein-input"
