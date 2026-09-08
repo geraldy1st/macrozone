@@ -38,7 +38,7 @@ export default function MacroGrid({ meals }: MacroGridProps) {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container} testID="macro-grid">
       <Text style={styles.sectionTitle}>{t("home.dailyProgress")}</Text>
 
       <MacroCard
@@ -47,6 +47,8 @@ export default function MacroGrid({ meals }: MacroGridProps) {
         goal={goals.calories}
         color={macroColors.calories}
         variant="hero"
+        testID="macro-calories"
+        valueTestID="macro-calories-value"
       />
 
       <View style={styles.row}>
@@ -56,6 +58,7 @@ export default function MacroGrid({ meals }: MacroGridProps) {
           goal={goals.protein}
           color={macroColors.protein}
           unit="g"
+          testID="macro-protein"
         />
         <MacroCard
           label={t("macros.carbs")}
@@ -63,6 +66,7 @@ export default function MacroGrid({ meals }: MacroGridProps) {
           goal={goals.carbs}
           color={macroColors.carbs}
           unit="g"
+          testID="macro-carbs"
         />
         <MacroCard
           label={t("macros.fat")}
@@ -70,6 +74,7 @@ export default function MacroGrid({ meals }: MacroGridProps) {
           goal={goals.fat}
           color={macroColors.fat}
           unit="g"
+          testID="macro-fat"
         />
       </View>
     </View>

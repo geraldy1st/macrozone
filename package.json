@@ -20,7 +20,10 @@
     "test:e2e:community:full": "bash scripts/run-maestro-with-user.sh maestro/flows/community-share-like-comment.yaml",
     "test:e2e:full": "RUN_FULL_E2E=1 bash scripts/predeploy.sh",
     "predeploy": "bash scripts/predeploy.sh",
-    "deploy:check": "npm run predeploy"
+    "deploy:check": "npm run predeploy",
+    "test:e2e:meal:manual": "bash scripts/run-maestro.sh maestro/flows/add-meal-manual.yaml",
+    "test:e2e:meal:persist": "bash scripts/run-maestro.sh maestro/flows/meal-persistence-relaunch.yaml",
+    "test:e2e:meal:gallery": "bash scripts/run-maestro.sh maestro/flows/add-meal-gallery-ai.yaml"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "2.2.0",

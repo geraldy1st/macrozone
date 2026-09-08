@@ -412,12 +412,17 @@ export default function AddMealScreen() {
               style={styles.secondaryButton}
               onPress={() => photoUri && runAnalysis(photoUri)}
               disabled={isAnalyzing}
+              testID="analyze-photo-btn"
             >
               <Ionicons name="sparkles" size={16} color={colors.accent} />
               <Text style={styles.secondaryButtonText}>{t("addMeal.analyzePhoto")}</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.removeButton} onPress={handleRemovePhoto}>
+            <TouchableOpacity
+              style={styles.removeButton}
+              onPress={handleRemovePhoto}
+              testID="remove-photo-btn"
+            >
               <Text style={styles.removeButtonText}>{t("addMeal.removePhoto")}</Text>
             </TouchableOpacity>
           </View>
@@ -465,6 +470,7 @@ export default function AddMealScreen() {
           keyboardType="numeric"
           value={protein}
           onChangeText={setProtein}
+          testID="meal-protein-input"
         />
         <TextInput
           style={[styles.input, styles.rowInput]}
@@ -473,6 +479,7 @@ export default function AddMealScreen() {
           keyboardType="numeric"
           value={carbs}
           onChangeText={setCarbs}
+          testID="meal-carbs-input"
         />
         <TextInput
           style={[styles.input, styles.rowInput]}
@@ -481,6 +488,7 @@ export default function AddMealScreen() {
           keyboardType="numeric"
           value={fat}
           onChangeText={setFat}
+          testID="meal-fat-input"
         />
       </View>
 
