@@ -1,4 +1,5 @@
-# TC-NAV-HIST-02 — deep link macrozone://meals opens the History (All Meals) screen
+# TC-NAV-HIST-02 / TC-E2E-11 — deep link macrozone://meals opens the History (All Meals) screen
+# with the History tab selected
 # Guest entry (same convention as the meal P0 flows); no account / network needed.
 appId: com.geraldy.macrozone
 ---
@@ -23,5 +24,12 @@ appId: com.geraldy.macrozone
     timeout: 15000
 - assertVisible:
     id: "toggle-edit-mode"
+# DEF-HIST-02: History tab must be SELECTED, Journal must NOT be.
+# RN Android maps accessibilityState.selected -> View.setSelected()
+# (BaseViewManager.setViewState), which Maestro reads as `selected`.
 - assertVisible:
     id: "all-meals-tab"
+    selected: true
+- assertVisible:
+    id: "home-tab"
+    selected: false

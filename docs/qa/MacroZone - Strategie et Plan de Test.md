@@ -251,13 +251,14 @@ macrozone/
 
 **testID à ajouter :**
 
-| Élément | testID suggéré |
+| Élément | testID (vérifié dans le code, `rg testID src`) |
 |---|---|
-| Onglet Accueil | `home-tab` |
-| Onglet Ajouter | `add-meal-tab` |
+| Onglet Journal (accueil) | `home-tab` |
+| Bouton central (+) Ajouter | `add-meals-tab` |
 | Onglet Historique (barre du bas, entre Journal et Ajouter) | `all-meals-tab` |
 | Chip « Historique » sur l'écran Journal | `journal-history-btn` |
-| Onglet Paramètres | `settings-tab` |
+| Onglet Moi (profil) — les Paramètres s'ouvrent depuis cet écran via `open-settings-btn` | `profile-tab` |
+| Onglet Inspirer (communauté) | `community-tab` |
 | Bouton Scanner repas | `scan-meal-btn` |
 | Champ nom repas | `meal-name-input` |
 | Champ calories | `meal-calories-input` |
@@ -284,7 +285,7 @@ macrozone/
 | Ajout repas galerie + IA | `add-meal-gallery-ai.yaml` | P0 |
 | Suppression repas | `delete-meal.yaml` | P1 |
 | Changement langue | `settings-language.yaml` | P1 |
-| Persistance après relance | `persistence-relaunch.yaml` | P0 |
+| Persistance après relance | `meal-persistence-relaunch.yaml` | P0 |
 
 **Critère de sortie Phase 2 :** 5 flows P0 passent sur 1 device Android réel.
 
@@ -357,13 +358,13 @@ Checklist exécutée 1× par sprint ou avant chaque release APK (~25 min) :
 | TC-E2E-02 | Galerie + IA + save | `add-meal-gallery-ai.yaml` | P0 |
 | TC-E2E-03 | Suppression repas | `delete-meal.yaml` | P1 |
 | TC-E2E-04 | Changement langue FR→EN | `settings-language.yaml` | P1 |
-| TC-E2E-05 | Persistance après relance | `persistence-relaunch.yaml` | P0 |
-| TC-E2E-06 | Mode avion → erreur IA | `offline-analysis.yaml` | P1 |
+| TC-E2E-05 | Persistance après relance | `meal-persistence-relaunch.yaml` | P0 |
+| TC-E2E-06 | Mode avion → erreur IA | `offline-analysis.yaml` (**à créer**, flow absent de `maestro/flows/`) | P1 |
 | TC-E2E-07 | Bouton submit visible | Assertion sans scroll | P1 |
 | TC-E2E-08 | Photo caméra | **Manuel** | P1 |
 | TC-E2E-09 | Photo Profile identique à Community | `profile-community-avatar.yaml` | P0 |
 | TC-E2E-10 | Onglet Historique visible sur Journal + ouvre Tous les repas | `add-meal-manual.yaml` | P0 |
-| TC-E2E-11 | Deep link `macrozone://meals` → Tous les repas | `history-tab-deeplink.yaml` | P1 |
+| TC-E2E-11 | Deep link `macrozone://meals` → Tous les repas, onglet Historique **sélectionné** | `history-tab-deeplink.yaml` | P1 |
 
 > **Note testID (feat/history-tab)** : `all-meals-tab` désigne désormais l'**onglet Historique** de la barre du bas (toujours visible sur les écrans à onglets). Le chip « Historique » de l'écran Journal a été renommé `journal-history-btn`. Les flows `add-meal-manual`, `delete-meal` et `meal-persistence-relaunch` tapent donc l'onglet réel.
 
@@ -388,7 +389,7 @@ Automatisation : TC-UNIT-11/12/13 (`__tests__/components/profileAvatar.test.ts`)
 | ID | Titre | Préconditions | Étapes | Résultat attendu | Priorité |
 |---|---|---|---|---|---|
 | TC-NAV-HIST-01 | Ordre et sélection des onglets | App ouverte (invité ou connecté) | 1. Observer la barre. 2. Taper Historique. 3. Taper Journal. | Ordre Journal · Historique · (+) · Inspirer · Moi. Historique surligné seul à l'étape 2, Journal seul à l'étape 3. Lecteur d'écran : « Historique, bouton, sélectionné ». | P0 |
-| TC-NAV-HIST-02 | Deep link | App installée, onboarding passé | `adb shell am start -a android.intent.action.VIEW -d "macrozone://meals"` (ou flow `history-tab-deeplink.yaml`) | Écran « Tous les repas » affiché, onglet Historique surligné | P1 |
+| TC-NAV-HIST-02 | Deep link | App installée, onboarding passé | `adb shell am start -a android.intent.action.VIEW -d "macrozone://meals"` (ou flow `history-tab-deeplink.yaml`) | Écran « Tous les repas » affiché ; onglet Historique **sélectionné** et Journal **non sélectionné**. Oracle Maestro : `assertVisible { id: all-meals-tab, selected: true }` + `assertVisible { id: home-tab, selected: false }` — `accessibilityState.selected` est mappé sur `View.setSelected()` par RN Android (`BaseViewManager.setViewState`, aussi via `BaseViewManagerDelegate` en New Architecture), donc lisible par Maestro/UiAutomator. Contrôle manuel complémentaire : TalkBack annonce « Historique, sélectionné ». | P1 |
 | TC-NAV-HIST-03 | Retour Android depuis Historique | Sur Journal | 1. Taper Historique. 2. Bouton/geste retour Android. | **Attendu : retour sur Journal** (Tabs `backBehavior` par défaut = `firstRoute`, premier onglet = `index`). Un 2ᵉ retour ferme l'app. | P1 |
 | TC-NAV-HIST-04 | Mode édition conservé entre onglets | Au moins 2 repas | 1. Historique → « Modifier », sélectionner 1 repas. 2. Taper Inspirer. 3. Revenir sur Historique. | **Attendu / observé par analyse du code : état conservé** (mode édition + sélection), car les écrans d'onglets restent montés. La liste est rechargée au focus (`useFocusEffect`). À confirmer sur device ; si jugé gênant → ticket UX séparé. | P2 |
 | TC-NAV-HIST-05 | Liste vide | Nouvel invité (`clearState`) | Taper Historique | Message « Aucun repas enregistré. » ; boutons Favoris / Gardés visibles ; pas de crash | P1 |
@@ -406,7 +407,7 @@ appId: com.geraldy.macrozone
 ---
 - launchApp
 - tapOn:
-    id: "add-meal-tab"
+    id: "add-meals-tab"
 - tapOn:
     id: "meal-name-input"
 - inputText: "Salade César"
