@@ -119,7 +119,7 @@ export default function HomeScreen() {
               { backgroundColor: colors.card, borderColor: colors.cardBorder },
             ]}
             onPress={() => router.push("/(tabs)/meals" as Href)}
-            testID="all-meals-tab"
+            testID="journal-history-btn"
           >
             <Ionicons name="time-outline" size={16} color={colors.accent} />
             <Text style={[styles.libraryChipText, { color: colors.text }]}>

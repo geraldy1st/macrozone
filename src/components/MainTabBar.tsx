@@ -13,7 +13,8 @@ export default function MainTabBar({ state, navigation }: BottomTabBarProps) {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const current = state.routes[state.index]?.name;
-  const journalFocused = current === "index" || current === "meals";
+  const journalFocused = current === "index";
+  const historyFocused = current === "meals";
 
   const open = (name: string) => {
     const route = state.routes.find((item) => item.name === name);
@@ -58,7 +59,21 @@ export default function MainTabBar({ state, navigation }: BottomTabBarProps) {
         ),
       })}
 
-      <View style={styles.slot} />
+      {renderSideTab({
+        name: "meals",
+        label: t("tabs.allMeals"),
+        testID: "all-meals-tab",
+        focused: historyFocused,
+        color: historyFocused ? colors.primary : colors.textSecondary,
+        onPress: () => open("meals"),
+        icon: (
+          <Ionicons
+            name="time-outline"
+            size={22}
+            color={historyFocused ? colors.primary : colors.textSecondary}
+          />
+        ),
+      })}
 
       <TouchableOpacity
         style={styles.fabSlot}

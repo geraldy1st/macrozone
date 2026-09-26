@@ -28,6 +28,7 @@ appId: com.geraldy.macrozone
 - hideKeyboard
 - tapOn:
     id: "add-meal-submit"
+# all-meals-tab = History bottom tab (Journal chip is journal-history-btn)
 - tapOn:
     id: "all-meals-tab"
 - longPressOn: "Repas test"

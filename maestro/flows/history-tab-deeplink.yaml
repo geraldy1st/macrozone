@@ -1,0 +1,27 @@
+# TC-NAV-HIST-02 — deep link macrozone://meals opens the History (All Meals) screen
+# Guest entry (same convention as the meal P0 flows); no account / network needed.
+appId: com.geraldy.macrozone
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: "Bienvenue|Welcome|nutriFlow|Bienvenido"
+    timeout: 20000
+- runFlow:
+    when:
+      visible: "Continuer en tant qu'invité|Continue as guest|Continuar como invitado"
+    commands:
+      - tapOn:
+          id: "welcome-guest-btn"
+- extendedWaitUntil:
+    visible:
+      id: "home-tab"
+    timeout: 20000
+- openLink: macrozone://meals
+- extendedWaitUntil:
+    visible: "Tous les repas|All Meals|Todas las comidas"
+    timeout: 15000
+- assertVisible:
+    id: "toggle-edit-mode"
+- assertVisible:
+    id: "all-meals-tab"

@@ -42,6 +42,10 @@ appId: com.geraldy.macrozone
     id: "macro-grid"
 # Calories from the meal (hero value) — text or dedicated testID
 - assertVisible: "450"
+# History tab (bottom bar, between Journal and Add) must be visible on Journal
+- assertVisible:
+    id: "all-meals-tab"
 - tapOn:
     id: "all-meals-tab"
+- assertVisible: "Tous les repas|All Meals|Todas las comidas"
 - assertVisible: "Salade Cesar"

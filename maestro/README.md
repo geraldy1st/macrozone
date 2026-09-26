@@ -106,6 +106,7 @@ Les dialogues utilisent le texte i18n :
 | `meal-persistence-relaunch.yaml` | Persistance après relaunch (guest smoke) |
 | `add-meal-gallery-ai.yaml` | Galerie + chemin IA (hors smoke) |
 | `delete-meal.yaml` | Suppression repas |
+| `history-tab-deeplink.yaml` | Deep link `macrozone://meals` → onglet Historique (invité) |
 | `settings-language.yaml` | Langue |
 
 ## Ajouter un nouveau cas de test

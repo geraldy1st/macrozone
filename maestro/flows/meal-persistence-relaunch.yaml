@@ -48,13 +48,13 @@ appId: com.geraldy.macrozone
 - extendedWaitUntil:
     visible: "nutriFlow|Today|Aujourd|Hoy|PersistMealP0|Meals|Repas|Comidas"
     timeout: 30000
-- runFlow:
-    when:
-      visible:
-        id: "all-meals-tab"
-    commands:
-      - tapOn:
-          id: "all-meals-tab"
+# History bottom tab is always present on tab screens (no longer a Journal-only chip)
+- extendedWaitUntil:
+    visible:
+      id: "all-meals-tab"
+    timeout: 20000
+- tapOn:
+    id: "all-meals-tab"
 - extendedWaitUntil:
     visible: "PersistMealP0"
     timeout: 20000
