@@ -1,0 +1,87 @@
+# CI oracle (APK pass, case d) — TC-NAV-HIST-04 "Mode édition conservé entre onglets".
+# Preconditions: at least 2 meals (created here, guest mode).
+# Steps: 1. Historique -> « Modifier », select 1 meal. 2. Tap Inspirer (community-tab).
+#        3. Back to Historique.
+# Expected (QA plan 7.5): "état conservé (mode édition + sélection)". Do not relax.
+appId: com.geraldy.macrozone
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: "Bienvenue|Welcome|nutriFlow|Bienvenido"
+    timeout: 30000
+- runFlow:
+    when:
+      visible: "Continuer en tant qu'invité|Continue as guest|Continuar como invitado"
+    commands:
+      - tapOn:
+          id: "welcome-guest-btn"
+- extendedWaitUntil:
+    visible:
+      id: "home-tab"
+    timeout: 30000
+# --- Precondition: 2 meals
+- tapOn:
+    id: "add-meals-tab"
+- tapOn:
+    id: "meal-name-input"
+- eraseText
+- inputText: "EditModeMealA"
+- tapOn:
+    id: "meal-calories-input"
+- eraseText
+- inputText: "210"
+- hideKeyboard
+- tapOn:
+    id: "add-meal-submit"
+- extendedWaitUntil:
+    visible: "Meal added successfully|Repas ajouté avec succès|Comida añadida"
+    timeout: 8000
+- tapOn:
+    id: "add-meals-tab"
+- tapOn:
+    id: "meal-name-input"
+- eraseText
+- inputText: "EditModeMealB"
+- tapOn:
+    id: "meal-calories-input"
+- eraseText
+- inputText: "320"
+- hideKeyboard
+- tapOn:
+    id: "add-meal-submit"
+- extendedWaitUntil:
+    visible: "Meal added successfully|Repas ajouté avec succès|Comida añadida"
+    timeout: 8000
+# --- Step 1: Historique -> Modifier, select 1 meal
+- tapOn:
+    id: "all-meals-tab"
+- extendedWaitUntil:
+    visible: "EditModeMealA"
+    timeout: 15000
+- assertVisible: "EditModeMealB"
+- tapOn:
+    id: "toggle-edit-mode"
+- assertVisible: "Done|Terminer|Listo"
+- tapOn: "EditModeMealA"
+- assertVisible:
+    id: "delete-selected-btn"
+- takeScreenshot: d-1-history-edit-mode-1-selected
+# --- Step 2: tap Inspirer (community tab)
+- tapOn:
+    id: "community-tab"
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: d-2-community
+# --- Step 3: back to Historique
+- tapOn:
+    id: "all-meals-tab"
+- extendedWaitUntil:
+    visible: "EditModeMealA"
+    timeout: 15000
+- takeScreenshot: d-3-history-after-tab-switch
+# Expected: edit mode preserved (button shows Done/Terminer) AND selection preserved
+# (delete-selected-btn only renders when >= 1 meal is selected)
+- assertVisible: "Done|Terminer|Listo"
+- assertVisible:
+    id: "delete-selected-btn"

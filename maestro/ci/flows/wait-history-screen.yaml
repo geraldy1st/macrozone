@@ -1,0 +1,7 @@
+# CI helper (APK pass) — no launch: wait until the "All Meals" (Historique) screen is displayed
+# after a deep link fired from adb. Used by case b and the observational back case.
+appId: com.geraldy.macrozone
+---
+- extendedWaitUntil:
+    visible: "Tous les repas|All Meals|Todas las comidas"
+    timeout: 30000

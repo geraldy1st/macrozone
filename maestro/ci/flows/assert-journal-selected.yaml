@@ -1,0 +1,9 @@
+# CI oracle (APK pass, case c) — after back from History: Journal tab selected, History not.
+appId: com.geraldy.macrozone
+---
+- assertVisible:
+    id: "home-tab"
+    selected: true
+- assertVisible:
+    id: "all-meals-tab"
+    selected: false

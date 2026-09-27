@@ -1,0 +1,24 @@
+# maestro/ci — Android emulator APK QA pass (CI helpers)
+
+Used by `.github/workflows/android-e2e.yml` (GitHub Actions, `reactivecircus/android-emulator-runner`,
+API 34 x86_64 google_apis). The workflow downloads a prebuilt EAS preview APK (object under test,
+never rebuilt) and runs `bash maestro/ci/run-apk-pass.sh` inside the emulator step.
+
+| File | Role |
+|---|---|
+| `run-apk-pass.sh` | Installs the APK, prints versionCode/versionName + flows SHA + APK sha256, runs cases a–e, collects JUnit, screenshots, hierarchy dumps, logcat, screen recordings into `$OUT_DIR`, writes `summary.md` / `$GITHUB_STEP_SUMMARY`, exits non-zero if any case failed |
+| `hier-summary.py` | Summarises a `maestro hierarchy` dump (tab `selected` states, screen markers) |
+| `flows/*.yaml` | Small Maestro helpers/oracles (guest setup, deep link `selected` asserts, back, edit mode TC-NAV-HIST-04, FR language, taps) |
+
+Cases: a) `maestro/flows/{add-meal-manual,meal-persistence-relaunch,delete-meal,history-tab-deeplink}.yaml`;
+b) deep link `macrozone://meals` app killed / in background (TC-NAV-HIST-02); c) Android back (TC-NAV-HIST-03)
++ observational back after deep link; d) edit mode kept across tabs (TC-NAV-HIST-04);
+e) font_scale 1.3 / 2.0 at 720x1280 @ 360 dpi (~320 dp), FR — evidence screenshots (TC-NAV-HIST-07).
+
+Expected results come from `docs/qa/MacroZone - Strategie et Plan de Test.md` §7.5 — do not relax them here.
+
+Local run (device/emulator connected, Maestro installed):
+
+```bash
+APK_PATH=/path/app.apk OUT_DIR=/tmp/apk-pass bash maestro/ci/run-apk-pass.sh
+```

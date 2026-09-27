@@ -1,0 +1,19 @@
+# CI helper (APK pass) — (re)launch WITHOUT clearing state; enter guest mode only if the
+# welcome screen is shown; wait for the bottom tab bar.
+appId: com.geraldy.macrozone
+---
+- launchApp:
+    clearState: false
+- extendedWaitUntil:
+    visible: "Bienvenue|Welcome|nutriFlow|Bienvenido|Aujourd|Today|Hoy"
+    timeout: 30000
+- runFlow:
+    when:
+      visible: "Continuer en tant qu'invité|Continue as guest|Continuar como invitado"
+    commands:
+      - tapOn:
+          id: "welcome-guest-btn"
+- extendedWaitUntil:
+    visible:
+      id: "home-tab"
+    timeout: 30000

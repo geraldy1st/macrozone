@@ -1,0 +1,19 @@
+# CI helper (APK pass) — fresh guest session: clearState, enter guest mode, land on the tabs.
+# Same guest-entry convention as maestro/flows/history-tab-deeplink.yaml.
+appId: com.geraldy.macrozone
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: "Bienvenue|Welcome|nutriFlow|Bienvenido"
+    timeout: 30000
+- runFlow:
+    when:
+      visible: "Continuer en tant qu'invité|Continue as guest|Continuar como invitado"
+    commands:
+      - tapOn:
+          id: "welcome-guest-btn"
+- extendedWaitUntil:
+    visible:
+      id: "home-tab"
+    timeout: 30000

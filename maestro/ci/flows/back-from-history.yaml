@@ -1,0 +1,25 @@
+# CI oracle (APK pass, case c) — TC-NAV-HIST-03 step 1-2.
+# From Journal: tap History tab, press Android back.
+# Expected (QA plan 7.5): "retour sur Journal" (Tabs backBehavior firstRoute).
+appId: com.geraldy.macrozone
+---
+- tapOn:
+    id: "home-tab"
+- extendedWaitUntil:
+    visible:
+      id: "journal-history-btn"
+    timeout: 15000
+- tapOn:
+    id: "all-meals-tab"
+- extendedWaitUntil:
+    visible: "Tous les repas|All Meals|Todas las comidas"
+    timeout: 15000
+- back
+- waitForAnimationToEnd:
+    timeout: 5000
+# Back on the Journal screen (Journal-only content visible, All Meals screen gone)
+- extendedWaitUntil:
+    visible:
+      id: "journal-history-btn"
+    timeout: 10000
+- assertNotVisible: "Tous les repas|All Meals|Todas las comidas"
