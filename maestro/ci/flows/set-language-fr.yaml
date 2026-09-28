@@ -1,0 +1,26 @@
+# CI helper (APK pass, case e) — set in-app language to FR via Me -> Settings -> language-fr
+# (same path as maestro/flows/settings-language.yaml), then return to Journal.
+appId: com.geraldy.macrozone
+---
+- tapOn:
+    id: "profile-tab"
+- tapOn:
+    id: "open-settings-btn"
+- scrollUntilVisible:
+    element:
+      id: "language-fr"
+    direction: DOWN
+    timeout: 15000
+- tapOn:
+    id: "language-fr"
+- runFlow:
+    when:
+      notVisible:
+        id: "home-tab"
+    commands:
+      - back
+- tapOn:
+    id: "home-tab"
+- extendedWaitUntil:
+    visible: "Aujourd’hui|Aujourd'hui"
+    timeout: 10000

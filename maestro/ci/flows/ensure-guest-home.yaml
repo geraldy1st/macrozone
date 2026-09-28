@@ -1,0 +1,23 @@
+# CI helper (APK pass) — (re)launch WITHOUT clearing state; enter guest mode only if the
+# welcome screen is shown; wait for the bottom tab bar.
+# Wait for app-rendered text only (full-match regexes): the welcome guest button label, or
+# the Journal "Today" title / "Recent Meals" header (EN/FR/ES). Not "nutriFlow", which also
+# matches the launcher icon label before the app is drawn.
+appId: com.geraldy.macrozone
+---
+- launchApp:
+    clearState: false
+- extendedWaitUntil:
+    visible: "Continuer en tant qu'invité|Continue as guest|Continuar como invitado|Today|Aujourd.hui|Hoy|Recent Meals|Repas récents|Comidas recientes"
+    timeout: 30000
+- runFlow:
+    when:
+      visible:
+        id: "welcome-guest-btn"
+    commands:
+      - tapOn:
+          id: "welcome-guest-btn"
+- extendedWaitUntil:
+    visible:
+      id: "home-tab"
+    timeout: 30000

@@ -1,0 +1,36 @@
+# TC-NAV-HIST-02 / TC-E2E-11 — deep link macrozone://meals opens the History (All Meals) screen
+# with the History tab selected
+# Guest entry (same convention as the meal P0 flows); no account / network needed.
+appId: com.geraldy.macrozone
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      id: "welcome-guest-btn"  # DEF-HIST-06: welcome title is one Text ("Welcome to nutriFlow"), old regex never full-matched
+    timeout: 20000
+- runFlow:
+    when:
+      visible: "Continuer en tant qu'invité|Continue as guest|Continuar como invitado"
+    commands:
+      - tapOn:
+          id: "welcome-guest-btn"
+- extendedWaitUntil:
+    visible:
+      id: "home-tab"
+    timeout: 20000
+- openLink: macrozone://meals
+- extendedWaitUntil:
+    visible: "Tous les repas|All Meals|Todas las comidas"
+    timeout: 15000
+- assertVisible:
+    id: "toggle-edit-mode"
+# DEF-HIST-02: History tab must be SELECTED, Journal must NOT be.
+# RN Android maps accessibilityState.selected -> View.setSelected()
+# (BaseViewManager.setViewState), which Maestro reads as `selected`.
+- assertVisible:
+    id: "all-meals-tab"
+    selected: true
+- assertVisible:
+    id: "home-tab"
+    selected: false

@@ -1,0 +1,23 @@
+# Changelog
+
+All notable changes to this project are documented in this file.
+
+## [Unreleased]
+
+### Added — History tab in the bottom navigation bar (`feat/history-tab`)
+
+A new **History** tab (FR « Historique », ES « Historial », label key `tabs.allMeals`, Ionicons `time-outline`) now sits between **Journal** and the central **Add** button. It opens the existing *All Meals* screen (`src/app/(tabs)/meals.tsx`). JS-only change: no native module, no config change. Shipping it needs a new EAS build because `expo-updates` is not installed, so an OTA update isn't possible.
+
+| File | What | Why | Can be cleaned up later | Risk |
+|---|---|---|---|---|
+| `src/components/MainTabBar.tsx` | Replaced the empty placeholder slot between Journal and the FAB with a `renderSideTab` entry for route `meals` (testID `all-meals-tab`, `accessibilityRole="button"`, `accessibilityState.selected`, translated label). `journalFocused` is now `current === "index"` only; new `historyFocused = current === "meals"`. | Give the meals history a direct, always-visible entry point. Journal must no longer light up when History is active. | The per-tab color/focus logic is repeated for each tab; it could come from a single tab config array. `role="tab"` / `accessibilityRole="tab"` could replace `button` (deliberately out of scope). | Low. The placeholder already had `flex:1`, so the layout width doesn't change. On narrow screens with very large fonts the label can get cut off (`numberOfLines={1}`). |
+| `src/app/(tabs)/index.tsx` | Journal « Historique » chip testID renamed `all-meals-tab` → `journal-history-btn`. Chip kept. | Avoid duplicate testIDs now that `all-meals-tab` is the real tab (Maestro would tap an ambiguous match). | The chip duplicates the new tab; it could be removed after a UX decision. | Low. Any external script that targeted the chip by `all-meals-tab` now hits the tab, which opens the same screen. |
+| `src/app/(tabs)/_layout.tsx` | **Unchanged.** `meals` keeps `href: null`. | With the custom `tabBar`, `href: null` only affects expo-router's default bar; `open("meals")` still works because the route stays in `state.routes`. Default `backBehavior` (`firstRoute`) means Android back from History returns to Journal. | `href: null` could be dropped, since it's cosmetic with a custom tab bar. | None. |
+| `__tests__/components/MainTabBar.test.tsx` (new) | 6 tests: visual order, single `all-meals-tab`, tabPress + `navigate("meals")`, prevented tabPress, selected state on `meals` / `index`. | Regression guard for the tab bar, which had no tests before. | — | None (test only). |
+| `__tests__/components/JournalHistoryChip.test.tsx` (new) | 2 tests: `journal-history-btn` renders exactly once on Journal (and no `all-meals-tab`); pressing it pushes `/(tabs)/meals`. | Lock in the testID rename. | Child components are mocked; if the Journal screen gains more dependencies, the mocks need updating. | None (test only). |
+| `maestro/flows/add-meal-manual.yaml` | `assertVisible id: all-meals-tab` on Journal, then tap it and assert the All Meals title. | E2E coverage of the new tab (TC-E2E-10). | — | Low. Needs a new APK containing the tab. |
+| `maestro/flows/delete-meal.yaml` | Comment only; `all-meals-tab` now taps the tab. | Clarity. | — | Low. |
+| `maestro/flows/meal-persistence-relaunch.yaml` | Replaced the conditional `runFlow when visible all-meals-tab` (Journal-chip workaround) with a deterministic wait + tap on the tab. | The tab is always present on tab screens, so the condition hid failures. | — | Low. Fails fast if the relaunch doesn't land on a tab screen (intended). |
+| `maestro/flows/history-tab-deeplink.yaml` (new) | Guest entry, then `openLink: macrozone://meals`, then assert the All Meals title, `toggle-edit-mode` and `all-meals-tab`. | Deep-link coverage (TC-E2E-11 / TC-NAV-HIST-02). | Could be added to `scripts/predeploy.sh` smoke once it's proven stable on a device. | Medium. Deep-link handling right after onboarding hasn't been run on a device yet. |
+| `maestro/README.md` | Flow catalogue row for the new flow. | Follows the README's "add a new test case" convention. | — | None. |
+| `docs/qa/MacroZone - Strategie et Plan de Test.md` | testID table updated (`all-meals-tab` = tab, `journal-history-btn` = chip), TC-E2E-10/11, new section 7.5 TC-NAV-HIST-01…07 (order/selection, deep link, Android back, edit-mode persistence, empty list, user switch, large-font exploratory), traceability row REQ-NAV-01. The former 7.5 is now 7.6. | Keep the QA plan in sync. | The `.docx` version is **not** regenerated (`docs/qa/generate-docx.js`). | None. |

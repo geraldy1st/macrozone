@@ -1,0 +1,12 @@
+# CI oracle (APK pass, case b) — TC-NAV-HIST-02 / TC-E2E-11 / DEF-HIST-04.
+# Expected (QA plan 7.5): "Tous les repas" displayed; History tab SELECTED, Journal NOT selected.
+# Same assertions as maestro/flows/history-tab-deeplink.yaml. Do not relax.
+appId: com.geraldy.macrozone
+---
+- assertVisible: "Tous les repas|All Meals|Todas las comidas"
+- assertVisible:
+    id: "all-meals-tab"
+    selected: true
+- assertVisible:
+    id: "home-tab"
+    selected: false

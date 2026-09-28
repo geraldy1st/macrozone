@@ -1,0 +1,7 @@
+# CI helper (APK pass, case e) — tap one element by testID (env TAP_ID) and let the UI settle.
+appId: com.geraldy.macrozone
+---
+- tapOn:
+    id: ${TAP_ID}
+- waitForAnimationToEnd:
+    timeout: 5000
