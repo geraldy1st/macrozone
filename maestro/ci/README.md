@@ -34,5 +34,7 @@ APK_PATH=/path/app.apk OUT_DIR=/tmp/apk-pass bash maestro/ci/run-apk-pass.sh
   `launchApp: clearState: true` still hit their own welcome wait.
 - The runner's default AVD is 320x640 @ 160 dpi (320x640 dp): with the soft keyboard up the
   Add Meal form shows only the name field, so `tapOn: meal-calories-input` cannot find the
-  field. `run-apk-pass.sh` sets a Pixel 6-like base display (`BASE_WM_SIZE=1080x2400`,
-  `BASE_WM_DENSITY=420`) for cases a–d; case e still uses 720x1280 @ 360.
+  field. `wm size` overrides are clamped to 3x the physical height (1920 px there), so the
+  workflow creates a `pixel_6` AVD (1080x2400 @ 420), and `run-apk-pass.sh` pins that base
+  display (`BASE_WM_SIZE=1080x2400`, `BASE_WM_DENSITY=420`) for cases a–d; case e still
+  uses 720x1280 @ 360.
