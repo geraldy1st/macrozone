@@ -22,3 +22,13 @@ Local run (device/emulator connected, Maestro installed):
 ```bash
 APK_PATH=/path/app.apk OUT_DIR=/tmp/apk-pass bash maestro/ci/run-apk-pass.sh
 ```
+
+## Notes
+
+- Maestro text selectors are **full-match** regexes. The welcome title is one `Text`
+  ("Welcome to nutriFlow" / "Bienvenue sur nutriFlow"), so `"Bienvenue|Welcome|nutriFlow"` does
+  not match the welcome screen (it only matches the Journal header `nutriFlow`, or the launcher
+  icon label). The helpers therefore wait for `id: welcome-guest-btn` / app-rendered texts.
+- Case a runs `ensure-guest-home.yaml` before each original flow (harness precondition: an
+  existing guest session). The original flows are not modified; those starting with
+  `launchApp: clearState: true` still hit their own welcome wait.

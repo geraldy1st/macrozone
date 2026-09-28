@@ -7,15 +7,15 @@ appId: com.geraldy.macrozone
 ---
 - launchApp:
     clearState: true
+# Welcome screen is guaranteed after clearState; wait for its guest button by testID
+# (the title is one Text "Welcome to nutriFlow", which "Bienvenue|Welcome|nutriFlow"
+# does not full-match).
 - extendedWaitUntil:
-    visible: "Bienvenue|Welcome|nutriFlow|Bienvenido"
+    visible:
+      id: "welcome-guest-btn"
     timeout: 30000
-- runFlow:
-    when:
-      visible: "Continuer en tant qu'invité|Continue as guest|Continuar como invitado"
-    commands:
-      - tapOn:
-          id: "welcome-guest-btn"
+- tapOn:
+    id: "welcome-guest-btn"
 - extendedWaitUntil:
     visible:
       id: "home-tab"

@@ -99,7 +99,7 @@ capture() {
 
 # "all-meals-tab=True home-tab=False" from a capture summary
 sel_state() {
-  awk '$1=="all-meals-tab"||$1=="home-tab"{s=$2; sub("selected=","",s); printf "%s selected=%s; ", $1, s}' \
+  awk '$1=="all-meals-tab"||$1=="home-tab"{s=$2; if (s ~ /^selected=/) sub("selected=","",s); else s="absent"; printf "%s selected=%s; ", $1, s}' \
     "$OUT/hierarchy/$1.summary.txt" 2>/dev/null
 }
 
@@ -296,14 +296,23 @@ else
 fi
 
 # ---------------------------------------------------------------- a. existing flows
+# Precondition (harness only, flows untouched): an existing guest session, as the flows
+# that start with a plain `launchApp` expect to land on Journal. Flows using clearState
+# reset it themselves.
 for flow in add-meal-manual meal-persistence-relaunch delete-meal history-tab-deeplink; do
   name="a-$flow"
   case_start "$name"
+  if maestro_test "$name-pre" "$FLOWS_CI/ensure-guest-home.yaml"; then
+    pre="precondition guest session ok"
+  else
+    pre="precondition guest session FAILED: $(maestro_failure "$name-pre")"
+  fi
   if maestro_test "$name" "$FLOWS_QA/$flow.yaml"; then
     st=PASS; ev="flow passed"
   else
     st=FAIL; ev="flow failed: $(maestro_failure "$name")"
   fi
+  ev="$ev; $pre"
   if [[ $flow == history-tab-deeplink ]]; then
     capture "$name-end"
     ev="$ev; hierarchy: $(sel_state "$name-end")"
@@ -420,12 +429,13 @@ for scale in 1.3 2.0; do
   case_start "$name"
   st=PASS; notes=""; shots=0
   if ! maestro_test "$name-launch" "$FLOWS_CI/ensure-guest-home.yaml"; then
-    if app_in_foreground; then notes="$notes launch flow failed but app in foreground;"; else st=FAIL; notes="$notes app did not launch/foreground;"; fi
+    st=FAIL
+    if app_in_foreground; then notes="$notes launch flow failed (tab bar not reached) but app in foreground;"; else notes="$notes app did not launch/foreground;"; fi
   fi
-  maestro_test "$name-lang-fr" "$FLOWS_CI/set-language-fr.yaml" || notes="$notes set FR flow failed ($(maestro_failure "$name-lang-fr"));"
+  maestro_test "$name-lang-fr" "$FLOWS_CI/set-language-fr.yaml" || { st=FAIL; notes="$notes set FR flow failed ($(maestro_failure "$name-lang-fr"));"; }
   for pair in home-tab:1-journal all-meals-tab:2-historique add-meals-tab:3-add community-tab:4-community profile-tab:5-me; do
     id="${pair%%:*}"; label="${pair#*:}"
-    maestro_test "$name-tap-$label" "$FLOWS_CI/tap-id.yaml" -e "TAP_ID=$id" || notes="$notes tap $id failed;"
+    maestro_test "$name-tap-$label" "$FLOWS_CI/tap-id.yaml" -e "TAP_ID=$id" || { st=FAIL; notes="$notes tap $id failed;"; }
     screenshot "e-fs$scale-$label"
     [[ -s "$OUT/screenshots/e-fs$scale-$label.png" ]] && shots=$((shots + 1))
     if ! app_in_foreground; then st=FAIL; notes="$notes app left foreground at $label;"; fi

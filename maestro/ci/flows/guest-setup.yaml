@@ -1,18 +1,19 @@
 # CI helper (APK pass) — fresh guest session: clearState, enter guest mode, land on the tabs.
 # Same guest-entry convention as maestro/flows/history-tab-deeplink.yaml.
+# NB: Maestro text selectors are full-match regexes. The real welcome title is a single
+# Text ("Welcome to nutriFlow" / "Bienvenue sur nutriFlow"), so "Bienvenue|Welcome|nutriFlow"
+# never matches it (and "nutriFlow" alone can match the launcher icon label). After
+# clearState the welcome screen is guaranteed, so wait for its guest button by testID.
 appId: com.geraldy.macrozone
 ---
 - launchApp:
     clearState: true
 - extendedWaitUntil:
-    visible: "Bienvenue|Welcome|nutriFlow|Bienvenido"
+    visible:
+      id: "welcome-guest-btn"
     timeout: 30000
-- runFlow:
-    when:
-      visible: "Continuer en tant qu'invité|Continue as guest|Continuar como invitado"
-    commands:
-      - tapOn:
-          id: "welcome-guest-btn"
+- tapOn:
+    id: "welcome-guest-btn"
 - extendedWaitUntil:
     visible:
       id: "home-tab"
