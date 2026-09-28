@@ -40,3 +40,4 @@ APK_PATH=/path/app.apk OUT_DIR=/tmp/apk-pass bash maestro/ci/run-apk-pass.sh
   base display for cases a–d; case e still uses 720x1280 @ 360.
 - The script also confirms the immersive-mode hint and sets `hide_error_dialogs=1` so a system
   "isn't responding" dialog cannot cover the app; app crashes/ANRs are still detected in logcat.
+- DEF-HIST-05 / DEF-HIST-06: toast waits now use `(Meal added successfully|Repas ajouté avec succès|¡?Comida añadida con éxito)\s*!?` and the welcome waits in the clearState flows target `id: welcome-guest-btn`.

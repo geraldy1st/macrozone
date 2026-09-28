@@ -35,7 +35,7 @@ appId: com.geraldy.macrozone
 - tapOn:
     id: "add-meal-submit"
 - extendedWaitUntil:
-    visible: "Meal added successfully|Repas ajouté avec succès|Comida añadida"
+    visible: "(Meal added successfully|Repas ajouté avec succès|¡?Comida añadida con éxito)\\s*!?"  # DEF-HIST-05: real toast ends with "!" / " !" (full-match regex)
     timeout: 8000
 - tapOn:
     id: "add-meals-tab"
@@ -51,7 +51,7 @@ appId: com.geraldy.macrozone
 - tapOn:
     id: "add-meal-submit"
 - extendedWaitUntil:
-    visible: "Meal added successfully|Repas ajouté avec succès|Comida añadida"
+    visible: "(Meal added successfully|Repas ajouté avec succès|¡?Comida añadida con éxito)\\s*!?"  # DEF-HIST-05: real toast ends with "!" / " !" (full-match regex)
     timeout: 8000
 # --- Step 1: Historique -> Modifier, select 1 meal
 - tapOn:

@@ -4,7 +4,8 @@ appId: com.geraldy.macrozone
 - launchApp:
     clearState: true
 - extendedWaitUntil:
-    visible: "Bienvenue|Welcome|nutriFlow"
+    visible:
+      id: "welcome-guest-btn"  # DEF-HIST-06: welcome title is one Text ("Welcome to nutriFlow"), old regex never full-matched
     timeout: 20000
 - runFlow:
     when:
