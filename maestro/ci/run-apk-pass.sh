@@ -12,9 +12,11 @@
 #   OUT_DIR                output dir (default: ./apk-pass-out)
 #   PKG                    app id (default: com.geraldy.macrozone)
 #   EXPECTED_VERSION_CODE  (default: 18 = EAS preview build from b696635)
-#   BASE_WM_SIZE / BASE_WM_DENSITY  phone display used for cases a-d (default 1080x2400 @ 420
-#                          = Pixel 6-like ~411x914 dp). The runner's default AVD is 320x640 @ 160
-#                          (320x640 dp), where the soft keyboard hides the next form field.
+#   BASE_WM_SIZE / BASE_WM_DENSITY  phone display used for cases a-d (default 1080x1920 @ 360
+#                          = ~480x853 dp). The runner's default AVD is 320x640 @ 160 (320x640 dp),
+#                          where the soft keyboard hides the next form field; `wm size` overrides
+#                          are clamped to 3x the physical height (1920 px), and a pixel_6 AVD
+#                          (1080x2400) made the launcher ANR under swiftshader.
 set -uo pipefail
 
 PKG="${PKG:-com.geraldy.macrozone}"
@@ -24,8 +26,8 @@ OUT="${OUT_DIR:-$PWD/apk-pass-out}"
 EXPECTED_VERSION_CODE="${EXPECTED_VERSION_CODE:-18}"
 DEEPLINK="${DEEPLINK:-macrozone://meals}"
 MAESTRO_TIMEOUT="${MAESTRO_TIMEOUT:-600}"
-BASE_WM_SIZE="${BASE_WM_SIZE:-1080x2400}"
-BASE_WM_DENSITY="${BASE_WM_DENSITY:-420}"
+BASE_WM_SIZE="${BASE_WM_SIZE:-1080x1920}"
+BASE_WM_DENSITY="${BASE_WM_DENSITY:-360}"
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(git -C "$HERE" rev-parse --show-toplevel 2>/dev/null || (cd "$HERE/../.." && pwd))"
@@ -272,6 +274,18 @@ log "Base display ${BASE_WM_SIZE} @ ${BASE_WM_DENSITY} dpi"
 reset_display
 sleep 2
 adb shell wm size; adb shell wm density
+# System UI noise that can steal focus from the app under test on a slow emulator:
+# "Viewing full screen" immersive-mode hint and system "isn't responding" dialogs (e.g. Pixel
+# Launcher ANR right after boot). Crashes/ANRs of the app are still detected from logcat
+# (case_end greps FATAL EXCEPTION / "ANR in $PKG"), hiding the dialog does not hide them.
+log "Harden emulator against system dialogs"
+adb shell settings put secure immersive_mode_confirmations confirmed || true
+adb shell settings put global hide_error_dialogs 1 || true
+adb shell input keyevent KEYCODE_WAKEUP || true
+adb shell wm dismiss-keyguard > /dev/null 2>&1 || true
+adb shell am broadcast -a android.intent.action.CLOSE_SYSTEM_DIALOGS > /dev/null 2>&1 || true
+adb shell input keyevent KEYCODE_HOME || true
+sleep 3
 adb logcat -v threadtime > "$OUT/logcat/logcat-full-stream.txt" 2>&1 &
 LOGCAT_STREAM_PID=$!
 
