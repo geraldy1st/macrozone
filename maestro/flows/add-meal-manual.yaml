@@ -32,6 +32,11 @@ appId: com.geraldy.macrozone
 - extendedWaitUntil:
     visible: "(Meal added successfully|Repas ajouté avec succès|¡?Comida añadida con éxito)\\s*!?"  # DEF-HIST-05: real toast ends with "!" / " !" (full-match regex)
     timeout: 8000
+    optional: true  # DEF-HIST-09: transient toast (~1 s visible after the post-add interstitial), best effort only
+# DEF-HIST-09: mandatory persistent oracle — the added meal is listed by name on Journal (Recent Meals)
+- extendedWaitUntil:
+    visible: "Salade Cesar"
+    timeout: 10000
 - tapOn:
     id: "home-tab"
 - extendedWaitUntil:

@@ -37,6 +37,11 @@ appId: com.geraldy.macrozone
 - extendedWaitUntil:
     visible: "(Meal added successfully|Repas ajouté avec succès|¡?Comida añadida con éxito)\\s*!?"  # DEF-HIST-05: real toast ends with "!" / " !" (full-match regex)
     timeout: 8000
+    optional: true  # DEF-HIST-09: transient toast (~1 s visible after the post-add interstitial), best effort only
+# DEF-HIST-09: mandatory persistent oracle — the added meal is listed by name on Journal (Recent Meals)
+- extendedWaitUntil:
+    visible: "EditModeMealA"
+    timeout: 10000
 - tapOn:
     id: "add-meals-tab"
 - tapOn:
@@ -53,9 +58,14 @@ appId: com.geraldy.macrozone
 - extendedWaitUntil:
     visible: "(Meal added successfully|Repas ajouté avec succès|¡?Comida añadida con éxito)\\s*!?"  # DEF-HIST-05: real toast ends with "!" / " !" (full-match regex)
     timeout: 8000
+    optional: true  # DEF-HIST-09: transient toast (~1 s visible after the post-add interstitial), best effort only
 # --- Step 1: Historique -> Modifier, select 1 meal
 - tapOn:
     id: "all-meals-tab"
+# DEF-HIST-09: mandatory persistent oracle — 2nd meal present in Historique before edit mode
+- extendedWaitUntil:
+    visible: "EditModeMealB"
+    timeout: 10000
 - extendedWaitUntil:
     visible: "EditModeMealA"
     timeout: 15000
