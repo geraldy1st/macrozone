@@ -1,0 +1,101 @@
+name: Android E2E (APK QA pass)
+
+# QA pass of a prebuilt EAS preview APK on an Android emulator with Maestro.
+# Testware only: the APK (object under test) is downloaded, never rebuilt here.
+# Not a required check.
+
+on:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      apk_url:
+        description: "APK to test (default: EAS preview b179b15a, commit b696635, versionCode 18)"
+        required: false
+        default: "https://expo.dev/artifacts/eas/9bP2WD4ez1m-ZSmsBWuViYF23WixrdvjVARnI4jNwYE.apk"
+      expected_version_code:
+        description: "Expected installed versionCode"
+        required: false
+        default: "18"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-e2e-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  DEFAULT_APK_URL: "https://expo.dev/artifacts/eas/9bP2WD4ez1m-ZSmsBWuViYF23WixrdvjVARnI4jNwYE.apk"
+  MAESTRO_VERSION: "2.10.0"
+  PKG: com.geraldy.macrozone
+
+jobs:
+  apk-pass:
+    name: APK QA pass (API 34 emulator)
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Checkout (PR head, flows under test)
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=always"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+          ls -l /dev/kvm
+
+      - name: Set up Java 17
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Install Maestro CLI ${{ env.MAESTRO_VERSION }}
+        run: |
+          curl -fsSL "https://get.maestro.mobile.dev" | bash
+          echo "$HOME/.maestro/bin" >> "$GITHUB_PATH"
+          "$HOME/.maestro/bin/maestro" --version
+
+      - name: Download APK under test
+        env:
+          INPUT_APK_URL: ${{ inputs.apk_url }}
+        run: |
+          APK_URL="${INPUT_APK_URL:-$DEFAULT_APK_URL}"
+          echo "APK_URL=$APK_URL" >> "$GITHUB_ENV"
+          echo "APK_PATH=$RUNNER_TEMP/app-under-test.apk" >> "$GITHUB_ENV"
+          curl -fL --retry 3 --retry-delay 5 -o "$RUNNER_TEMP/app-under-test.apk" "$APK_URL"
+          ls -l "$RUNNER_TEMP/app-under-test.apk"
+          sha256sum "$RUNNER_TEMP/app-under-test.apk"
+          AAPT2="$(find "$ANDROID_HOME/build-tools" -name aapt2 -type f | sort -V | tail -1)"
+          if [ -n "$AAPT2" ]; then "$AAPT2" dump badging "$RUNNER_TEMP/app-under-test.apk" | head -1 || true; fi
+
+      - name: Run QA pass on emulator
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
+        env:
+          OUT_DIR: ${{ github.workspace }}/apk-pass-out
+          EXPECTED_VERSION_CODE: ${{ inputs.expected_version_code || '18' }}
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          cores: 4
+          ram-size: 4096M
+          disk-size: 6000M
+          force-avd-creation: true
+          emulator-boot-timeout: 900
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none -camera-front none
+          disable-animations: true
+          script: bash maestro/ci/run-apk-pass.sh
+
+      - name: Upload QA pass artifacts
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: apk-pass-${{ github.run_id }}
+          path: apk-pass-out/
+          if-no-files-found: warn
+          retention-days: 30
