@@ -32,3 +32,7 @@ APK_PATH=/path/app.apk OUT_DIR=/tmp/apk-pass bash maestro/ci/run-apk-pass.sh
 - Case a runs `ensure-guest-home.yaml` before each original flow (harness precondition: an
   existing guest session). The original flows are not modified; those starting with
   `launchApp: clearState: true` still hit their own welcome wait.
+- The runner's default AVD is 320x640 @ 160 dpi (320x640 dp): with the soft keyboard up the
+  Add Meal form shows only the name field, so `tapOn: meal-calories-input` cannot find the
+  field. `run-apk-pass.sh` sets a Pixel 6-like base display (`BASE_WM_SIZE=1080x2400`,
+  `BASE_WM_DENSITY=420`) for cases a–d; case e still uses 720x1280 @ 360.

@@ -12,6 +12,9 @@
 #   OUT_DIR                output dir (default: ./apk-pass-out)
 #   PKG                    app id (default: com.geraldy.macrozone)
 #   EXPECTED_VERSION_CODE  (default: 18 = EAS preview build from b696635)
+#   BASE_WM_SIZE / BASE_WM_DENSITY  phone display used for cases a-d (default 1080x2400 @ 420
+#                          = Pixel 6-like ~411x914 dp). The runner's default AVD is 320x640 @ 160
+#                          (320x640 dp), where the soft keyboard hides the next form field.
 set -uo pipefail
 
 PKG="${PKG:-com.geraldy.macrozone}"
@@ -21,6 +24,8 @@ OUT="${OUT_DIR:-$PWD/apk-pass-out}"
 EXPECTED_VERSION_CODE="${EXPECTED_VERSION_CODE:-18}"
 DEEPLINK="${DEEPLINK:-macrozone://meals}"
 MAESTRO_TIMEOUT="${MAESTRO_TIMEOUT:-600}"
+BASE_WM_SIZE="${BASE_WM_SIZE:-1080x2400}"
+BASE_WM_DENSITY="${BASE_WM_DENSITY:-420}"
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(git -C "$HERE" rev-parse --show-toplevel 2>/dev/null || (cd "$HERE/../.." && pwd))"
@@ -195,7 +200,15 @@ case_end() {
   return 0
 }
 
+# back to the base phone display (cases a-d), font scale 1.0
 reset_display() {
+  adb shell wm size "$BASE_WM_SIZE" > /dev/null 2>&1 || true
+  adb shell wm density "$BASE_WM_DENSITY" > /dev/null 2>&1 || true
+  adb shell settings put system font_scale 1.0 > /dev/null 2>&1 || true
+}
+
+# leave the emulator as found (trap)
+restore_display() {
   adb shell wm size reset > /dev/null 2>&1 || true
   adb shell wm density reset > /dev/null 2>&1 || true
   adb shell settings put system font_scale 1.0 > /dev/null 2>&1 || true
@@ -204,7 +217,7 @@ reset_display() {
 # shellcheck disable=SC2317  # invoked via trap
 cleanup() {
   rec_stop
-  reset_display
+  restore_display
   [[ -n "$LOGCAT_STREAM_PID" ]] && kill "$LOGCAT_STREAM_PID" 2> /dev/null
   return 0
 }
@@ -255,6 +268,10 @@ adb wait-for-device
 adb shell getprop ro.build.version.release | tr -d '\r'
 adb shell getprop ro.product.cpu.abi | tr -d '\r'
 adb shell wm size; adb shell wm density
+log "Base display ${BASE_WM_SIZE} @ ${BASE_WM_DENSITY} dpi"
+reset_display
+sleep 2
+adb shell wm size; adb shell wm density
 adb logcat -v threadtime > "$OUT/logcat/logcat-full-stream.txt" 2>&1 &
 LOGCAT_STREAM_PID=$!
 
@@ -278,6 +295,7 @@ VERSION_NAME="$(grep -o 'versionName=[^ ]*' <<< "$VERSION_LINES" | head -1 | cut
   echo "flows git HEAD:     $(git -C "$REPO_ROOT" rev-parse HEAD 2>/dev/null)"
   echo "flows maestro/ SHA: $(git -C "$REPO_ROOT" log -1 --format=%H -- maestro/ 2>/dev/null)"
   echo "maestro:            $(maestro --version 2>/dev/null | tail -1)"
+  echo "display (a-d):      $(adb shell wm size | tr -d '\r' | tail -1) / $(adb shell wm density | tr -d '\r' | tail -1)"
   echo "device:             Android $(adb shell getprop ro.build.version.release | tr -d '\r') API $(adb shell getprop ro.build.version.sdk | tr -d '\r') $(adb shell getprop ro.product.cpu.abi | tr -d '\r')"
   echo "run:                ${GITHUB_SERVER_URL:-}/${GITHUB_REPOSITORY:-}/actions/runs/${GITHUB_RUN_ID:-local}"
 } > "$VERSIONS"
