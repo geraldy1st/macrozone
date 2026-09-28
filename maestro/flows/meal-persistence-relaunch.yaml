@@ -30,7 +30,7 @@ appId: com.geraldy.macrozone
 - tapOn:
     id: "add-meal-submit"
 - extendedWaitUntil:
-    visible: "Meal added successfully|Repas ajouté avec succès|Comida añadida"
+    visible: "(Meal added successfully|Repas ajouté avec succès|¡?Comida añadida con éxito)\\s*!?"  # DEF-HIST-05
     timeout: 8000
 - tapOn:
     id: "all-meals-tab"
